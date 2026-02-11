@@ -7,10 +7,10 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
+    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden dark-section">
       {/* Animated gradient background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-background" />
+        <div className="absolute inset-0" style={{ backgroundColor: 'hsl(220 15% 6%)' }} />
         <div className="absolute top-0 right-0 w-[80%] h-[80%] bg-gradient-to-bl from-primary/8 via-emerald/5 to-transparent rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[60%] h-[60%] bg-gradient-to-tr from-primary/5 via-transparent to-transparent rounded-full blur-3xl" />
         {/* Grid pattern */}
@@ -52,7 +52,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-xl mb-12 leading-relaxed"
+            className="text-lg md:text-xl max-w-xl mb-12 leading-relaxed opacity-70"
           >
             Dein Turbo für digitale Sichtbarkeit & planbare Anfragen in AT/DE.
             Websites & Onlineshops mit klarem Fokus auf Performance und messbaren Ergebnissen.
@@ -78,7 +78,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap gap-8 md:gap-12 mt-16 pt-8 border-t border-border/30"
+            className="flex flex-wrap gap-8 md:gap-12 mt-16 pt-8 border-t border-white/10"
           >
             {[
               { value: "6+", label: "Jahre Erfahrung" },
@@ -87,7 +87,7 @@ const HeroSection = () => {
             ].map((stat, i) => (
               <div key={i}>
                 <div className="text-2xl md:text-3xl font-extrabold text-primary">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
+                <div className="text-sm mt-1 opacity-60">{stat.label}</div>
               </div>
             ))}
           </motion.div>

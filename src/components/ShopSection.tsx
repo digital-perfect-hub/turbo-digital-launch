@@ -23,12 +23,7 @@ const ShopSection = () => {
   return (
     <section id="shop" className="py-24 md:py-36" ref={ref}>
       <div className="section-container">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="text-center mb-16">
           <p className="section-label">Margen-Booster & Upsell</p>
           <h2 className="section-title">
             Dein Schlüssel zu mehr <span className="gradient-gold-text">Vertrauen & Anfragen</span>
@@ -45,15 +40,10 @@ const ShopSection = () => {
               initial={{ opacity: 0, y: 40 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="glass-card overflow-hidden group hover:border-primary/30 transition-all duration-300"
+              className="glass-card overflow-hidden group hover:border-primary/40 transition-all duration-300"
             >
               <div className="relative h-64 overflow-hidden bg-muted">
-                <img
-                  src={p.image_url || ""}
-                  alt={p.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  loading="lazy"
-                />
+                <img src={p.image_url || ""} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
               </div>
               <div className="p-6">
                 <h3 className="font-bold text-lg mb-1">{p.title}</h3>

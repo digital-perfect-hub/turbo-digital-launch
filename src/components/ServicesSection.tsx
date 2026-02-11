@@ -20,12 +20,7 @@ const ServicesSection = () => {
   return (
     <section id="services" className="py-24 md:py-36" ref={ref}>
       <div className="section-container">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="text-center mb-16">
           <p className="section-label">Unsere Leistungen</p>
           <h2 className="section-title">
             Webdesign, das für dich arbeitet.{" "}
@@ -40,7 +35,7 @@ const ServicesSection = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.06 }}
-              className="glass-card p-6 group hover:border-primary/30 transition-all duration-300 cursor-pointer relative overflow-hidden"
+              className="glass-card p-6 group hover:border-primary/40 transition-all duration-300 cursor-pointer relative overflow-hidden"
             >
               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <ArrowUpRight size={16} className="text-primary" />
