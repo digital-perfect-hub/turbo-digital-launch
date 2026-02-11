@@ -11,7 +11,7 @@ const serviceOptions = [
 
 const budgetOptions = ["unter 2.000 €", "2.000 – 5.000 €", "5.000 – 10.000 €", "über 10.000 €"];
 
-const inputClass = "w-full px-4 py-3 rounded-xl bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all text-sm";
+const inputClass = "w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all text-sm";
 
 const ContactSection = () => {
   const ref = useRef(null);
@@ -53,9 +53,8 @@ const ContactSection = () => {
 
   if (isSubmitted) {
     return (
-      <section id="kontakt" className="py-24 md:py-36 relative" ref={ref}>
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-surface to-background" />
-        <div className="section-container relative z-10 text-center">
+      <section id="kontakt" className="py-24 md:py-36 bg-surface" ref={ref}>
+        <div className="section-container text-center">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card p-12 max-w-lg mx-auto">
             <CheckCircle2 size={48} className="text-secondary mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-2">Vielen Dank!</h3>
@@ -67,9 +66,8 @@ const ContactSection = () => {
   }
 
   return (
-    <section id="kontakt" className="py-24 md:py-36 relative" ref={ref}>
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-surface to-background" />
-      <div className="section-container relative z-10">
+    <section id="kontakt" className="py-24 md:py-36 bg-surface" ref={ref}>
+      <div className="section-container">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
           <motion.div initial={{ opacity: 0, x: -40 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7 }}>
             <p className="section-label">Kontakt</p>

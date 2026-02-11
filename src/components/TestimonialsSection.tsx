@@ -21,27 +21,16 @@ const TestimonialsSection = () => {
   }, []);
 
   return (
-    <section className="py-24 md:py-36 relative" ref={ref}>
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-surface to-background" />
-      <div className="section-container relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
+    <section className="py-24 md:py-36 bg-surface" ref={ref}>
+      <div className="section-container">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="text-center mb-16">
           <p className="section-label">Kundenstimmen</p>
           <h2 className="section-title">
             Das sagen unsere <span className="gradient-gold-text">Kunden</span>
           </h2>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-3xl mx-auto"
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }} className="max-w-3xl mx-auto">
           <div className="glass-card p-8 md:p-12 relative overflow-hidden">
             <Quote className="text-primary/10 absolute top-6 left-6" size={60} />
             <div className="flex gap-1 mb-8 justify-center">
@@ -50,14 +39,8 @@ const TestimonialsSection = () => {
               ))}
             </div>
             <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}
-              >
-                <p className="text-lg md:text-xl text-center leading-relaxed mb-8 text-foreground/90">
+              <motion.div key={current} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
+                <p className="text-lg md:text-xl text-center leading-relaxed mb-8 text-foreground/80">
                   „{testimonials[current].text}"
                 </p>
                 <div className="text-center">

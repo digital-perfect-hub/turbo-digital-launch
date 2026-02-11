@@ -27,18 +27,18 @@ const Header = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? "bg-background/80 backdrop-blur-2xl border-b border-border/30 shadow-xl shadow-black/10" : "bg-transparent"}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? "bg-card/90 backdrop-blur-xl border-b border-border/50 shadow-sm" : "bg-transparent"}`}>
       <div className="section-container flex items-center justify-between h-16 md:h-20">
         <a href="#hero" onClick={() => scrollTo("#hero")} className="flex items-center gap-2.5">
           <img src={logo} alt="Digital-Perfect Logo" className="h-9 md:h-11 w-auto" />
-          <span className="font-heading font-bold text-base hidden sm:block tracking-tight">
+          <span className="font-heading font-bold text-base hidden sm:block tracking-tight text-foreground">
             DIGITAL<span className="text-primary">-PERFECT</span>
           </span>
         </a>
 
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
-            <button key={item.href} onClick={() => scrollTo(item.href)} className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all">
+            <button key={item.href} onClick={() => scrollTo(item.href)} className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
               {item.label}
             </button>
           ))}
@@ -56,10 +56,10 @@ const Header = () => {
 
       <AnimatePresence>
         {isMobileOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="lg:hidden bg-background/95 backdrop-blur-2xl border-b border-border/30">
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="lg:hidden bg-card/95 backdrop-blur-xl border-b border-border/50">
             <div className="section-container py-4 flex flex-col gap-1">
               {navItems.map((item) => (
-                <button key={item.href} onClick={() => scrollTo(item.href)} className="py-3 px-4 text-left text-foreground hover:text-primary hover:bg-muted/30 rounded-xl transition-colors text-sm">
+                <button key={item.href} onClick={() => scrollTo(item.href)} className="py-3 px-4 text-left text-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-colors text-sm">
                   {item.label}
                 </button>
               ))}
