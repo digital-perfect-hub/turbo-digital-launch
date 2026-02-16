@@ -1,4 +1,5 @@
 import { Instagram, Linkedin } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const Footer = () => {
@@ -14,9 +15,9 @@ const Footer = () => {
           </div>
 
           <div className="flex items-center gap-6 text-xs opacity-60">
-            <a href="#" className="hover:text-primary transition-colors">Impressum</a>
-            <a href="#" className="hover:text-primary transition-colors">Datenschutz</a>
-            <a href="#" className="hover:text-primary transition-colors">AGB</a>
+            <Link to="/impressum" className="hover:text-primary transition-colors">Impressum</Link>
+            <Link to="/datenschutz" className="hover:text-primary transition-colors">Datenschutz</Link>
+            <Link to="/agb" className="hover:text-primary transition-colors">AGB</Link>
           </div>
 
           <div className="flex items-center gap-3">
