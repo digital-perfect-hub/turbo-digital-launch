@@ -12,6 +12,7 @@ import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminHomepage from "./pages/admin/AdminHomepage";
 import AdminHero from "./pages/admin/AdminHero";
 import AdminServices from "./pages/admin/AdminServices";
 import AdminPortfolio from "./pages/admin/AdminPortfolio";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="homepage" element={<AdminHomepage />} />
               <Route path="hero" element={<AdminHero />} />
               <Route path="services" element={<AdminServices />} />
               <Route path="portfolio" element={<AdminPortfolio />} />
