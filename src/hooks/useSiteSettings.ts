@@ -211,8 +211,25 @@ export const useSiteSettings = () => {
     [data],
   );
 
-  const getSetting = (key: string, fallback = "") => settings[key] || defaultSiteText[key] || fallback;
-  const getJsonSetting = <T,>(key: string, fallback: T) => parseJsonSetting(settings[key], fallback);
+  const getSetting = (key: string, fallback = "") => {
+    const hasKey = Object.prototype.hasOwnProperty.call(settings, key);
+    if (hasKey) return settings[key] ?? fallback;
+    // Only use hardcoded defaults while we don't have DB data yet.
+    if (isLoading) return defaultSiteText[key] || fallback;
+    return fallback;
+  };
+
+  const emptyLike = <T,>(fallback: T): T => {
+    if (Array.isArray(fallback)) return ([] as unknown) as T;
+    if (fallback && typeof fallback === "object") return ({} as unknown) as T;
+    return ("" as unknown) as T;
+  };
+
+  const getJsonSetting = <T,>(key: string, fallback: T) => {
+    const hasKey = Object.prototype.hasOwnProperty.call(settings, key);
+    if (!hasKey) return isLoading ? fallback : emptyLike(fallback);
+    return parseJsonSetting(settings[key], fallback);
+  };
 
   return {
     isLoading,

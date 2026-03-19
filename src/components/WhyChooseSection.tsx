@@ -1,20 +1,18 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { defaultWhyChoosePoints, type WhyChoosePoint, useSiteSettings } from "@/hooks/useSiteSettings";
 
 const WhyChooseSection = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { getSetting, getJsonSetting } = useSiteSettings();
   const points = getJsonSetting<WhyChoosePoint[]>("home_why_choose_points", defaultWhyChoosePoints);
 
   return (
-    <section className="py-24 md:py-32 bg-surface" ref={ref}>
+    <section className="py-20 sm:py-24 md:py-28 bg-surface" aria-label="Warum wählen">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
           className="max-w-3xl mb-14"
         >
@@ -30,9 +28,11 @@ const WhyChooseSection = () => {
             <motion.div
               key={point.title}
               initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.06 }}
-              className="glass-card p-6 h-full"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.45, delay: index * 0.05 }}
+              className="glass-card p-6 h-full transition-transform duration-500 hover:scale-[1.01]"
+              style={{ willChange: "transform, opacity" }}
             >
               <CheckCircle2 className="text-primary mb-4" size={22} />
               <h3 className="text-base font-bold mb-3">{point.title}</h3>
@@ -43,13 +43,14 @@ const WhyChooseSection = () => {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, delay: 0.15 }}
           className="mt-10"
         >
           <button
             onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
-            className="btn-primary"
+            className="btn-primary min-h-[44px]"
           >
             🚀 Unverbindlich anfragen
             <ArrowRight size={18} />

@@ -20,8 +20,24 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminSEO from "./pages/admin/AdminSEO";
+import AdminBranding from "./pages/admin/AdminBranding";
+import { useGlobalTheme } from "./hooks/useGlobalTheme";
 
 const queryClient = new QueryClient();
+
+const ThemeBootstrap = ({ children }: { children: React.ReactNode }) => {
+  const { isLoading } = useGlobalTheme();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
+        Frontend-Theme wird geladen...
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,25 +46,28 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/impressum" element={<Impressum />} />
-            <Route path="/datenschutz" element={<Datenschutz />} />
-            <Route path="/agb" element={<AGB />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="homepage" element={<AdminHomepage />} />
-              <Route path="hero" element={<AdminHero />} />
-              <Route path="services" element={<AdminServices />} />
-              <Route path="portfolio" element={<AdminPortfolio />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="faq" element={<AdminFAQ />} />
-              <Route path="leads" element={<AdminLeads />} />
-              <Route path="seo" element={<AdminSEO />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ThemeBootstrap>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/impressum" element={<Impressum />} />
+              <Route path="/datenschutz" element={<Datenschutz />} />
+              <Route path="/agb" element={<AGB />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="branding" element={<AdminBranding />} />
+                <Route path="homepage" element={<AdminHomepage />} />
+                <Route path="hero" element={<AdminHero />} />
+                <Route path="services" element={<AdminServices />} />
+                <Route path="portfolio" element={<AdminPortfolio />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="faq" element={<AdminFAQ />} />
+                <Route path="leads" element={<AdminLeads />} />
+                <Route path="seo" element={<AdminSEO />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ThemeBootstrap>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

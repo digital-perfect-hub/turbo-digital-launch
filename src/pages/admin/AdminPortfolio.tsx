@@ -22,7 +22,15 @@ const AdminPortfolio = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (item: any) => {
-      const payload = { title: item.title, description: item.description, image_url: item.image_url, url: item.url, tags: item.tags, sort_order: item.sort_order, is_visible: item.is_visible ?? true };
+      const payload = {
+        title: item.title,
+        description: item.description,
+        image_url: item.image_url,
+        url: item.url,
+        tags: item.tags,
+        sort_order: item.sort_order,
+        is_visible: item.is_visible ?? true,
+      };
       if (item.id) {
         const { error } = await supabase.from("portfolio_items").update(payload).eq("id", item.id);
         if (error) throw error;
@@ -56,7 +64,11 @@ const AdminPortfolio = () => {
         <div className="mb-6 p-4 border border-border rounded-xl bg-card space-y-3">
           <Input placeholder="Titel" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
           <Textarea placeholder="Beschreibung" value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
-          <Input placeholder="Bild-URL" value={editing.image_url || ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} />
+          <Input
+            placeholder="Bild-Pfad (bucket/datei.jpg)"
+            value={editing.image_url || ""}
+            onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+          />
           <Input placeholder="Website-URL" value={editing.url || ""} onChange={(e) => setEditing({ ...editing, url: e.target.value })} />
           <Input placeholder="Tags (kommagetrennt)" value={(editing.tags || []).join(", ")} onChange={(e) => setEditing({ ...editing, tags: e.target.value.split(",").map((t: string) => t.trim()).filter(Boolean) })} />
           <Input type="number" placeholder="Reihenfolge" value={editing.sort_order ?? 0} onChange={(e) => setEditing({ ...editing, sort_order: parseInt(e.target.value) })} />

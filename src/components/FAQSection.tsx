@@ -1,5 +1,4 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Accordion,
   AccordionContent,
@@ -11,8 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const FAQSection = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { getSetting } = useSiteSettings();
 
   const { data: faqs = [] } = useQuery({
@@ -25,11 +22,12 @@ const FAQSection = () => {
   });
 
   return (
-    <section id="faq" className="py-24 md:py-32 bg-background" ref={ref}>
+    <section id="faq" className="py-20 sm:py-24 md:py-28 bg-background" aria-label="FAQ">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
@@ -39,7 +37,8 @@ const FAQSection = () => {
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="max-w-4xl mx-auto"
         >

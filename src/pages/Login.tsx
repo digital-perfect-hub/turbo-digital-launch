@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/logo.png";
+import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +15,7 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { logoUrl, settings } = useGlobalTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +47,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logo} alt="Logo" className="h-12 mx-auto mb-4" />
+          {logoUrl && <img src={logoUrl} alt={`${settings.company_name || "Logo"} Logo`} className="h-12 mx-auto mb-4" />}
           <h1 className="text-2xl font-bold">{isSignUp ? "Registrieren" : "Admin Login"}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {isSignUp ? "Neuen Account erstellen" : "Melde dich an, um die Seite zu verwalten"}

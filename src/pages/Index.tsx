@@ -12,10 +12,13 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import ContactSection from "@/components/ContactSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEO />
+      <div className="min-h-screen bg-background">
       <Header />
       <main>
         <HeroSection />
@@ -32,7 +35,8 @@ const Index = () => {
         <FAQSection />
       </main>
       <Footer />
-    </div>
+      </div>
+    </>
   );
 };
 

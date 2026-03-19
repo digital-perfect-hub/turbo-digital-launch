@@ -1,11 +1,9 @@
-import { motion, useInView, AnimatePresence } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { defaultTestimonials, type TestimonialItem, useSiteSettings } from "@/hooks/useSiteSettings";
 
 const TestimonialsSection = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [current, setCurrent] = useState(0);
   const { getSetting, getJsonSetting } = useSiteSettings();
   const testimonials = getJsonSetting<TestimonialItem[]>("home_testimonials", defaultTestimonials);
@@ -16,11 +14,12 @@ const TestimonialsSection = () => {
   }, [testimonials.length]);
 
   return (
-    <section className="py-24 md:py-32 bg-surface" ref={ref}>
+    <section className="py-20 sm:py-24 md:py-28 bg-surface" aria-label="Testimonials">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
@@ -30,7 +29,8 @@ const TestimonialsSection = () => {
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="max-w-4xl mx-auto"
         >
@@ -55,7 +55,11 @@ const TestimonialsSection = () => {
           </div>
 
           <div className="flex items-center justify-center gap-4 mt-8">
-            <button onClick={() => setCurrent((c) => (c - 1 + testimonials.length) % testimonials.length)} className="p-3 rounded-full border border-border hover:border-primary hover:text-primary transition-colors">
+            <button
+              onClick={() => setCurrent((c) => (c - 1 + testimonials.length) % testimonials.length)}
+              className="h-12 w-12 p-0 rounded-full border border-border hover:border-primary hover:text-primary transition-colors"
+              aria-label="Vorheriges Testimonial"
+            >
               <ChevronLeft size={18} />
             </button>
             <div className="flex gap-2">
@@ -63,7 +67,11 @@ const TestimonialsSection = () => {
                 <button key={i} onClick={() => setCurrent(i)} className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "bg-primary w-8" : "bg-muted-foreground/20 w-1.5"}`} />
               ))}
             </div>
-            <button onClick={() => setCurrent((c) => (c + 1) % testimonials.length)} className="p-3 rounded-full border border-border hover:border-primary hover:text-primary transition-colors">
+            <button
+              onClick={() => setCurrent((c) => (c + 1) % testimonials.length)}
+              className="h-12 w-12 p-0 rounded-full border border-border hover:border-primary hover:text-primary transition-colors"
+              aria-label="Nächstes Testimonial"
+            >
               <ChevronRight size={18} />
             </button>
           </div>

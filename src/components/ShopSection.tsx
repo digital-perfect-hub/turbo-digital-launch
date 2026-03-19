@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { buildRenderImageUrl } from "@/lib/image";
 
 const ShopSection = () => {
   const ref = useRef(null);
@@ -49,7 +50,7 @@ const ShopSection = () => {
             >
               <div className="aspect-[4/3] bg-muted overflow-hidden">
                 <img
-                  src={product.image_url || ""}
+                  src={buildRenderImageUrl(product.image_url)}
                   alt={product.title}
                   className="w-full h-full object-cover"
                   loading="lazy"

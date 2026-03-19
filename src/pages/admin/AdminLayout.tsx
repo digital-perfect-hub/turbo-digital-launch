@@ -7,6 +7,7 @@ import {
   Package,
   MessageSquare,
   Settings,
+  Palette,
   Type,
   HelpCircle,
   LogOut,
@@ -15,6 +16,7 @@ import {
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
+  { to: "/admin/branding", icon: Palette, label: "Branding & Theme" },
   { to: "/admin/homepage", icon: FileText, label: "Homepage Inhalte" },
   { to: "/admin/hero", icon: Type, label: "Hero-Bereich" },
   { to: "/admin/services", icon: Settings, label: "Leistungen" },

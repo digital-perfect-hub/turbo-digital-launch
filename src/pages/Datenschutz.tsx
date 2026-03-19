@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-const Datenschutz = () => (
-  <div className="min-h-screen bg-background py-20">
+import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+
+const Datenschutz = () => {
+  const { settings } = useGlobalTheme();
+
+  return (
+    <div className="min-h-screen bg-background py-20">
     <div className="section-container max-w-3xl">
       <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm">
         <ArrowLeft size={16} /> Zurück zur Startseite
@@ -18,7 +23,7 @@ const Datenschutz = () => (
         <h2 className="text-xl font-semibold">2. Datenerfassung auf dieser Website</h2>
         <h3 className="text-lg font-medium">Wer ist verantwortlich für die Datenerfassung?</h3>
         <p>
-          Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber (Digital-Perfect, Markus Schulz).
+          Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber ({settings.company_name || "Digital-Perfect"}, Markus Schulz).
         </p>
         <h3 className="text-lg font-medium">Wie erfassen wir Ihre Daten?</h3>
         <p>
@@ -39,7 +44,8 @@ const Datenschutz = () => (
         </p>
       </div>
     </div>
-  </div>
-);
+    </div>
+  );
+};
 
 export default Datenschutz;

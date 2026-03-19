@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 
-const AGB = () => (
-  <div className="min-h-screen bg-background py-20">
+const AGB = () => {
+  const { settings } = useGlobalTheme();
+
+  return (
+    <div className="min-h-screen bg-background py-20">
     <div className="section-container max-w-3xl">
       <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 text-sm">
         <ArrowLeft size={16} /> Zurück zur Startseite
@@ -11,7 +15,7 @@ const AGB = () => (
       <div className="prose prose-gray max-w-none space-y-4 text-foreground/80">
         <h2 className="text-xl font-semibold">§ 1 Geltungsbereich</h2>
         <p>
-          Diese Allgemeinen Geschäftsbedingungen gelten für alle Geschäftsbeziehungen zwischen Digital-Perfect
+          Diese Allgemeinen Geschäftsbedingungen gelten für alle Geschäftsbeziehungen zwischen {settings.company_name || "Digital-Perfect"}
           (nachfolgend „Anbieter") und dem Kunden. Maßgeblich ist die jeweils zum Zeitpunkt des Vertragsschlusses
           gültige Fassung.
         </p>
@@ -38,7 +42,8 @@ const AGB = () => (
         </p>
       </div>
     </div>
-  </div>
-);
+    </div>
+  );
+};
 
 export default AGB;

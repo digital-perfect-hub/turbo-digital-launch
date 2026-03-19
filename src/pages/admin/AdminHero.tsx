@@ -25,7 +25,28 @@ const AdminHero = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: any) => {
-      const { error } = await supabase.from("hero_content").update(values).eq("id", hero.id);
+      if (!hero?.id) throw new Error("Hero content not loaded");
+
+      const payload = {
+        badge_text: values.badge_text ?? null,
+        headline: values.headline ?? null,
+        subheadline: values.subheadline ?? null,
+        cta_text: values.cta_text ?? null,
+        stat1_value: values.stat1_value ?? null,
+        stat1_label: values.stat1_label ?? null,
+        stat2_value: values.stat2_value ?? null,
+        stat2_label: values.stat2_label ?? null,
+        stat3_value: values.stat3_value ?? null,
+        stat3_label: values.stat3_label ?? null,
+        ...(hero && typeof hero === "object" && "image_url" in hero
+          ? { image_url: values.image_url ?? null }
+          : {}),
+        ...(hero && typeof hero === "object" && "image_path" in hero
+          ? { image_path: values.image_path ?? null }
+          : {}),
+      };
+
+      const { error } = await supabase.from("hero_content").update(payload).eq("id", hero.id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["hero_content"] }); toast.success("Hero aktualisiert"); },
@@ -45,6 +66,12 @@ const AdminHero = () => {
     { key: "stat2_label", label: "Statistik 2 - Label" },
     { key: "stat3_value", label: "Statistik 3 - Wert" },
     { key: "stat3_label", label: "Statistik 3 - Label" },
+    ...(hero && typeof hero === "object" && "image_url" in hero
+      ? [{ key: "image_url", label: "Hero Bild-Pfad (bucket/datei.jpg)" }]
+      : []),
+    ...(hero && typeof hero === "object" && "image_path" in hero
+      ? [{ key: "image_path", label: "Hero Bild-Pfad (bucket/datei.jpg)" }]
+      : []),
   ];
 
   return (

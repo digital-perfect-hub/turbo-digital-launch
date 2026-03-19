@@ -64,6 +64,8 @@ const AdminHomepage = () => {
   const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (isLoading) return;
+
     const nextForm: Record<string, string> = {};
 
     textFields.forEach(({ key }) => {
@@ -74,8 +76,17 @@ const AdminHomepage = () => {
       nextForm[key] = settings[key] || JSON.stringify(jsonDefaults[key], null, 2);
     });
 
-    setForm(nextForm);
-  }, [settings]);
+    setForm((prev) => {
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(nextForm);
+      if (prevKeys.length !== nextKeys.length) return nextForm;
+
+      for (const k of nextKeys) {
+        if ((prev[k] || "") !== (nextForm[k] || "")) return nextForm;
+      }
+      return prev;
+    });
+  }, [settings, isLoading]);
 
   const mutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {

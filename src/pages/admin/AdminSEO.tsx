@@ -21,10 +21,24 @@ const AdminSEO = () => {
   const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (isLoading) return;
+
     const obj: Record<string, string> = {};
-    settings.forEach((s) => { obj[s.key] = s.value || ""; });
-    setForm(obj);
-  }, [settings]);
+    settings.forEach((s) => {
+      obj[s.key] = s.value || "";
+    });
+
+    setForm((prev) => {
+      // Prevent render-cycles by only updating when something actually changed.
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(obj);
+      if (prevKeys.length !== nextKeys.length) return obj;
+      for (const k of nextKeys) {
+        if ((prev[k] || "") !== (obj[k] || "")) return obj;
+      }
+      return prev;
+    });
+  }, [settings, isLoading]);
 
   const mutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
@@ -45,17 +59,30 @@ const AdminSEO = () => {
       <div className="space-y-4">
         <div>
           <Label>Meta-Titel</Label>
-          <Input value={form.meta_title || ""} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} />
+          <Input
+            value={form.meta_title || ""}
+            onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
+            maxLength={60}
+          />
           <p className="text-xs text-muted-foreground mt-1">{(form.meta_title || "").length}/60 Zeichen</p>
         </div>
         <div>
           <Label>Meta-Beschreibung</Label>
-          <Textarea value={form.meta_description || ""} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} rows={3} />
+          <Textarea
+            value={form.meta_description || ""}
+            onChange={(e) => setForm({ ...form, meta_description: e.target.value })}
+            rows={3}
+            maxLength={160}
+          />
           <p className="text-xs text-muted-foreground mt-1">{(form.meta_description || "").length}/160 Zeichen</p>
         </div>
         <div>
-          <Label>OG-Image URL</Label>
-          <Input value={form.og_image || ""} onChange={(e) => setForm({ ...form, og_image: e.target.value })} />
+          <Label>OG-Image Pfad (bucket/datei.jpg)</Label>
+          <Input
+            value={form.og_image || ""}
+            onChange={(e) => setForm({ ...form, og_image: e.target.value })}
+            placeholder="bucket/datei.jpg"
+          />
         </div>
         <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
           {mutation.isPending ? "Speichere..." : "Speichern"}
