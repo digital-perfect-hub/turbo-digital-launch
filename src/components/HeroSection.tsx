@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import heroImage from "@/assets/dp-hero-markus.png";
 
 const HeroSection = () => {
   const { data: hero } = useQuery({
@@ -17,74 +18,84 @@ const HeroSection = () => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const stats = hero
-    ? [
-        { value: hero.stat1_value, label: hero.stat1_label },
-        { value: hero.stat2_value, label: hero.stat2_label },
-        { value: hero.stat3_value, label: hero.stat3_label },
-      ]
-    : [
-        { value: "6+", label: "Jahre Erfahrung" },
-        { value: "50+", label: "Projekte umgesetzt" },
-        { value: "1000%", label: "Mehr org. Traffic" },
-      ];
-
   return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden dark-section">
+    <section id="hero" className="relative overflow-hidden dark-section pt-[132px] lg:pt-[152px]">
       <div className="absolute inset-0">
-        <div className="absolute inset-0" style={{ backgroundColor: 'hsl(220 15% 6%)' }} />
-        <div className="absolute top-0 right-0 w-[80%] h-[80%] bg-gradient-to-bl from-primary/8 via-emerald/5 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[60%] h-[60%] bg-gradient-to-tr from-primary/5 via-transparent to-transparent rounded-full blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
-          }}
-        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,hsl(var(--secondary)/0.25),transparent_34%),linear-gradient(90deg,hsl(var(--hero-bg)),hsl(158_70%_14%))]" />
+        <div className="absolute inset-0 noise-overlay opacity-40" />
       </div>
 
-      <div className="section-container relative z-10 py-32 md:py-40">
-        <div className="max-w-3xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 mb-8">
-            <Sparkles size={14} className="text-primary" />
-            <span className="text-xs font-semibold text-primary tracking-wide uppercase">
-              {hero?.badge_text || "Digital-Perfect · AT/DE"}
-            </span>
-          </motion.div>
+      <div className="section-container relative z-10 py-12 md:py-16 lg:py-20">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="max-w-3xl">
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="mb-5 text-sm uppercase tracking-[0.28em] text-[hsl(var(--hero-fg)/0.7)]"
+            >
+              {hero?.badge_text || "DIGITAL-PERFECT"}
+            </motion.p>
 
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.08] mb-8">
-            <span className="gradient-gold-text">Bullenpower</span> für{" "}
-            <br className="hidden sm:block" />
-            {hero?.headline?.replace("Bullenpower für ", "") || "Webdesign, Onlineshops & SEO"}
-          </motion.h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.08 }}
+              className="max-w-4xl text-4xl sm:text-5xl lg:text-[4rem] font-extrabold leading-[1.08] text-balance"
+            >
+              <span className="gradient-gold-text">Bullenpower</span> für Webdesign,
+              <br />
+              Onlineshops & SEO: Dein Turbo für
+              <br />
+              digitale Sichtbarkeit & planbare
+              <br />
+              Anfragen.
+            </motion.h1>
 
-          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-lg md:text-xl max-w-xl mb-12 leading-relaxed opacity-70">
-            {hero?.subheadline || "Dein Turbo für digitale Sichtbarkeit & planbare Anfragen in AT/DE."}
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.16 }}
+              className="mt-8 max-w-2xl text-xl leading-relaxed text-[hsl(var(--hero-fg)/0.82)]"
+            >
+              {hero?.subheadline || "Websites & Onlineshops mit klarem Fokus auf Performance und messbaren Ergebnissen."}
+            </motion.p>
 
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="flex flex-col sm:flex-row gap-4">
-            <button onClick={() => scrollTo("#kontakt")} className="btn-primary animate-glow-pulse">
-              🚀 {hero?.cta_text || "Kostenlos Beraten lassen"}
-              <ArrowRight size={18} />
-            </button>
-            <button onClick={() => scrollTo("#portfolio")} className="btn-outline">
-              Portfolio ansehen
-            </button>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.24 }}
+              className="mt-10"
+            >
+              <button onClick={() => scrollTo("#kontakt")} className="btn-primary !rounded-full !px-7 !py-4 !text-lg">
+                🚀 Zur Anfrage — 1 Minute
+                <ArrowRight size={18} />
+              </button>
+            </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }} className="flex flex-wrap gap-8 md:gap-12 mt-16 pt-8 border-t border-white/10">
-            {stats.map((stat, i) => (
-              <div key={i}>
-                <div className="text-2xl md:text-3xl font-extrabold text-primary">{stat.value}</div>
-                <div className="text-sm mt-1 opacity-60">{stat.label}</div>
-              </div>
-            ))}
+          <motion.div
+            initial={{ opacity: 0, x: 36 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.65, delay: 0.12 }}
+            className="relative min-h-[340px] lg:min-h-[520px]"
+          >
+            <img
+              src={heroImage}
+              alt="Markus Schulz von Digital-Perfect"
+              className="absolute bottom-0 right-0 h-full w-auto max-w-full object-contain"
+              loading="eager"
+            />
+
+            <div className="absolute right-0 bottom-8 lg:bottom-20 max-w-sm rounded-[1.75rem] border border-border/20 bg-card/10 backdrop-blur-xl p-6 text-[hsl(var(--hero-fg))] shadow-2xl">
+              <p className="font-bold text-lg">Markus Schulz</p>
+              <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--hero-fg)/0.8)]">
+                Experte für Webdesign, SEO & digitale Sichtbarkeit. Über 6 Jahre Erfahrung in der Entwicklung leistungsstarker Websites – mit Fokus auf Performance, maximale Sichtbarkeit und nachhaltige Lead-Gewinnung.
+              </p>
+            </div>
           </motion.div>
         </div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 };

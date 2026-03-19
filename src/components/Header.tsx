@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const navItems = [
+  { label: "Startseite", href: "#hero" },
   { label: "Leistungen", href: "#services" },
   { label: "Referenzen", href: "#portfolio" },
   { label: "Shop", href: "#shop" },
@@ -14,6 +16,7 @@ const navItems = [
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { getSetting } = useSiteSettings();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -27,45 +30,81 @@ const Header = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? "bg-card/90 backdrop-blur-xl border-b border-border/50 shadow-sm" : "bg-transparent"}`}>
-      <div className="section-container flex items-center justify-between h-16 md:h-20">
-        <a href="#hero" onClick={() => scrollTo("#hero")} className="flex items-center gap-2.5">
-          <img src={logo} alt="Digital-Perfect Logo" className="h-9 md:h-11 w-auto" />
-          <span className="font-heading font-bold text-base hidden sm:block tracking-tight text-foreground">
-            DIGITAL<span className="text-primary">-PERFECT</span>
-          </span>
-        </a>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled ? "bg-background/95 backdrop-blur-xl shadow-sm border-b border-border" : "bg-background"
+      }`}
+    >
+      <div className="border-b border-border bg-surface/60">
+        <div className="section-container h-11 flex items-center justify-center">
+          <p className="text-xs sm:text-sm font-semibold tracking-tight text-foreground text-center">
+            {getSetting("home_header_topbar", "#1 Webdesign & SEO Agentur aus Österreich")}
+          </p>
+        </div>
+      </div>
 
-        <nav className="hidden lg:flex items-center gap-1">
+      <div className="section-container h-20 hidden lg:grid lg:grid-cols-[1fr_auto_1fr] items-center gap-6">
+        <nav className="flex items-center gap-6">
           {navItems.map((item) => (
-            <button key={item.href} onClick={() => scrollTo(item.href)} className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+            <button
+              key={item.href}
+              onClick={() => scrollTo(item.href)}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
               {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <button onClick={() => scrollTo("#kontakt")} className="hidden md:inline-flex px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-gold-light transition-all shadow-lg shadow-primary/20">
-            Kostenlos Beraten
-          </button>
-          <button className="lg:hidden p-2 text-foreground" onClick={() => setIsMobileOpen(!isMobileOpen)}>
-            {isMobileOpen ? <X size={22} /> : <Menu size={22} />}
+        <button onClick={() => scrollTo("#hero")} className="flex items-center justify-center">
+          <img src={logo} alt="Digital-Perfect Logo" className="h-20 w-auto object-contain" />
+        </button>
+
+        <div className="flex items-center justify-end gap-3">
+          <button
+            onClick={() => scrollTo("#shop")}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+            aria-label="Zum Shop"
+          >
+            <ShoppingBag size={18} />
           </button>
         </div>
       </div>
 
+      <div className="section-container h-20 flex lg:hidden items-center justify-between gap-4">
+        <button className="p-2 text-foreground" onClick={() => setIsMobileOpen((value) => !value)}>
+          {isMobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        <button onClick={() => scrollTo("#hero")} className="flex items-center justify-center">
+          <img src={logo} alt="Digital-Perfect Logo" className="h-14 w-auto object-contain" />
+        </button>
+        <button
+          onClick={() => scrollTo("#shop")}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground"
+          aria-label="Zum Shop"
+        >
+          <ShoppingBag size={17} />
+        </button>
+      </div>
+
       <AnimatePresence>
         {isMobileOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="lg:hidden bg-card/95 backdrop-blur-xl border-b border-border/50">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-background border-t border-border"
+          >
             <div className="section-container py-4 flex flex-col gap-1">
               {navItems.map((item) => (
-                <button key={item.href} onClick={() => scrollTo(item.href)} className="py-3 px-4 text-left text-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-colors text-sm">
+                <button
+                  key={item.href}
+                  onClick={() => scrollTo(item.href)}
+                  className="py-3 px-4 text-left rounded-xl text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                >
                   {item.label}
                 </button>
               ))}
-              <button onClick={() => scrollTo("#kontakt")} className="mt-2 py-3 px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-center text-sm">
-                Kostenlos Beraten
-              </button>
             </div>
           </motion.div>
         )}

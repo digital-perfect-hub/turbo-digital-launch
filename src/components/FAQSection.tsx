@@ -8,10 +8,12 @@ import {
 } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const FAQSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { getSetting } = useSiteSettings();
 
   const { data: faqs = [] } = useQuery({
     queryKey: ["faq_items"],
@@ -23,23 +25,31 @@ const FAQSection = () => {
   });
 
   return (
-    <section id="faq" className="py-20 md:py-32" ref={ref}>
+    <section id="faq" className="py-24 md:py-32 bg-background" ref={ref}>
       <div className="section-container">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="text-center mb-16">
-          <p className="section-label">Wissensbasis für KMU</p>
-          <h2 className="section-title">
-            Du hast Fragen? <span className="gradient-gold-text">Wir haben die Antworten!</span>
-          </h2>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <p className="section-label">{getSetting("home_faq_kicker")}</p>
+          <h2 className="section-title">{getSetting("home_faq_title")}</h2>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }} className="max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-4xl mx-auto"
+        >
           <Accordion type="single" collapsible className="space-y-3">
-            {faqs.map((faq, i) => (
-              <AccordionItem key={faq.id} value={`item-${i}`} className="glass-card px-6 border-border/60 rounded-xl overflow-hidden">
-                <AccordionTrigger className="text-left font-semibold hover:text-primary transition-colors py-5 text-base">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={faq.id} value={`item-${index}`} className="glass-card px-6 rounded-2xl overflow-hidden">
+                <AccordionTrigger className="text-left font-semibold hover:text-primary transition-colors py-5 text-base md:text-lg">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5 text-sm md:text-base">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
