@@ -9,19 +9,17 @@ const AudienceSection = () => {
   const audience = getJsonSetting<AudienceItem[]>("home_audience_items", defaultAudienceItems);
 
   return (
-    <section className="py-24 md:py-32 bg-background" ref={ref}>
+    <section className="bg-background py-24 md:py-32" ref={ref}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mb-14"
+          className="mb-14 max-w-4xl"
         >
           <p className="section-label">{getSetting("home_audience_kicker")}</p>
           <h2 className="section-title">{getSetting("home_audience_title")}</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            {getSetting("home_audience_description")}
-          </p>
+          <p className="max-w-3xl text-lg leading-relaxed text-slate-600">{getSetting("home_audience_description")}</p>
         </motion.div>
 
         <div className="grid gap-5 lg:grid-cols-3">
@@ -31,19 +29,26 @@ const AudienceSection = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.55, delay: index * 0.08 }}
-              className="glass-card p-7"
+              className="premium-grid-card"
             >
-              <div className="text-3xl mb-4">{item.emoji}</div>
-              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-5">{item.description}</p>
-              <ul className="space-y-3">
-                {item.bullets.map((bullet) => (
-                  <li key={bullet} className="text-sm text-foreground/85 leading-relaxed flex gap-3">
-                    <span className="text-primary font-bold">•</span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="relative z-10">
+                <div className="mb-5 flex items-center justify-between gap-4">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-slate-950 text-2xl shadow-[0_26px_48px_-30px_rgba(15,23,42,0.55)]">
+                    {item.emoji}
+                  </div>
+                  <span className="premium-pill">Passender Fit</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.description}</p>
+                <ul className="mt-6 space-y-3">
+                  {item.bullets.map((bullet) => (
+                    <li key={bullet} className="flex gap-3 text-sm leading-relaxed text-slate-700">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </motion.article>
           ))}
         </div>

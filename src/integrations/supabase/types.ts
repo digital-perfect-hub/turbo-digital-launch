@@ -44,12 +44,79 @@ export type Database = {
         }
         Relationships: []
       }
+      global_settings: {
+        Row: {
+          accent_color_hex: string | null
+          body_font_family: string | null
+          button_theme: Json | null
+          company_name: string | null
+          font_family: string | null
+          heading_font_family: string | null
+          hero_theme: Json | null
+          id: string
+          imprint_address: string | null
+          imprint_company: string | null
+          imprint_contact: string | null
+          imprint_legal: string | null
+          logo_path: string | null
+          navigation_theme: Json | null
+          primary_color_hex: string | null
+          secondary_color_hex: string | null
+          surface_theme: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color_hex?: string | null
+          body_font_family?: string | null
+          button_theme?: Json | null
+          company_name?: string | null
+          font_family?: string | null
+          heading_font_family?: string | null
+          hero_theme?: Json | null
+          id?: string
+          imprint_address?: string | null
+          imprint_company?: string | null
+          imprint_contact?: string | null
+          imprint_legal?: string | null
+          logo_path?: string | null
+          navigation_theme?: Json | null
+          primary_color_hex?: string | null
+          secondary_color_hex?: string | null
+          surface_theme?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color_hex?: string | null
+          body_font_family?: string | null
+          button_theme?: Json | null
+          company_name?: string | null
+          font_family?: string | null
+          heading_font_family?: string | null
+          hero_theme?: Json | null
+          id?: string
+          imprint_address?: string | null
+          imprint_company?: string | null
+          imprint_contact?: string | null
+          imprint_legal?: string | null
+          logo_path?: string | null
+          navigation_theme?: Json | null
+          primary_color_hex?: string | null
+          secondary_color_hex?: string | null
+          surface_theme?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       hero_content: {
         Row: {
+          background_image_path: string | null
+          background_mobile_image_path: string | null
           badge_text: string | null
           cta_text: string | null
           headline: string | null
           id: string
+          image_path: string | null
+          overlay_opacity: number | null
           stat1_label: string | null
           stat1_value: string | null
           stat2_label: string | null
@@ -60,10 +127,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          background_image_path?: string | null
+          background_mobile_image_path?: string | null
           badge_text?: string | null
           cta_text?: string | null
           headline?: string | null
           id?: string
+          image_path?: string | null
+          overlay_opacity?: number | null
           stat1_label?: string | null
           stat1_value?: string | null
           stat2_label?: string | null
@@ -74,10 +145,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          background_image_path?: string | null
+          background_mobile_image_path?: string | null
           badge_text?: string | null
           cta_text?: string | null
           headline?: string | null
           id?: string
+          image_path?: string | null
+          overlay_opacity?: number | null
           stat1_label?: string | null
           stat1_value?: string | null
           stat2_label?: string | null

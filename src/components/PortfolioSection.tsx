@@ -1,184 +1,153 @@
 import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { ArrowUpRight, LayoutTemplate, ShieldCheck, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 
 type PortfolioItem = {
   id: string;
-  title: string;
+  title: string | null;
   description: string | null;
   image_url: string | null;
-  is_visible: boolean | null;
-  sort_order: number | null;
-  tags: string[] | null;
   url: string | null;
+  tags: string[] | null;
 };
 
-type PortfolioCardProps = {
-  item: PortfolioItem;
-  index: number;
-};
+const fallbackPortfolioItems: PortfolioItem[] = [
+  {
+    id: "fallback-portfolio-1",
+    title: "SEO-Landingpage mit klarer Conversion-Hierarchie",
+    description:
+      "Premium-Light Layout mit lesbaren Headlines, sauberer Informationsarchitektur und einer CTA-Führung, die direkt auf Anfragen ausgerichtet ist.",
+    image_url: null,
+    url: null,
+    tags: ["Landingpage", "SEO", "Conversion"],
+  },
+  {
+    id: "fallback-portfolio-2",
+    title: "Onlineshop-Struktur für verkaufsstarke Nutzerwege",
+    description:
+      "Ein robuster Shop-Auftritt mit klarer Produktnavigation, Vertrauenssignalen und einer visuellen Sprache, die auch ohne echte Referenzbilder professionell wirkt.",
+    image_url: null,
+    url: null,
+    tags: ["Shop", "UX", "Performance"],
+  },
+  {
+    id: "fallback-portfolio-3",
+    title: "Unternehmenswebsite mit technischer SEO-Basis",
+    description:
+      "Strukturierte Inhaltsblöcke, starke Lesbarkeit und ein stabiles Portfolio-Modul, das nicht zusammenfällt, wenn der Admin noch nichts gepflegt hat.",
+    image_url: null,
+    url: null,
+    tags: ["Unternehmensseite", "Tech SEO", "Premium UI"],
+  },
+];
 
-const PortfolioCard = ({ item, index }: PortfolioCardProps) => {
-  const cardImage = item.image_url
-    ? buildRenderImageUrl(item.image_url, { width: 1280, quality: 84 })
-    : "";
-  const tags = Array.isArray(item.tags) ? item.tags.filter(Boolean).slice(0, 3) : [];
-
-  const content = (
-    <div className="relative z-10 flex h-full flex-col">
-      <div className="relative overflow-hidden border-b border-border/70 bg-muted/40">
-        <div className="absolute inset-x-6 top-5 z-20 flex items-center justify-between gap-4">
-          <div className="rounded-full border border-primary/20 bg-card/90 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-primary backdrop-blur-xl">
-            Projekt
-          </div>
-          {item.url ? (
-            <div className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-card/90 text-[hsl(var(--midnight))] opacity-0 transition-all duration-300 group-hover:opacity-100 backdrop-blur-xl">
-              <ExternalLink size={17} />
-            </div>
-          ) : null}
-        </div>
-
-        <div className="aspect-[16/10] overflow-hidden">
-          {cardImage ? (
-            <img
-              src={cardImage}
-              alt={`Referenz ${item.title}`}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(255,255,255,0.92),rgba(15,23,42,0.08))] p-8 text-center">
-              <span className="text-lg font-bold tracking-tight text-[hsl(var(--midnight))]">{item.title}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(15,23,42,0.08)] via-transparent to-transparent" />
-      </div>
-
-      <div className="flex flex-1 flex-col p-6 sm:p-7">
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--midnight))]"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <h3 className="mt-5 text-2xl font-extrabold tracking-[-0.04em] text-[hsl(var(--midnight))]">
-          {item.title}
-        </h3>
-        <div className="mt-4 h-px w-24 gold-divider" />
-        <p className="mt-5 flex-1 text-sm leading-7 text-muted-foreground sm:text-[0.95rem]">
-          {item.description}
-        </p>
-
-        <div className="mt-8 flex items-center justify-between gap-4">
-          <span className="text-sm font-semibold text-[hsl(var(--midnight))]">
-            {item.url ? "Webseite besuchen" : "Projekt ansehen"}
-          </span>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            Premium Case
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const animationProps = {
-    initial: { opacity: 0, y: 40 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-50px" },
-    transition: { duration: 0.45, delay: index * 0.05 },
-    className:
-      "group premium-card-interactive overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40",
-    style: { willChange: "transform, opacity" as const },
-  };
-
-  if (item.url) {
-    return (
-      <motion.a
-        key={item.id}
-        href={item.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        {...animationProps}
-      >
-        {content}
-      </motion.a>
-    );
-  }
-
-  return (
-    <motion.article key={item.id} {...animationProps}>
-      {content}
-    </motion.article>
-  );
-};
+const placeholderTiles = [
+  { title: "Struktur", text: "Klare Inhaltslogik statt Leerraum-Chaos.", icon: LayoutTemplate },
+  { title: "Vertrauen", text: "Premium-Look mit ruhiger Informationsführung.", icon: ShieldCheck },
+  { title: "Wirkung", text: "Sichtbare Qualität auch ohne echtes Referenzbild.", icon: Sparkles },
+];
 
 const PortfolioSection = () => {
   const { getSetting } = useSiteSettings();
 
-  const { data: portfolioItems = [] } = useQuery({
+  const { data: portfolioItems = [], isLoading } = useQuery({
     queryKey: ["portfolio_items"],
-    queryFn: async () => {
+    queryFn: async (): Promise<PortfolioItem[]> => {
       const { data, error } = await supabase
         .from("portfolio_items")
-        .select("*")
+        .select("id, title, description, image_url, url, tags")
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data || []) as PortfolioItem[];
+      return (data as PortfolioItem[]) ?? [];
     },
   });
 
+  const effectiveItems = portfolioItems.length > 0 ? portfolioItems : fallbackPortfolioItems;
+
   return (
-    <section id="portfolio" className="bg-surface py-24 sm:py-28 md:py-36" aria-label="Portfolio">
+    <section id="portfolio" className="bg-surface py-24 sm:py-28 md:py-32" aria-label="Portfolio">
       <div className="section-container">
-        <div className="grid gap-12 xl:grid-cols-[0.88fr_1.12fr] xl:items-end">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.55 }}
-            className="max-w-4xl"
-          >
-            <p className="section-label">{getSetting("home_portfolio_kicker")}</p>
-            <h2 className="section-title max-w-5xl">{getSetting("home_portfolio_title")}</h2>
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.55 }}
+          className="mb-14 max-w-4xl"
+        >
+          <p className="section-label">{getSetting("home_portfolio_kicker", defaultSiteText.home_portfolio_kicker)}</p>
+          <h2 className="section-title">{getSetting("home_portfolio_title", defaultSiteText.home_portfolio_title)}</h2>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="premium-card p-6 sm:p-8"
-          >
-            <div className="relative z-10 grid gap-6 sm:grid-cols-3">
-              {[
-                { value: `${portfolioItems.length}+`, label: "sichtbare Referenzen" },
-                { value: "Render API", label: "optimierte Bildausgabe" },
-                { value: "Light UI", label: "ruhige Premium-Präsentation" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-2xl font-extrabold tracking-[-0.04em] text-[hsl(var(--midnight))]">{item.value}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.label}</p>
+        <div className="grid gap-5 xl:grid-cols-3">
+          {effectiveItems.map((item, index) => {
+            const hasImage = Boolean(item.image_url);
+            const imageSrc = hasImage ? buildRenderImageUrl(item.image_url, { width: 1200, quality: 84 }) : "";
+
+            return (
+              <motion.article
+                key={item.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+                className={`premium-card overflow-hidden ${isLoading ? "premium-skeleton" : ""}`}
+              >
+                <div className="relative z-10">
+                  {hasImage ? (
+                    <div className="relative h-[250px] overflow-hidden border-b border-slate-200/70 bg-slate-100">
+                      <img src={imageSrc} alt={item.title || "Projekt"} className="h-full w-full object-cover" loading="lazy" />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_10%,rgba(15,23,42,0.45)_100%)]" />
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 border-b border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.14),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)] p-5 sm:grid-cols-3">
+                      {placeholderTiles.map((tile) => {
+                        const Icon = tile.icon;
+                        return (
+                          <div key={tile.title} className="rounded-[1.3rem] border border-white bg-white/85 p-4 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.22)]">
+                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                              <Icon size={18} />
+                            </div>
+                            <p className="text-sm font-bold text-slate-900">{tile.title}</p>
+                            <p className="mt-2 text-xs leading-relaxed text-slate-600">{tile.text}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="p-6 md:p-7">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <span className="premium-pill">Case {String(index + 1).padStart(2, "0")}</span>
+                      {item.url ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-all duration-300 hover:border-slate-300 hover:text-slate-900"
+                          aria-label={`Projekt ${item.title || "öffnen"}`}
+                        >
+                          <ArrowUpRight size={16} />
+                        </a>
+                      ) : null}
+                    </div>
+
+                    <h3 className="text-xl font-bold leading-tight text-slate-900">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.description}</p>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {(item.tags && item.tags.length > 0 ? item.tags : ["Premium UI", "SEO", "Performance"]).map((tag) => (
+                        <span key={tag} className="premium-pill">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {portfolioItems.map((item, index) => (
-            <PortfolioCard key={item.id} item={item} index={index} />
-          ))}
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>

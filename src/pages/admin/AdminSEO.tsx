@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
+const SEO_SETTING_KEYS = ["meta_title", "meta_description", "og_image"] as const;
+
 const AdminSEO = () => {
   const qc = useQueryClient();
   const { data: settings = [], isLoading } = useQuery({
@@ -24,12 +26,12 @@ const AdminSEO = () => {
     if (isLoading) return;
 
     const obj: Record<string, string> = {};
-    settings.forEach((s) => {
-      obj[s.key] = s.value || "";
+    SEO_SETTING_KEYS.forEach((key) => {
+      const match = settings.find((setting) => setting.key === key);
+      obj[key] = match?.value || "";
     });
 
     setForm((prev) => {
-      // Prevent render-cycles by only updating when something actually changed.
       const prevKeys = Object.keys(prev);
       const nextKeys = Object.keys(obj);
       if (prevKeys.length !== nextKeys.length) return obj;
@@ -42,13 +44,19 @@ const AdminSEO = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
-      for (const [key, value] of Object.entries(values)) {
-        const { error } = await supabase.from("site_settings").update({ value }).eq("key", key);
-        if (error) throw error;
-      }
+      const payload = SEO_SETTING_KEYS.map((key) => ({
+        key,
+        value: values[key] ?? "",
+      }));
+
+      const { error } = await supabase.from("site_settings").upsert(payload, { onConflict: "key" });
+      if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-site-settings"] }); toast.success("SEO-Einstellungen gespeichert"); },
-    onError: () => toast.error("Fehler"),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-site-settings"] });
+      toast.success("SEO-Einstellungen gespeichert");
+    },
+    onError: (error: any) => toast.error(String(error?.message || "Fehler beim Speichern")),
   });
 
   if (isLoading) return <div className="p-6">Laden...</div>;

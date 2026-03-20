@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import {
-  ArrowUpRight,
+  ArrowRight,
   BarChart,
   Bot,
   Globe,
@@ -16,7 +16,14 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
+
+type ServiceItem = {
+  id: string;
+  icon_name: string | null;
+  title: string | null;
+  description: string | null;
+};
 
 const iconMap: Record<string, any> = {
   Monitor,
@@ -34,26 +41,60 @@ const iconMap: Record<string, any> = {
   BarChart3: BarChart,
 };
 
+const fallbackServices: ServiceItem[] = [
+  {
+    id: "fallback-webdesign",
+    icon_name: "Monitor",
+    title: "Webdesign mit klarer Conversion-Struktur",
+    description:
+      "Saubere Layouts, verständliche Nutzerführung und ein Premium-Look, der Vertrauen aufbaut statt nur Fläche zu füllen.",
+  },
+  {
+    id: "fallback-shop",
+    icon_name: "ShoppingCart",
+    title: "Onlineshops, die wirklich verkaufen",
+    description:
+      "Shop-Strukturen mit starker Produktlogik, schnellen Wegen zum Kauf und einer Basis, die langfristig mitwachsen kann.",
+  },
+  {
+    id: "fallback-seo",
+    icon_name: "Search",
+    title: "Technisches SEO für echte Sichtbarkeit",
+    description:
+      "Indexierung, Struktur, interne Verlinkung und Performance werden sauber aufgesetzt, damit Google versteht, wofür deine Website steht.",
+  },
+  {
+    id: "fallback-support",
+    icon_name: "Shield",
+    title: "Persönliche Betreuung statt Agentur-Chaos",
+    description:
+      "Direkte Kommunikation, klare nächste Schritte und Lösungen, die nicht im PM-Loop verschwinden.",
+  },
+];
+
 const ServicesSection = () => {
   const { getSetting } = useSiteSettings();
 
-  const { data: services = [] } = useQuery({
+  const { data: services = [], isLoading } = useQuery({
     queryKey: ["services"],
-    queryFn: async () => {
+    queryFn: async (): Promise<ServiceItem[]> => {
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select("id, icon_name, title, description")
         .eq("is_visible", true)
         .order("sort_order");
       if (error) throw error;
-      return data;
+      return (data as ServiceItem[]) ?? [];
     },
   });
 
+  const safeText = (value: string | null | undefined, fallback: string) => (value?.trim() ? value : fallback);
+  const effectiveServices = services.length > 0 ? services : fallbackServices;
+
   return (
-    <section id="services" className="bg-background py-24 sm:py-28 md:py-36" aria-label="Leistungen">
+    <section id="services" className="bg-background py-24 sm:py-28 md:py-32" aria-label="Leistungen">
       <div className="section-container">
-        <div className="grid gap-12 xl:grid-cols-[0.92fr_1.08fr] xl:items-end">
+        <div className="mb-14 grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -61,10 +102,10 @@ const ServicesSection = () => {
             transition={{ duration: 0.6 }}
             className="max-w-3xl"
           >
-            <p className="section-label">{getSetting("home_services_kicker")}</p>
-            <h2 className="section-title max-w-4xl">{getSetting("home_services_title")}</h2>
-            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              {getSetting("home_services_description")}
+            <p className="section-label">{getSetting("home_services_kicker", defaultSiteText.home_services_kicker)}</p>
+            <h2 className="section-title">{getSetting("home_services_title", defaultSiteText.home_services_title)}</h2>
+            <p className="text-lg leading-relaxed text-slate-600">
+              {getSetting("home_services_description", defaultSiteText.home_services_description)}
             </p>
           </motion.div>
 
@@ -73,82 +114,55 @@ const ServicesSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.08 }}
-            className="premium-card p-6 sm:p-8"
+            className="premium-card p-6 md:p-7"
           >
-            <div className="relative z-10 grid gap-6 sm:grid-cols-3">
-              {[
-                { value: `${services.length}+`, label: "Leistungsbausteine" },
-                { value: "100%", label: "Premium Light Design-System" },
-                { value: "AT / DE", label: "Fokus auf klare Sichtbarkeit" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-2xl font-extrabold tracking-[-0.04em] text-[hsl(var(--midnight))]">{item.value}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.label}</p>
-                </div>
-              ))}
+            <div className="relative z-10">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Leistungsfokus</p>
+              <p className="mt-3 text-base leading-relaxed text-slate-700">
+                Von der Positionierung über Design bis zur Sichtbarkeit bauen wir keine hübsche Hülle, sondern eine Website,
+                die Vertrauen, Klicktiefe und Anfragen systematisch verstärkt.
+              </p>
+              <button
+                onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
+                className="btn-outline mt-5 !px-5 !py-3 !text-sm"
+              >
+                Projekt besprechen
+                <ArrowRight size={16} />
+              </button>
             </div>
           </motion.div>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {services.map((service, index) => {
-            const Icon = iconMap[service.icon_name] || Globe;
-            const orderLabel = String(index + 1).padStart(2, "0");
-
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {effectiveServices.map((service, index) => {
+            const Icon = iconMap[service.icon_name || ""] || Globe;
             return (
-              <motion.article
+              <motion.div
                 key={service.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: index * 0.05 }}
-                className="group premium-card-interactive min-h-[22rem] p-6 sm:p-7"
-                style={{ willChange: "transform, opacity" }}
+                className={`premium-grid-card ${isLoading ? "premium-skeleton" : ""}`}
               >
-                <div className="relative z-10 flex h-full flex-col">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.35rem] border border-primary/20 bg-[linear-gradient(180deg,rgba(251,191,36,0.18),rgba(255,255,255,0.95))] shadow-[0_18px_40px_-28px_rgba(251,191,36,0.9)]">
-                      <Icon className="text-[hsl(var(--midnight))]" size={24} />
+                <div className="relative z-10">
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-gold/30 bg-gold/10 text-gold-dark shadow-[0_18px_40px_-28px_rgba(255,75,44,0.66)]">
+                      <Icon size={24} />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                        {orderLabel}
-                      </span>
-                      <div className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary transition-all duration-300 group-hover:scale-105">
-                        <ArrowUpRight size={16} />
-                      </div>
-                    </div>
+                    <span className="premium-pill">{String(index + 1).padStart(2, "0")}</span>
                   </div>
 
-                  <div className="mt-8 flex-1">
-                    <h3 className="text-2xl font-extrabold tracking-[-0.04em] text-[hsl(var(--midnight))]">
-                      {service.title}
-                    </h3>
-                    <div className="mt-4 h-px w-20 gold-divider" />
-                    <p className="mt-5 text-sm leading-7 text-muted-foreground sm:text-[0.95rem]">
-                      {service.description}
-                    </p>
-                  </div>
-
-                  <div className="mt-8 flex items-center justify-between gap-4">
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                      Klar. Elegant. Skalierbar.
-                    </span>
-                    <span className="text-sm font-semibold text-[hsl(var(--midnight))]">Mehr erfahren</span>
-                  </div>
+                  <h3 className="text-xl font-bold leading-tight text-slate-900">
+                    {safeText(service.title, fallbackServices[index]?.title ?? "Leistung")}
+                  </h3>
+                  <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                    {safeText(service.description, fallbackServices[index]?.description ?? "")}
+                  </p>
                 </div>
-              </motion.article>
+              </motion.div>
             );
           })}
-        </div>
-
-        <div className="mt-12 flex justify-start">
-          <button
-            onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
-            className="btn-outline"
-          >
-            Zum Kontaktformular
-          </button>
         </div>
       </div>
     </section>
