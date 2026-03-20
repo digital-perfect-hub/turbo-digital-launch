@@ -1,18 +1,13 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Eye, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 
-type ProductItem = {
-  id: string;
-  title: string;
-  description: string | null;
-  image_url: string | null;
-  price: number;
-};
+type ProductItem = Database["public"]["Tables"]["products"]["Row"];
 
 const fallbackProducts: ProductItem[] = [
   {
@@ -21,6 +16,10 @@ const fallbackProducts: ProductItem[] = [
     description: "Mehr lokale Bewertungen mit einem Scan oder Tap – perfekt für Restaurants, Studios und Dienstleister.",
     image_url: null,
     price: 89,
+    is_visible: true,
+    sort_order: 0,
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
   },
   {
     id: "fallback-2",
@@ -28,8 +27,14 @@ const fallbackProducts: ProductItem[] = [
     description: "Saubere Markenwirkung am Point of Sale und direkter Weg zu mehr Social Proof für dein Unternehmen.",
     image_url: null,
     price: 119,
+    is_visible: true,
+    sort_order: 1,
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
   },
 ];
+
+const PRODUCTS_SELECT = "id, title, description, image_url, price, is_visible, sort_order, created_at, updated_at";
 
 const ShopSection = () => {
   const ref = useRef(null);
@@ -41,9 +46,10 @@ const ShopSection = () => {
     queryFn: async (): Promise<ProductItem[]> => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, title, description, image_url, price")
-        .eq("is_active", true)
+        .select(PRODUCTS_SELECT)
+        .eq("is_visible", true)
         .order("sort_order", { ascending: true });
+
       if (error) throw error;
       return (data as ProductItem[]) ?? [];
     },
@@ -62,7 +68,7 @@ const ShopSection = () => {
         >
           <p className="section-label">{getSetting("home_shop_kicker")}</p>
           <h2 className="section-title">{getSetting("home_shop_title")}</h2>
-          <p className="text-lg leading-relaxed text-slate-600">{getSetting("home_shop_description")}</p>
+          <p className="text-lg leading-relaxed text-muted-foreground">{getSetting("home_shop_description")}</p>
         </motion.div>
 
         <div className="grid gap-6 sm:grid-cols-2 xl:max-w-5xl">
@@ -74,7 +80,7 @@ const ShopSection = () => {
               transition={{ duration: 0.5, delay: index * 0.08 }}
               className="premium-card overflow-hidden"
             >
-              <div className="relative h-[250px] overflow-hidden border-b border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.15),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)]">
+              <div className="relative h-[250px] overflow-hidden border-b bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.15),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)]" style={{ borderColor: "var(--surface-card-border)" }}>
                 {product.image_url ? (
                   <img
                     src={buildRenderImageUrl(product.image_url, { width: 1200, quality: 84 })}
@@ -86,9 +92,9 @@ const ShopSection = () => {
                   <div className="flex h-full items-end justify-between gap-4 p-6">
                     <div>
                       <div className="premium-pill">Local SEO Booster</div>
-                      <p className="mt-4 max-w-xs text-lg font-bold leading-tight text-slate-900">Mehr Vertrauen und mehr Bewertungen direkt am Kontaktpunkt.</p>
+                      <p className="mt-4 max-w-xs text-lg font-bold leading-tight text-[var(--surface-card-text)]">Mehr Vertrauen und mehr Bewertungen direkt am Kontaktpunkt.</p>
                     </div>
-                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-slate-950 text-white shadow-[0_26px_50px_-30px_rgba(15,23,42,0.55)]">
+                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-secondary text-white shadow-[0_26px_50px_-30px_rgba(15,23,42,0.55)]">
                       <Star size={28} />
                     </div>
                   </div>
@@ -96,10 +102,14 @@ const ShopSection = () => {
               </div>
 
               <div className="relative z-10 p-6">
-                <h3 className="text-xl font-bold text-slate-900">{product.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">{product.description}</p>
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground" style={{ borderColor: "var(--surface-card-border)" }}>
+                  <Eye size={13} />
+                  Sichtbar im Shop
+                </div>
+                <h3 className="text-xl font-bold text-[var(--surface-card-text)]">{product.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--surface-card-muted)]">{product.description || "Produktbeschreibung kann zentral im Admin gepflegt werden."}</p>
                 <div className="mt-6 flex items-center justify-between gap-4">
-                  <span className="text-2xl font-extrabold text-slate-900">€{Number(product.price).toFixed(2).replace(".", ",")}</span>
+                  <span className="text-2xl font-extrabold text-[var(--surface-card-text)]">€{Number(product.price).toFixed(2).replace(".", ",")}</span>
                   <button className="btn-outline !px-5 !py-3 !text-sm">
                     Mehr erfahren
                     <ArrowRight size={16} />

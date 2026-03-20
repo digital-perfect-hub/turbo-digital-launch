@@ -75,14 +75,33 @@ export type GlobalThemeSettings = {
   hero_theme: HeroTheme | null;
   surface_theme: SurfaceTheme | null;
   button_theme: ButtonTheme | null;
+  bg_main_hex: string | null;
+  bg_card_hex: string | null;
+  text_main_hex: string | null;
+  text_muted_hex: string | null;
+  border_color_hex: string | null;
+  border_radius: string | null;
+  inserted_at?: string | null;
+  updated_at?: string | null;
 };
 
-export const FALLBACK_PRIMARY_HEX = "#FF8400";
+export const FALLBACK_PRIMARY_HEX = "#FF4B2C";
 export const FALLBACK_SECONDARY_HEX = "#0E1F53";
-export const FALLBACK_ACCENT_HEX = "#14B8A6";
-const FALLBACK_PRIMARY_TUPLE = "31 100% 50%";
+export const FALLBACK_ACCENT_HEX = "#0E1F53";
+export const FALLBACK_BG_MAIN_HEX = "#FFFFFF";
+export const FALLBACK_BG_CARD_HEX = "#F8FAFC";
+export const FALLBACK_TEXT_MAIN_HEX = "#0F172A";
+export const FALLBACK_TEXT_MUTED_HEX = "#64748B";
+export const FALLBACK_BORDER_HEX = "#E2E8F0";
+export const FALLBACK_RADIUS = "0.5rem";
+const FALLBACK_PRIMARY_TUPLE = "9 100% 59%";
 const FALLBACK_SECONDARY_TUPLE = "225 71% 19%";
-const FALLBACK_ACCENT_TUPLE = "173 80% 40%";
+const FALLBACK_ACCENT_TUPLE = "225 71% 19%";
+const FALLBACK_BG_MAIN_TUPLE = "0 0% 100%";
+const FALLBACK_BG_CARD_TUPLE = "210 40% 98%";
+const FALLBACK_TEXT_MAIN_TUPLE = "222 47% 11%";
+const FALLBACK_TEXT_MUTED_TUPLE = "215 16% 47%";
+const FALLBACK_BORDER_TUPLE = "214 32% 91%";
 
 export const defaultNavigationTheme: NavigationTheme = {
   background_color: "rgba(255,255,255,0.92)",
@@ -91,11 +110,11 @@ export const defaultNavigationTheme: NavigationTheme = {
   border_color: "rgba(255,255,255,0.65)",
   hover_background_color: "rgba(14,31,83,0.08)",
   hover_text_color: "#0E1F53",
-  cta_background_color: "#FF8400",
+  cta_background_color: "#FF4B2C",
   cta_text_color: "#FFFFFF",
   topbar_background_color: "rgba(255,255,255,0.84)",
   topbar_text_color: "#334155",
-  topbar_accent_color: "#FF8400",
+  topbar_accent_color: "#FF4B2C",
   logo_badge_background_color: "#07112F",
   logo_badge_text_color: "#FFFFFF",
 };
@@ -116,26 +135,26 @@ export const defaultHeroTheme: HeroTheme = {
   stat_label_color: "#CBD5E1",
   proof_card_background_color: "rgba(255,255,255,0.07)",
   proof_text_color: "#E2E8F0",
-  proof_icon_background_color: "rgba(255,132,0,0.12)",
+  proof_icon_background_color: "rgba(255,75,44,0.12)",
   proof_icon_color: "#FFB566",
   visual_panel_background_color: "rgba(7,17,47,0.72)",
   visual_panel_text_color: "#E2E8F0",
 };
 
 export const defaultSurfaceTheme: SurfaceTheme = {
-  page_background_color: "#EEF3F9",
+  page_background_color: FALLBACK_BG_MAIN_HEX,
   section_background_color: "#F6F8FC",
   card_background_color: "rgba(255,255,255,0.86)",
   card_border_color: "rgba(148,163,184,0.22)",
-  card_text_color: "#0E1F53",
-  card_muted_color: "#64748B",
+  card_text_color: FALLBACK_TEXT_MAIN_HEX,
+  card_muted_color: FALLBACK_TEXT_MUTED_HEX,
 };
 
 export const defaultButtonTheme: ButtonTheme = {
-  primary_background_color: "#FF8400",
+  primary_background_color: "#FF4B2C",
   primary_text_color: "#FFFFFF",
   secondary_background_color: "rgba(255,255,255,0.84)",
-  secondary_text_color: "#0E1F53",
+  secondary_text_color: FALLBACK_TEXT_MAIN_HEX,
   secondary_border_color: "rgba(148,163,184,0.26)",
 };
 
@@ -157,6 +176,12 @@ export const defaultTheme: GlobalThemeSettings = {
   hero_theme: defaultHeroTheme,
   surface_theme: defaultSurfaceTheme,
   button_theme: defaultButtonTheme,
+  bg_main_hex: FALLBACK_BG_MAIN_HEX,
+  bg_card_hex: FALLBACK_BG_CARD_HEX,
+  text_main_hex: FALLBACK_TEXT_MAIN_HEX,
+  text_muted_hex: FALLBACK_TEXT_MUTED_HEX,
+  border_color_hex: FALLBACK_BORDER_HEX,
+  border_radius: FALLBACK_RADIUS,
 };
 
 export const normalizeHex = (value: string | null | undefined): string | null => {
@@ -287,18 +312,34 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   const primaryParts = hexToHslParts(settings.primary_color_hex, parseFallbackTuple(FALLBACK_PRIMARY_TUPLE));
   const secondaryParts = hexToHslParts(settings.secondary_color_hex, parseFallbackTuple(FALLBACK_SECONDARY_TUPLE));
   const accentParts = hexToHslParts(settings.accent_color_hex, parseFallbackTuple(FALLBACK_ACCENT_TUPLE));
+  const bgMainParts = hexToHslParts(settings.bg_main_hex, parseFallbackTuple(FALLBACK_BG_MAIN_TUPLE));
+  const bgCardParts = hexToHslParts(settings.bg_card_hex, parseFallbackTuple(FALLBACK_BG_CARD_TUPLE));
+  const textMainParts = hexToHslParts(settings.text_main_hex, parseFallbackTuple(FALLBACK_TEXT_MAIN_TUPLE));
+  const textMutedParts = hexToHslParts(settings.text_muted_hex, parseFallbackTuple(FALLBACK_TEXT_MUTED_TUPLE));
+  const borderParts = hexToHslParts(settings.border_color_hex, parseFallbackTuple(FALLBACK_BORDER_TUPLE));
 
   const primaryTuple = toTuple(primaryParts);
   const secondaryTuple = toTuple(secondaryParts);
   const accentTuple = toTuple(accentParts);
+  const bgMainTuple = toTuple(bgMainParts);
+  const bgCardTuple = toTuple(bgCardParts);
+  const textMainTuple = toTuple(textMainParts);
+  const textMutedTuple = toTuple(textMutedParts);
+  const borderTuple = toTuple(borderParts);
 
-  const primaryForeground = getReadableForeground(primaryParts, secondaryTuple);
-  const secondaryForeground = getReadableForeground(secondaryParts, "0 0% 100%", secondaryTuple);
-  const accentForeground = getReadableForeground(accentParts, secondaryTuple);
+  const primaryForeground = getReadableForeground(primaryParts, textMainTuple);
+  const secondaryForeground = getReadableForeground(secondaryParts, textMainTuple, "0 0% 100%");
+  const accentForeground = getReadableForeground(accentParts, textMainTuple);
 
   root.style.setProperty("--theme-primary-hex", normalizeHex(settings.primary_color_hex) ?? FALLBACK_PRIMARY_HEX);
   root.style.setProperty("--theme-secondary-hex", normalizeHex(settings.secondary_color_hex) ?? FALLBACK_SECONDARY_HEX);
   root.style.setProperty("--theme-accent-hex", normalizeHex(settings.accent_color_hex) ?? FALLBACK_ACCENT_HEX);
+  root.style.setProperty("--theme-bg-main-hex", normalizeHex(settings.bg_main_hex) ?? FALLBACK_BG_MAIN_HEX);
+  root.style.setProperty("--theme-bg-card-hex", normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX);
+  root.style.setProperty("--theme-text-main-hex", normalizeHex(settings.text_main_hex) ?? FALLBACK_TEXT_MAIN_HEX);
+  root.style.setProperty("--theme-text-muted-hex", normalizeHex(settings.text_muted_hex) ?? FALLBACK_TEXT_MUTED_HEX);
+  root.style.setProperty("--theme-border-hex", normalizeHex(settings.border_color_hex) ?? FALLBACK_BORDER_HEX);
+  root.style.setProperty("--theme-radius", settings.border_radius?.trim() || FALLBACK_RADIUS);
 
   root.style.setProperty("--primary", primaryTuple);
   root.style.setProperty("--primary-foreground", primaryForeground);
@@ -308,22 +349,26 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   root.style.setProperty("--accent-foreground", accentForeground);
   root.style.setProperty("--ring", primaryTuple);
 
+  root.style.setProperty("--background", bgMainTuple);
+  root.style.setProperty("--card", bgCardTuple);
+  root.style.setProperty("--popover", bgCardTuple);
+  root.style.setProperty("--foreground", textMainTuple);
+  root.style.setProperty("--card-foreground", textMainTuple);
+  root.style.setProperty("--popover-foreground", textMainTuple);
+  root.style.setProperty("--muted", shiftLightness(bgCardParts, -2, -4));
+  root.style.setProperty("--muted-foreground", textMutedTuple);
+  root.style.setProperty("--border", borderTuple);
+  root.style.setProperty("--input", borderTuple);
+  root.style.setProperty("--surface", bgCardTuple);
+  root.style.setProperty("--surface-raised", bgMainTuple);
+  root.style.setProperty("--hero-bg", secondaryTuple);
+  root.style.setProperty("--radius", settings.border_radius?.trim() || FALLBACK_RADIUS);
+
   root.style.setProperty("--gold", primaryTuple);
   root.style.setProperty("--gold-light", shiftLightness(primaryParts, 12, 6));
   root.style.setProperty("--gold-dark", shiftLightness(primaryParts, -12, -6));
   root.style.setProperty("--emerald", accentTuple);
   root.style.setProperty("--emerald-light", shiftLightness(accentParts, 10, 4));
-
-  root.style.setProperty("--foreground", secondaryTuple);
-  root.style.setProperty("--card-foreground", secondaryTuple);
-  root.style.setProperty("--popover-foreground", secondaryTuple);
-  root.style.setProperty("--hero-fg", secondaryTuple);
-  root.style.setProperty("--muted-foreground", shiftLightness(secondaryParts, 28, -16));
-  root.style.setProperty("--border", shiftLightness(secondaryParts, 74, -26));
-  root.style.setProperty("--input", shiftLightness(secondaryParts, 74, -26));
-  root.style.setProperty("--surface", shiftLightness(secondaryParts, 86, -20));
-  root.style.setProperty("--surface-raised", "0 0% 100%");
-  root.style.setProperty("--hero-bg", shiftLightness(secondaryParts, 86, -18));
 
   root.style.setProperty("--sidebar-background", shiftLightness(secondaryParts, -2));
   root.style.setProperty("--sidebar-foreground", "0 0% 100%");
@@ -341,6 +386,13 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   const hero = settings.hero_theme!;
   const surface = settings.surface_theme!;
   const buttons = settings.button_theme!;
+
+  const surfacePageFallback = normalizeHex(settings.bg_main_hex) ?? FALLBACK_BG_MAIN_HEX;
+  const surfaceSectionFallback = normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX;
+  const surfaceCardFallback = normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX;
+  const surfaceCardBorderFallback = normalizeHex(settings.border_color_hex) ?? FALLBACK_BORDER_HEX;
+  const surfaceCardTextFallback = normalizeHex(settings.text_main_hex) ?? FALLBACK_TEXT_MAIN_HEX;
+  const surfaceCardMutedFallback = normalizeHex(settings.text_muted_hex) ?? FALLBACK_TEXT_MUTED_HEX;
 
   setCssVar(root, "--nav-bg", nav.background_color, defaultNavigationTheme.background_color!);
   setCssVar(root, "--nav-text", nav.text_color, defaultNavigationTheme.text_color!);
@@ -376,16 +428,16 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   setCssVar(root, "--hero-panel-bg", hero.visual_panel_background_color, defaultHeroTheme.visual_panel_background_color!);
   setCssVar(root, "--hero-panel-text", hero.visual_panel_text_color, defaultHeroTheme.visual_panel_text_color!);
 
-  setCssVar(root, "--surface-page", surface.page_background_color, defaultSurfaceTheme.page_background_color!);
-  setCssVar(root, "--surface-section", surface.section_background_color, defaultSurfaceTheme.section_background_color!);
-  setCssVar(root, "--surface-card", surface.card_background_color, defaultSurfaceTheme.card_background_color!);
-  setCssVar(root, "--surface-card-border", surface.card_border_color, defaultSurfaceTheme.card_border_color!);
-  setCssVar(root, "--surface-card-text", surface.card_text_color, defaultSurfaceTheme.card_text_color!);
-  setCssVar(root, "--surface-card-muted", surface.card_muted_color, defaultSurfaceTheme.card_muted_color!);
+  setCssVar(root, "--surface-page", surface.page_background_color, surfacePageFallback);
+  setCssVar(root, "--surface-section", surface.section_background_color, surfaceSectionFallback);
+  setCssVar(root, "--surface-card", surface.card_background_color, surfaceCardFallback);
+  setCssVar(root, "--surface-card-border", surface.card_border_color, surfaceCardBorderFallback);
+  setCssVar(root, "--surface-card-text", surface.card_text_color, surfaceCardTextFallback);
+  setCssVar(root, "--surface-card-muted", surface.card_muted_color, surfaceCardMutedFallback);
 
   setCssVar(root, "--button-primary-bg", buttons.primary_background_color, defaultButtonTheme.primary_background_color!);
   setCssVar(root, "--button-primary-text", buttons.primary_text_color, defaultButtonTheme.primary_text_color!);
   setCssVar(root, "--button-secondary-bg", buttons.secondary_background_color, defaultButtonTheme.secondary_background_color!);
-  setCssVar(root, "--button-secondary-text", buttons.secondary_text_color, defaultButtonTheme.secondary_text_color!);
-  setCssVar(root, "--button-secondary-border", buttons.secondary_border_color, defaultButtonTheme.secondary_border_color!);
+  setCssVar(root, "--button-secondary-text", buttons.secondary_text_color, surfaceCardTextFallback);
+  setCssVar(root, "--button-secondary-border", buttons.secondary_border_color, surfaceCardBorderFallback);
 };

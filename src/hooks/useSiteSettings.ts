@@ -175,6 +175,8 @@ export const defaultSiteText: Record<string, string> = {
     "Google-Bewertungen sind einer der stärksten Faktoren für lokale Sichtbarkeit – doch die meisten Unternehmen verlieren täglich Potenzial, weil der Weg zu umständlich ist. Unsere NFC- & QR-Bewertungsständer verkürzen den Prozess auf einen einzigen Tap oder Scan und sorgen so in der Praxis für fünf- bis zehnmal mehr Bewertungen.",
   home_testimonials_kicker: "Kundenstimmen",
   home_testimonials_title: "Das sagen unsere Kundinnen & Kunden",
+  home_team_kicker: "Team & Verantwortung",
+  home_team_title: "Wer hinter Strategie, Design und Performance steht",
   home_contact_kicker: "Kontakt",
   home_contact_title: "Kostenloses Erstgespräch anfragen",
   home_contact_description:

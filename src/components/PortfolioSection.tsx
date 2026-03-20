@@ -2,17 +2,11 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, LayoutTemplate, ShieldCheck, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 
-type PortfolioItem = {
-  id: string;
-  title: string | null;
-  description: string | null;
-  image_url: string | null;
-  url: string | null;
-  tags: string[] | null;
-};
+type PortfolioItem = Database["public"]["Tables"]["portfolio_items"]["Row"];
 
 const fallbackPortfolioItems: PortfolioItem[] = [
   {
@@ -23,6 +17,10 @@ const fallbackPortfolioItems: PortfolioItem[] = [
     image_url: null,
     url: null,
     tags: ["Landingpage", "SEO", "Conversion"],
+    sort_order: 0,
+    is_visible: true,
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
   },
   {
     id: "fallback-portfolio-2",
@@ -32,6 +30,10 @@ const fallbackPortfolioItems: PortfolioItem[] = [
     image_url: null,
     url: null,
     tags: ["Shop", "UX", "Performance"],
+    sort_order: 1,
+    is_visible: true,
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
   },
   {
     id: "fallback-portfolio-3",
@@ -41,6 +43,10 @@ const fallbackPortfolioItems: PortfolioItem[] = [
     image_url: null,
     url: null,
     tags: ["Unternehmensseite", "Tech SEO", "Premium UI"],
+    sort_order: 2,
+    is_visible: true,
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
   },
 ];
 
@@ -50,6 +56,8 @@ const placeholderTiles = [
   { title: "Wirkung", text: "Sichtbare Qualität auch ohne echtes Referenzbild.", icon: Sparkles },
 ];
 
+const PORTFOLIO_SELECT = "id, title, description, image_url, url, tags, sort_order, is_visible, created_at, updated_at";
+
 const PortfolioSection = () => {
   const { getSetting } = useSiteSettings();
 
@@ -58,7 +66,7 @@ const PortfolioSection = () => {
     queryFn: async (): Promise<PortfolioItem[]> => {
       const { data, error } = await supabase
         .from("portfolio_items")
-        .select("id, title, description, image_url, url, tags")
+        .select(PORTFOLIO_SELECT)
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
@@ -98,21 +106,21 @@ const PortfolioSection = () => {
               >
                 <div className="relative z-10">
                   {hasImage ? (
-                    <div className="relative h-[250px] overflow-hidden border-b border-slate-200/70 bg-slate-100">
+                    <div className="relative h-[250px] overflow-hidden border-b bg-slate-100" style={{ borderColor: "var(--surface-card-border)" }}>
                       <img src={imageSrc} alt={item.title || "Projekt"} className="h-full w-full object-cover" loading="lazy" />
                       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_10%,rgba(15,23,42,0.45)_100%)]" />
                     </div>
                   ) : (
-                    <div className="grid gap-3 border-b border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.14),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)] p-5 sm:grid-cols-3">
+                    <div className="grid gap-3 border-b bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.14),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)] p-5 sm:grid-cols-3" style={{ borderColor: "var(--surface-card-border)" }}>
                       {placeholderTiles.map((tile) => {
                         const Icon = tile.icon;
                         return (
-                          <div key={tile.title} className="rounded-[1.3rem] border border-white bg-white/85 p-4 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.22)]">
-                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                          <div key={tile.title} className="rounded-[1.3rem] border p-4 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.22)]" style={{ borderColor: "var(--surface-card-border)", background: "var(--surface-card)" }}>
+                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary text-white">
                               <Icon size={18} />
                             </div>
-                            <p className="text-sm font-bold text-slate-900">{tile.title}</p>
-                            <p className="mt-2 text-xs leading-relaxed text-slate-600">{tile.text}</p>
+                            <p className="text-sm font-bold text-[var(--surface-card-text)]">{tile.title}</p>
+                            <p className="mt-2 text-xs leading-relaxed text-[var(--surface-card-muted)]">{tile.text}</p>
                           </div>
                         );
                       })}
@@ -127,7 +135,8 @@ const PortfolioSection = () => {
                           href={item.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-all duration-300 hover:border-slate-300 hover:text-slate-900"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-slate-700 transition-all duration-300 hover:text-slate-900"
+                          style={{ borderColor: "var(--surface-card-border)" }}
                           aria-label={`Projekt ${item.title || "öffnen"}`}
                         >
                           <ArrowUpRight size={16} />
@@ -135,8 +144,8 @@ const PortfolioSection = () => {
                       ) : null}
                     </div>
 
-                    <h3 className="text-xl font-bold leading-tight text-slate-900">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.description}</p>
+                    <h3 className="text-xl font-bold leading-tight text-[var(--surface-card-text)]">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-[var(--surface-card-muted)]">{item.description || "Beschreibung folgt."}</p>
 
                     <div className="mt-5 flex flex-wrap gap-2">
                       {(item.tags && item.tags.length > 0 ? item.tags : ["Premium UI", "SEO", "Performance"]).map((tag) => (

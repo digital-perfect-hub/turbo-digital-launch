@@ -47,7 +47,11 @@ export type Database = {
       global_settings: {
         Row: {
           accent_color_hex: string | null
+          bg_card_hex: string | null
+          bg_main_hex: string | null
           body_font_family: string | null
+          border_color_hex: string | null
+          border_radius: string | null
           button_theme: Json | null
           company_name: string | null
           font_family: string | null
@@ -58,16 +62,23 @@ export type Database = {
           imprint_company: string | null
           imprint_contact: string | null
           imprint_legal: string | null
+          inserted_at: string | null
           logo_path: string | null
           navigation_theme: Json | null
           primary_color_hex: string | null
           secondary_color_hex: string | null
           surface_theme: Json | null
+          text_main_hex: string | null
+          text_muted_hex: string | null
           updated_at: string | null
         }
         Insert: {
           accent_color_hex?: string | null
+          bg_card_hex?: string | null
+          bg_main_hex?: string | null
           body_font_family?: string | null
+          border_color_hex?: string | null
+          border_radius?: string | null
           button_theme?: Json | null
           company_name?: string | null
           font_family?: string | null
@@ -78,16 +89,23 @@ export type Database = {
           imprint_company?: string | null
           imprint_contact?: string | null
           imprint_legal?: string | null
+          inserted_at?: string | null
           logo_path?: string | null
           navigation_theme?: Json | null
           primary_color_hex?: string | null
           secondary_color_hex?: string | null
           surface_theme?: Json | null
+          text_main_hex?: string | null
+          text_muted_hex?: string | null
           updated_at?: string | null
         }
         Update: {
           accent_color_hex?: string | null
+          bg_card_hex?: string | null
+          bg_main_hex?: string | null
           body_font_family?: string | null
+          border_color_hex?: string | null
+          border_radius?: string | null
           button_theme?: Json | null
           company_name?: string | null
           font_family?: string | null
@@ -98,11 +116,14 @@ export type Database = {
           imprint_company?: string | null
           imprint_contact?: string | null
           imprint_legal?: string | null
+          inserted_at?: string | null
           logo_path?: string | null
           navigation_theme?: Json | null
           primary_color_hex?: string | null
           secondary_color_hex?: string | null
           surface_theme?: Json | null
+          text_main_hex?: string | null
+          text_muted_hex?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -248,7 +269,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
-          is_active: boolean | null
+          is_visible: boolean | null
           price: number
           sort_order: number | null
           title: string
@@ -259,7 +280,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
-          is_active?: boolean | null
+          is_visible?: boolean | null
           price: number
           sort_order?: number | null
           title: string
@@ -270,7 +291,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
-          is_active?: boolean | null
+          is_visible?: boolean | null
           price?: number
           sort_order?: number | null
           title?: string
@@ -329,6 +350,87 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string | null
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          bio: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_visible: boolean | null
+          linkedin_url: string | null
+          name: string
+          role: string | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          linkedin_url?: string | null
+          name: string
+          role?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          linkedin_url?: string | null
+          name?: string
+          role?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          company: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_visible: boolean | null
+          name: string
+          quote: string | null
+          rating: number | null
+          role: string | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          name: string
+          quote?: string | null
+          rating?: number | null
+          role?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          name?: string
+          quote?: string | null
+          rating?: number | null
+          role?: string | null
+          sort_order?: number | null
+          updated_at?: string
         }
         Relationships: []
       }

@@ -84,10 +84,7 @@ const HeroSection = () => {
   const effectiveStats = statItems.length > 0 ? statItems : fallbackStats;
 
   const heroImagePath = hero?.image_path || hero?.image_url || hero?.image;
-  const heroImageSrc =
-    heroImagePath && !heroImagePath.startsWith("http")
-      ? buildRenderImageUrl(heroImagePath, { width: 1600, quality: 86 })
-      : heroImagePath || heroFallback;
+  const heroImageSrc = heroImagePath ? buildRenderImageUrl(heroImagePath, { width: 1600, quality: 86 }) : heroFallback;
 
   return (
     <section id="hero" className="dark-section relative overflow-hidden pt-[158px] lg:pt-[178px]">

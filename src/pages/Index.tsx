@@ -6,6 +6,7 @@ import WhyChooseSection from "@/components/WhyChooseSection";
 import AudienceSection from "@/components/AudienceSection";
 import ServicesSection from "@/components/ServicesSection";
 import PortfolioSection from "@/components/PortfolioSection";
+import TeamSection from "@/components/TeamSection";
 import ProcessSection from "@/components/ProcessSection";
 import ShopSection from "@/components/ShopSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
@@ -19,22 +20,23 @@ const Index = () => {
     <>
       <SEO />
       <div className="min-h-screen bg-background">
-      <Header />
-      <main>
-        <HeroSection />
-        <IntroSection />
-        <TrustSection />
-        <WhyChooseSection />
-        <AudienceSection />
-        <ServicesSection />
-        <PortfolioSection />
-        <ProcessSection />
-        <ShopSection />
-        <TestimonialsSection />
-        <ContactSection />
-        <FAQSection />
-      </main>
-      <Footer />
+        <Header />
+        <main>
+          <HeroSection />
+          <IntroSection />
+          <TrustSection />
+          <WhyChooseSection />
+          <AudienceSection />
+          <ServicesSection />
+          <PortfolioSection />
+          <TeamSection />
+          <ProcessSection />
+          <ShopSection />
+          <TestimonialsSection />
+          <ContactSection />
+          <FAQSection />
+        </main>
+        <Footer />
       </div>
     </>
   );
