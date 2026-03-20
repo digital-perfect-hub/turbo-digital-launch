@@ -18,23 +18,25 @@ const FAQSection = () => {
   });
 
   return (
-    <section id="faq" className="bg-surface py-20 sm:py-24 md:py-28" aria-label="FAQ">
-      <div className="section-container">
-        <div className="grid gap-8 xl:grid-cols-[0.82fr_1.18fr] xl:gap-10">
+    <section id="faq" className="bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="FAQ">
+      <div className="section-container relative z-10">
+        <div className="grid gap-12 xl:grid-cols-[0.8fr_1.2fr] xl:gap-16 items-start">
+          
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6 }}
-            className="premium-card p-8 md:p-10 xl:sticky xl:top-28 xl:self-start"
+            className="xl:sticky xl:top-32"
           >
-            <div className="relative z-10">
-              <p className="section-label">{getSetting("home_faq_kicker")}</p>
-              <h2 className="section-title">{getSetting("home_faq_title")}</h2>
-              <div className="mt-6 inline-flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-slate-950 text-white shadow-[0_28px_50px_-30px_rgba(15,23,42,0.55)]">
-                <HelpCircle size={24} />
-              </div>
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-8">
+              <HelpCircle size={32} strokeWidth={2} />
             </div>
+            <p className="section-label">{getSetting("home_faq_kicker", "Häufige Fragen")}</p>
+            <h2 className="section-title mt-4">{getSetting("home_faq_title", "Klarheit vor Projektstart.")}</h2>
+            <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+              Offene Fragen? Hier findest du transparente Antworten zu unserem Prozess, den Kosten und der Zusammenarbeit.
+            </p>
           </motion.div>
 
           <motion.div
@@ -43,13 +45,17 @@ const FAQSection = () => {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Accordion type="single" collapsible className="space-y-3">
+            <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, index) => (
-                <AccordionItem key={faq.id} value={`item-${index}`} className="premium-card overflow-hidden px-6 rounded-[1.55rem]">
-                  <AccordionTrigger className="py-5 text-left text-base font-semibold text-slate-900 transition-colors hover:text-slate-700 md:text-lg">
+                <AccordionItem 
+                  key={faq.id} 
+                  value={`item-${index}`} 
+                  className="rounded-[1.5rem] border border-border bg-card px-6 sm:px-8 shadow-sm transition-all hover:shadow-md data-[state=open]:border-primary/30"
+                >
+                  <AccordionTrigger className="py-6 text-left text-lg font-bold text-foreground hover:no-underline hover:text-primary transition-colors">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="pb-5 text-sm leading-relaxed text-slate-600 md:text-base">
+                  <AccordionContent className="pb-6 text-base leading-relaxed text-muted-foreground">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>

@@ -26,18 +26,8 @@ type ServiceItem = {
 };
 
 const iconMap: Record<string, any> = {
-  Monitor,
-  ShoppingCart,
-  Search,
-  MapPin,
-  Bot,
-  Wrench,
-  BarChart,
-  Repeat,
-  Globe,
-  Megaphone,
-  Star,
-  Shield,
+  Monitor, ShoppingCart, Search, MapPin, Bot, Wrench,
+  BarChart, Repeat, Globe, Megaphone, Star, Shield,
   BarChart3: BarChart,
 };
 
@@ -46,117 +36,108 @@ const fallbackServices: ServiceItem[] = [
     id: "fallback-webdesign",
     icon_name: "Monitor",
     title: "Webdesign mit klarer Conversion-Struktur",
-    description:
-      "Saubere Layouts, verständliche Nutzerführung und ein Premium-Look, der Vertrauen aufbaut statt nur Fläche zu füllen.",
-  },
-  {
-    id: "fallback-shop",
-    icon_name: "ShoppingCart",
-    title: "Onlineshops, die wirklich verkaufen",
-    description:
-      "Shop-Strukturen mit starker Produktlogik, schnellen Wegen zum Kauf und einer Basis, die langfristig mitwachsen kann.",
+    description: "Saubere Layouts, verständliche Nutzerführung und ein Premium-Look, der Vertrauen aufbaut statt nur Fläche zu füllen.",
   },
   {
     id: "fallback-seo",
     icon_name: "Search",
-    title: "Technisches SEO für echte Sichtbarkeit",
-    description:
-      "Indexierung, Struktur, interne Verlinkung und Performance werden sauber aufgesetzt, damit Google versteht, wofür deine Website steht.",
+    title: "Sichtbarkeit & Suchmaschinen-Optimierung",
+    description: "Technische Sauberkeit und strategischer Content, damit deine Seite nicht nur existiert, sondern aktiv gefunden wird.",
   },
   {
-    id: "fallback-support",
-    icon_name: "Shield",
-    title: "Persönliche Betreuung statt Agentur-Chaos",
-    description:
-      "Direkte Kommunikation, klare nächste Schritte und Lösungen, die nicht im PM-Loop verschwinden.",
+    id: "fallback-shop",
+    icon_name: "ShoppingCart",
+    title: "E-Commerce & digitale Verkaufswege",
+    description: "Onlineshops, die schnelle Ladezeiten mit psychologisch optimierten Checkouts verbinden.",
   },
 ];
+
+const safeText = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : fallback;
+};
 
 const ServicesSection = () => {
   const { getSetting } = useSiteSettings();
 
-  const { data: services = [], isLoading } = useQuery({
+  const { data: services, isLoading } = useQuery({
     queryKey: ["services"],
-    queryFn: async (): Promise<ServiceItem[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, icon_name, title, description")
+        .select("*")
         .eq("is_visible", true)
-        .order("sort_order");
+        .order("sort_order", { ascending: true });
+
       if (error) throw error;
-      return (data as ServiceItem[]) ?? [];
+      return data as ServiceItem[];
     },
   });
 
-  const safeText = (value: string | null | undefined, fallback: string) => (value?.trim() ? value : fallback);
-  const effectiveServices = services.length > 0 ? services : fallbackServices;
+  const effectiveServices = services?.length ? services : fallbackServices;
 
   return (
-    <section id="services" className="bg-background py-24 sm:py-28 md:py-32" aria-label="Leistungen">
-      <div className="section-container">
-        <div className="mb-14 grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
+    <section id="leistungen" className="bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="Unsere Leistungen">
+      <div className="section-container relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 md:mb-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6 }}
-            className="max-w-3xl"
+            className="max-w-2xl"
           >
-            <p className="section-label">{getSetting("home_services_kicker", defaultSiteText.home_services_kicker)}</p>
-            <h2 className="section-title">{getSetting("home_services_title", defaultSiteText.home_services_title)}</h2>
-            <p className="text-lg leading-relaxed text-slate-600">
-              {getSetting("home_services_description", defaultSiteText.home_services_description)}
-            </p>
+            <p className="section-label">{getSetting("home_services_kicker", "Expertise")}</p>
+            <h2 className="section-title mt-4">
+              {getSetting("home_services_title", defaultSiteText.home_services_title)}
+            </h2>
           </motion.div>
-
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.6, delay: 0.08 }}
-            className="premium-card p-6 md:p-7"
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="relative z-10">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Leistungsfokus</p>
-              <p className="mt-3 text-base leading-relaxed text-slate-700">
-                Von der Positionierung über Design bis zur Sichtbarkeit bauen wir keine hübsche Hülle, sondern eine Website,
-                die Vertrauen, Klicktiefe und Anfragen systematisch verstärkt.
-              </p>
-              <button
-                onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
-                className="btn-outline mt-5 !px-5 !py-3 !text-sm"
-              >
-                Projekt besprechen
-                <ArrowRight size={16} />
-              </button>
-            </div>
+            <button
+              onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
+              className="btn-outline hidden md:inline-flex bg-background border-border text-foreground hover:bg-slate-50"
+            >
+              Projekt anfragen
+              <ArrowRight size={18} />
+            </button>
           </motion.div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {effectiveServices.map((service, index) => {
-            const Icon = iconMap[service.icon_name || ""] || Globe;
+            const Icon = iconMap[service.icon_name || "Monitor"] || Monitor;
+            
             return (
               <motion.div
                 key={service.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.05 }}
-                className={`premium-grid-card ${isLoading ? "premium-skeleton" : ""}`}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`group relative h-full rounded-[2.5rem] border border-border bg-card p-8 sm:p-10 shadow-sm transition-all duration-500 hover:shadow-xl overflow-hidden flex flex-col ${isLoading ? "animate-pulse bg-slate-100" : ""}`}
               >
-                <div className="relative z-10">
-                  <div className="mb-5 flex items-center justify-between gap-3">
-                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-gold/30 bg-gold/10 text-gold-dark shadow-[0_18px_40px_-28px_rgba(255,75,44,0.66)]">
-                      <Icon size={24} />
+                {/* Dynamischer Background Glow beim Hovern */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500 blur-2xl pointer-events-none" />
+
+                <div className="relative z-10 flex-1 flex flex-col">
+                  <div className="mb-8 flex items-center justify-between">
+                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                      <Icon size={28} strokeWidth={1.5} />
                     </div>
-                    <span className="premium-pill">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="text-4xl font-extrabold text-slate-100 group-hover:text-primary/10 transition-colors duration-500">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
                   </div>
 
-                  <h3 className="text-xl font-bold leading-tight text-slate-900">
+                  <h3 className="text-2xl font-bold leading-tight text-foreground mb-4">
                     {safeText(service.title, fallbackServices[index]?.title ?? "Leistung")}
                   </h3>
-                  <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                  <p className="text-base leading-relaxed text-muted-foreground flex-1">
                     {safeText(service.description, fallbackServices[index]?.description ?? "")}
                   </p>
                 </div>

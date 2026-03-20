@@ -1,107 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Palette, Type } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useGlobalTheme } from "@/hooks/useGlobalTheme";
-import { applyThemeToRoot } from "@/lib/theme-settings";
-import { buildRenderImageUrl } from "@/lib/image";
+import { Palette, Type, Upload, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-
-type ColorFieldProps = {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  hint?: string;
-};
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+import { toast } from "sonner";
+import { buildRenderImageUrl } from "@/lib/image";
 
 const GLOBAL_SETTINGS_EDITABLE_COLUMNS = [
-  "primary_color_hex",
-  "secondary_color_hex",
-  "accent_color_hex",
-  "font_family",
-  "heading_font_family",
-  "body_font_family",
-  "company_name",
-  "logo_path",
-  "imprint_company",
-  "imprint_address",
-  "imprint_contact",
-  "imprint_legal",
-  "bg_main_hex",
-  "bg_card_hex",
-  "text_main_hex",
-  "text_muted_hex",
-  "border_color_hex",
-  "border_radius",
+  "primary_color_hex", "secondary_color_hex", "accent_color_hex",
+  "bg_main_hex", "bg_card_hex", "text_main_hex", "text_muted_hex", 
+  "border_color_hex", "border_radius",
+  "font_family", "company_name", "logo_path", "use_text_logo", 
+  "text_logo_color_hex", "show_logo_dot", "logo_dot_color_hex", "logo_font_family", "cta_hover_hex", "footer_bg_hex",
+  "imprint_company", "imprint_address", "imprint_contact", "imprint_legal",
 ] as const;
-
-const fontOptions = [
-  { value: "default", label: "Default (Jakarta + Inter)" },
-  { value: "jakarta", label: "Plus Jakarta Sans" },
-  { value: "inter", label: "Inter" },
-  { value: "serif", label: "Serif" },
-] as const;
-
-const normalizeHexInput = (value: string) => value.toUpperCase();
-
-const ColorField = ({ id, label, value, onChange, hint }: ColorFieldProps) => {
-  const safeValue = value?.trim() || "#FFFFFF";
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <div className="flex items-center gap-3">
-        <Input
-          id={id}
-          type="color"
-          value={safeValue}
-          onChange={(event) => onChange(normalizeHexInput(event.target.value))}
-          className="h-11 w-16 cursor-pointer rounded-xl p-1"
-        />
-        <Input
-          value={value}
-          placeholder="#FFFFFF"
-          onChange={(event) => onChange(normalizeHexInput(event.target.value))}
-          className="font-mono"
-        />
-      </div>
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-    </div>
-  );
-};
 
 const AdminBranding = () => {
   const queryClient = useQueryClient();
-  const { settings, rawSettings, isLoading } = useGlobalTheme();
-  const [form, setForm] = useState<Record<string, any>>({});
+  const { settings, isLoading } = useGlobalTheme();
+  const [form, setForm] = useState<any>({});
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (settings) setForm(settings as unknown as Record<string, any>);
+    if (settings) setForm(settings);
   }, [settings]);
 
-  useEffect(() => {
-    if (!Object.keys(form).length) return;
-    applyThemeToRoot(form);
-  }, [form]);
-
-  useEffect(() => () => applyThemeToRoot(settings), [settings]);
-
-  const supportedColumns = useMemo(() => {
-    if (!rawSettings) return [...GLOBAL_SETTINGS_EDITABLE_COLUMNS];
-    return GLOBAL_SETTINGS_EDITABLE_COLUMNS.filter((key) => Object.prototype.hasOwnProperty.call(rawSettings, key));
-  }, [rawSettings]);
-
   const mutation = useMutation({
-    mutationFn: async (values: Record<string, any>) => {
-      const rowId = typeof values?.id === "string" && values.id.trim() ? values.id : "default";
-      const payload = supportedColumns.reduce<Record<string, string | null>>((acc, key) => {
-        const value = values[key];
-        acc[key] = value === "" ? null : value ?? null;
+    mutationFn: async (values: any) => {
+      const rowId = values?.id?.trim() ? values.id : "default";
+      const payload = GLOBAL_SETTINGS_EDITABLE_COLUMNS.reduce<Record<string, any>>((acc, key) => {
+        acc[key] = values[key] ?? null;
         return acc;
       }, {});
 
@@ -112,167 +44,226 @@ const AdminBranding = () => {
         .select("id");
 
       if (updateError) throw updateError;
-
       if (!updatedRows?.length) {
-        const { error: upsertError } = await supabase.from("global_settings").upsert({ id: rowId, ...payload }, { onConflict: "id" });
+        const { error: upsertError } = await supabase
+          .from("global_settings")
+          .upsert({ id: rowId, ...payload }, { onConflict: "id" });
         if (upsertError) throw upsertError;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["global_settings"] });
-      toast.success("Branding & Theme gespeichert");
+      toast.success("Endlevel Branding erfolgreich aktualisiert.");
     },
-    onError: (error: Error) => toast.error(error.message || "Speichern fehlgeschlagen"),
+    onError: (error: any) => toast.error(error?.message || "Speichern fehlgeschlagen."),
   });
 
-  const logoPreview = useMemo(() => {
-    if (!form.logo_path) return "";
-    return buildRenderImageUrl(form.logo_path, { width: 480, quality: 82 });
-  }, [form.logo_path]);
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `logos/${crypto.randomUUID()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('branding').upload(filePath, file);
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('branding').getPublicUrl(filePath);
+      setForm({ ...form, logo_path: publicUrl, use_text_logo: false });
+      toast.success("Logo erfolgreich hochgeladen!");
+    } catch (error: any) {
+      toast.error("Upload fehlgeschlagen: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-  const previewHeadingFont = useMemo(() => {
-    const choice = form.heading_font_family || form.font_family || "jakarta";
-    if (choice === "inter") return 'Inter, system-ui, sans-serif';
-    if (choice === "serif") return 'Georgia, "Times New Roman", serif';
-    return '"Plus Jakarta Sans", Inter, system-ui, sans-serif';
-  }, [form.font_family, form.heading_font_family]);
+  const logoPreview = form.logo_path?.startsWith("http") ? form.logo_path : buildRenderImageUrl(form.logo_path, { width: 480, quality: 82 });
 
-  const previewBodyFont = useMemo(() => {
-    const choice = form.body_font_family || (form.font_family === "serif" ? "serif" : "inter");
-    if (choice === "serif") return 'Georgia, "Times New Roman", serif';
-    if (choice === "jakarta") return '"Plus Jakarta Sans", Inter, system-ui, sans-serif';
-    return 'Inter, system-ui, sans-serif';
-  }, [form.body_font_family, form.font_family]);
-
-  if (isLoading) return <div className="p-6">Laden...</div>;
+  if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 
   return (
-    <div className="max-w-7xl p-6">
+    <div className="p-6 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Branding & Theme</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Granulare Basisfarben, Border-Radius und Typografie werden jetzt direkt aus <code>global_settings</code> gelesen und live als CSS-Variablen auf Root-Ebene gespiegelt.
-        </p>
+        <p className="mt-2 text-sm text-slate-500">Volle Kontrolle über Agentur-Identität, Logo und Farben.</p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-        <section className="glass-card space-y-5 p-6">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700"><Palette size={16} className="text-gold-dark" /> Live-Vorschau</div>
-
-          <div className="rounded-[1.8rem] border p-5 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.18)]" style={{ background: form.bg_main_hex || "#FFFFFF", borderColor: form.border_color_hex || "#E2E8F0", borderRadius: form.border_radius || "0.5rem" }}>
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl border" style={{ backgroundColor: form.primary_color_hex || "#FF4B2C", borderColor: form.border_color_hex || "#E2E8F0" }} />
-              <div className="h-12 w-12 rounded-2xl border" style={{ backgroundColor: form.secondary_color_hex || "#0E1F53", borderColor: form.border_color_hex || "#E2E8F0" }} />
-              <div className="h-12 w-12 rounded-2xl border" style={{ backgroundColor: form.accent_color_hex || "#0E1F53", borderColor: form.border_color_hex || "#E2E8F0" }} />
+      <div className="grid gap-8 xl:grid-cols-[1fr_1.1fr]">
+        <div className="space-y-8">
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
+              <Palette size={24} className="text-[#FF4B2C]" /> Farben & Schriften
             </div>
 
-            <div className="mt-5 rounded-[1.5rem] border p-5" style={{ background: form.bg_card_hex || "#F8FAFC", borderColor: form.border_color_hex || "#E2E8F0", borderRadius: form.border_radius || "0.5rem" }}>
-              <div className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: form.text_muted_hex || "#64748B", fontFamily: previewBodyFont }}>Preview</div>
-              <div className="mt-3 text-2xl font-extrabold tracking-[-0.04em]" style={{ color: form.text_main_hex || "#0F172A", fontFamily: previewHeadingFont }}>
-                {form.company_name || "Digital-Perfect Premium"}
-              </div>
-              <p className="mt-2 text-sm" style={{ color: form.text_muted_hex || "#64748B", fontFamily: previewBodyFont }}>
-                Änderungen an Farben, Radius und Fonts greifen sofort als Live-Preview. Genau diese Werte landen danach in den Root-CSS-Variablen der App.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <span className="inline-flex rounded-full px-4 py-2 text-sm font-semibold" style={{ backgroundColor: form.primary_color_hex || "#FF4B2C", color: "#FFFFFF", borderRadius: form.border_radius || "0.5rem", fontFamily: previewBodyFont }}>CTA</span>
-                <span className="inline-flex rounded-full px-4 py-2 text-sm font-semibold" style={{ backgroundColor: form.bg_main_hex || "#FFFFFF", color: form.text_main_hex || "#0F172A", border: `1px solid ${form.border_color_hex || "#E2E8F0"}`, borderRadius: form.border_radius || "0.5rem", fontFamily: previewBodyFont }}>Surface</span>
-              </div>
-            </div>
-
-            {logoPreview ? (
-              <div className="mt-5 rounded-[1.5rem] border p-4" style={{ background: form.bg_card_hex || "#F8FAFC", borderColor: form.border_color_hex || "#E2E8F0", borderRadius: form.border_radius || "0.5rem" }}>
-                <img src={logoPreview} alt="Logo Vorschau" className="h-16 w-auto object-contain" />
-              </div>
-            ) : null}
-          </div>
-        </section>
-
-        <div className="space-y-6">
-          <section className="glass-card space-y-5 p-6">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700"><Palette size={16} className="text-gold-dark" /> Brand & Basisflächen</div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <ColorField id="primary_color_hex" label="Brand Orange" value={form.primary_color_hex || "#FF4B2C"} onChange={(value) => setForm({ ...form, primary_color_hex: value })} />
-              <ColorField id="secondary_color_hex" label="Mitternachtsblau" value={form.secondary_color_hex || "#0E1F53"} onChange={(value) => setForm({ ...form, secondary_color_hex: value })} />
-              <ColorField id="accent_color_hex" label="Accent Farbe" value={form.accent_color_hex || "#0E1F53"} onChange={(value) => setForm({ ...form, accent_color_hex: value })} />
-              <ColorField id="bg_main_hex" label="Haupt-Hintergrund" value={form.bg_main_hex || "#FFFFFF"} onChange={(value) => setForm({ ...form, bg_main_hex: value })} />
-              <ColorField id="bg_card_hex" label="Card-Hintergrund" value={form.bg_card_hex || "#F8FAFC"} onChange={(value) => setForm({ ...form, bg_card_hex: value })} />
-              <ColorField id="border_color_hex" label="Border-Farbe" value={form.border_color_hex || "#E2E8F0"} onChange={(value) => setForm({ ...form, border_color_hex: value })} />
-              <ColorField id="text_main_hex" label="Haupttext" value={form.text_main_hex || "#0F172A"} onChange={(value) => setForm({ ...form, text_main_hex: value })} />
-              <ColorField id="text_muted_hex" label="Muted Text" value={form.text_muted_hex || "#64748B"} onChange={(value) => setForm({ ...form, text_muted_hex: value })} />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-5 md:grid-cols-2 mb-6">
               <div className="space-y-2">
-                <Label htmlFor="border_radius">Border Radius</Label>
-                <Input id="border_radius" value={form.border_radius || "0.5rem"} placeholder="0.5rem" onChange={(event) => setForm({ ...form, border_radius: event.target.value })} />
+                <Label className="text-slate-700">Brand Primary</Label>
+                <Input type="color" className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={form.primary_color_hex || ""} onChange={(e) => setForm({ ...form, primary_color_hex: e.target.value.toUpperCase() })} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="company_name">Firmenname</Label>
-                <Input id="company_name" value={form.company_name || ""} placeholder="Digital-Perfect Premium" onChange={(event) => setForm({ ...form, company_name: event.target.value })} />
+                <Label className="text-slate-700">Brand Secondary</Label>
+                <Input type="color" className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={form.secondary_color_hex || ""} onChange={(e) => setForm({ ...form, secondary_color_hex: e.target.value.toUpperCase() })} />
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-6 mb-6">
+              <Label className="text-base font-bold text-slate-900 mb-4 block">Footer & Buttons</Label>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-slate-700">Footer Background</Label>
+                  <Input type="color" className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={form.footer_bg_hex || "#020617"} onChange={(e) => setForm({ ...form, footer_bg_hex: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-700">CTA Hover Farbe</Label>
+                  <Input type="color" className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={form.cta_hover_hex || "#E03A1E"} onChange={(e) => setForm({ ...form, cta_hover_hex: e.target.value.toUpperCase() })} />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-6">
+              <Label className="text-base font-bold text-slate-900 mb-4 block">Erweiterte Theme-Steuerung</Label>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-slate-700">Seiten-Hintergrund</Label>
+                  <Input className="rounded-xl bg-slate-50 border-slate-200" value={form.bg_main_hex || ""} onChange={(e) => setForm({ ...form, bg_main_hex: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-700">Boxen/Karten BG</Label>
+                  <Input className="rounded-xl bg-slate-50 border-slate-200" value={form.bg_card_hex || ""} onChange={(e) => setForm({ ...form, bg_card_hex: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-700">Haupt-Textfarbe</Label>
+                  <Input className="rounded-xl bg-slate-50 border-slate-200" value={form.text_main_hex || ""} onChange={(e) => setForm({ ...form, text_main_hex: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-slate-700">Rundungen (Radius)</Label>
+                  <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none" value={form.border_radius || "1rem"} onChange={(e) => setForm({ ...form, border_radius: e.target.value })}>
+                    <option value="0.5rem">Leicht rund (0.5rem)</option>
+                    <option value="1rem">Modern rund (1rem)</option>
+                    <option value="1.5rem">Stark rund (1.5rem)</option>
+                    <option value="2rem">Premium rund (2rem)</option>
+                  </select>
+                </div>
               </div>
             </div>
           </section>
+        </div>
 
-          <section className="glass-card space-y-5 p-6">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700"><Type size={16} className="text-gold-dark" /> Typografie, Logo & Impressum</div>
+        <div className="space-y-8">
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
+              <Type size={24} className="text-[#FF4B2C]" /> Identität & Logo
+            </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="font_family">Font-Preset</Label>
-                <select id="font_family" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.font_family || "default"} onChange={(event) => setForm({ ...form, font_family: event.target.value })}>
-                  {fontOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
+            <div className="space-y-4 mb-8">
+              <Label className="text-slate-700">Firmenname</Label>
+              <Input className="rounded-xl bg-slate-50 border-slate-200 text-lg font-bold h-12" value={form.company_name || ""} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <Label className="text-base font-bold text-slate-900">Logo-Darstellung</Label>
+                  <p className="text-sm text-slate-500 mt-1">Was soll gerendert werden?</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                  <span className={`text-sm font-bold ${!form.use_text_logo ? 'text-[#FF4B2C]' : 'text-slate-400'}`}>Bild</span>
+                  <Switch checked={form.use_text_logo || false} onCheckedChange={(c) => setForm({ ...form, use_text_logo: c })} className="data-[state=checked]:bg-[#FF4B2C]" />
+                  <span className={`text-sm font-bold ${form.use_text_logo ? 'text-[#FF4B2C]' : 'text-slate-400'}`}>Text</span>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="heading_font_family">Heading Font</Label>
-                <select id="heading_font_family" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.heading_font_family || "jakarta"} onChange={(event) => setForm({ ...form, heading_font_family: event.target.value })}>
-                  {fontOptions.filter((option) => option.value !== "default").map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
+
+              {!form.use_text_logo ? (
+                <div className="pt-5 border-t border-slate-200">
+                  <Label className="text-slate-700 mb-3 block">Logo hochladen</Label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                    {logoPreview ? (
+                      <div className="relative h-20 w-40 shrink-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm flex items-center justify-center">
+                        <img src={logoPreview} alt="Logo" className="max-h-full max-w-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className="flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-slate-400"><ImageIcon size={24} /></div>
+                    )}
+                    <div>
+                      <Label htmlFor="logo-upload" className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:border-[#FF4B2C] hover:text-[#FF4B2C] transition-all">
+                        {isUploading ? "Lädt..." : <><Upload size={16} className="mr-2" /> Bild wählen</>}
+                      </Label>
+                      <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={isUploading} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-5 border-t border-slate-200">
+                  <Label className="text-slate-700 mb-4 block text-base font-bold">Text-Logo Einstellungen</Label>
+                  
+                  <div className="grid gap-4 md:grid-cols-2 mb-4">
+                    <div className="space-y-2">
+                      <Label className="text-slate-600 text-xs uppercase tracking-wider">Logo Typografie</Label>
+                      <select className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" value={form.logo_font_family || "default"} onChange={(e) => setForm({ ...form, logo_font_family: e.target.value })}>
+                        <option value="default">Standard (Sans-Serif)</option>
+                        <option value="serif">Edel (Serif)</option>
+                        <option value="mono">Tech (Monospace)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-slate-600 text-xs uppercase tracking-wider">Schriftfarbe</Label>
+                      <Input type="color" className="h-[46px] rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full" value={form.text_logo_color_hex || "#0F172A"} onChange={(e) => setForm({ ...form, text_logo_color_hex: e.target.value.toUpperCase() })} />
+                    </div>
+                  </div>
+
+                  {/* DER NEUE SCHALTER FÜR DEN PUNKT */}
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <Label className="text-slate-700 font-bold">Punkt am Ende anzeigen?</Label>
+                      <Switch checked={form.show_logo_dot !== false} onCheckedChange={(c) => setForm({ ...form, show_logo_dot: c })} className="data-[state=checked]:bg-[#FF4B2C]" />
+                    </div>
+                    
+                    {form.show_logo_dot !== false && (
+                      <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                        <Label className="text-slate-600 text-xs uppercase tracking-wider w-24">Farbe für Punkt</Label>
+                        <Input type="color" className="h-10 w-full rounded-xl bg-white border-slate-200 px-3 cursor-pointer" value={form.logo_dot_color_hex || form.primary_color_hex || "#FF4B2C"} onChange={(e) => setForm({ ...form, logo_dot_color_hex: e.target.value.toUpperCase() })} />
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+             <div className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
+              Live-Vorschau
+            </div>
+            <div className="rounded-[1.5rem] p-8 text-white shadow-xl relative overflow-hidden" style={{ backgroundColor: form.footer_bg_hex || form.secondary_color_hex || "#0E1F53" }}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)] pointer-events-none" />
+              <div className="relative z-10">
+                <div className="mb-6">
+                  {form.use_text_logo ? (
+                    <div className={`text-4xl font-black tracking-tighter ${form.logo_font_family === 'serif' ? 'font-serif' : form.logo_font_family === 'mono' ? 'font-mono' : ''}`} style={{ color: form.text_logo_color_hex || '#FFFFFF' }}>
+                      {form.company_name || 'Digital-Perfect'}
+                      {form.show_logo_dot !== false && (
+                        <span style={{ color: form.logo_dot_color_hex || form.primary_color_hex || '#FF4B2C' }}>.</span>
+                      )}
+                    </div>
+                  ) : (
+                    logoPreview ? <img src={logoPreview} alt="Logo" className="h-8 w-auto object-contain brightness-0 invert" /> : <div className="text-xl font-bold">LOGO</div>
+                  )}
+                </div>
+                <div className="flex gap-3 mt-8">
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold shadow-md transition-colors" style={{ backgroundColor: form.primary_color_hex || '#FF4B2C', color: '#FFFFFF' }}>
+                    <CheckCircle2 size={16} /> Beispiel CTA
+                  </span>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="body_font_family">Body Font</Label>
-                <select id="body_font_family" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.body_font_family || "inter"} onChange={(event) => setForm({ ...form, body_font_family: event.target.value })}>
-                  {fontOptions.filter((option) => option.value !== "default").map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="logo_path">Logo-Speicherpfad</Label>
-              <Input id="logo_path" value={form.logo_path || ""} placeholder="branding/logo.webp" onChange={(event) => setForm({ ...form, logo_path: event.target.value })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imprint_company">Impressum – Firmenzeile</Label>
-              <Input id="imprint_company" value={form.imprint_company || ""} onChange={(event) => setForm({ ...form, imprint_company: event.target.value })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imprint_address">Impressum – Adresse</Label>
-              <Textarea id="imprint_address" rows={3} value={form.imprint_address || ""} onChange={(event) => setForm({ ...form, imprint_address: event.target.value })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imprint_contact">Impressum – Kontakt</Label>
-              <Textarea id="imprint_contact" rows={3} value={form.imprint_contact || ""} onChange={(event) => setForm({ ...form, imprint_contact: event.target.value })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imprint_legal">Impressum – Rechtstext</Label>
-              <Textarea id="imprint_legal" rows={4} value={form.imprint_legal || ""} onChange={(event) => setForm({ ...form, imprint_legal: event.target.value })} />
             </div>
           </section>
         </div>
       </div>
 
-      <div className="mt-8 flex gap-3">
-        <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
+      <div className="mt-8 border-t border-slate-200 pt-8 flex items-center justify-end">
+        <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending} className="rounded-xl bg-[#FF4B2C] hover:bg-[#E03A1E] text-white px-8 py-6 text-lg font-bold shadow-[0_10px_30px_-10px_rgba(255,75,44,0.5)] transition-all hover:scale-105">
           {mutation.isPending ? "Speichere..." : "Branding & Theme speichern"}
-        </Button>
-        <Button variant="ghost" onClick={() => setForm(settings as unknown as Record<string, any>)}>
-          Auf DB-Werte zurücksetzen
         </Button>
       </div>
     </div>

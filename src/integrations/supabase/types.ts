@@ -71,6 +71,10 @@ export type Database = {
           text_main_hex: string | null
           text_muted_hex: string | null
           updated_at: string | null
+          text_logo_colors: Json | null
+          logo_font_family: string | null
+          cta_hover_hex: string | null
+          footer_bg_hex: string | null
         }
         Insert: {
           accent_color_hex?: string | null
@@ -98,6 +102,10 @@ export type Database = {
           text_main_hex?: string | null
           text_muted_hex?: string | null
           updated_at?: string | null
+          text_logo_colors: Json | null
+          logo_font_family: string | null
+          cta_hover_hex: string | null
+          footer_bg_hex: string | null
         }
         Update: {
           accent_color_hex?: string | null
@@ -125,6 +133,10 @@ export type Database = {
           text_main_hex?: string | null
           text_muted_hex?: string | null
           updated_at?: string | null
+          text_logo_colors: Json | null
+          logo_font_family: string | null
+          cta_hover_hex: string | null
+          footer_bg_hex: string | null
         }
         Relationships: []
       }

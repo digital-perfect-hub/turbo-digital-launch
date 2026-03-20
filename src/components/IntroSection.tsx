@@ -26,55 +26,57 @@ const IntroSection = () => {
   const { settings } = useGlobalTheme();
 
   return (
-    <section className="bg-background py-24 sm:py-28 md:py-32" aria-label="Intro">
-      <div className="section-container">
-        <div className="grid gap-6 xl:grid-cols-[1.04fr_0.96fr] xl:gap-8">
+    <section className="bg-background py-24 sm:py-32 relative overflow-hidden" aria-label="Intro">
+      <div className="section-container relative z-10">
+        <div className="grid gap-8 xl:grid-cols-[1fr_1fr] xl:gap-16 items-center">
+          
           <motion.div
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.55 }}
-            className="premium-card p-8 md:p-10 lg:p-12"
+            transition={{ duration: 0.6 }}
+            className="rounded-[2.5rem] bg-slate-950 p-10 md:p-14 relative overflow-hidden shadow-2xl"
           >
+            {/* Dynamischer Glow im Dark Panel */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_60%)] opacity-20 blur-[80px] pointer-events-none" />
+            
             <div className="relative z-10">
-              <p className="section-label">{settings.company_name || "Digital-Perfect"}</p>
-              <h2 className="section-title max-w-4xl">{getSetting("home_intro_title")}</h2>
-              <p className="max-w-3xl whitespace-pre-line text-base leading-relaxed text-slate-600 md:text-lg">
-                {getSetting("home_intro_body")}
+              <p className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-slate-300 backdrop-blur-md mb-6">
+                {settings.company_name || "Digital-Perfect"}
               </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <button
-                  onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
-                  className="btn-primary !px-6 !py-3 !text-sm"
-                >
-                  Analyse starten
-                  <ArrowRight size={16} />
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-[1.1] tracking-tight mb-8">
+                {getSetting("home_intro_title", "Wir machen aus deiner Webseite einen Vertriebskanal.")}
+              </h2>
+              
+              <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                <button onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })} className="btn-primary !px-8 !py-4 shadow-[0_0_40px_-10px_rgba(var(--primary),0.4)]">
+                  Jetzt starten
+                  <ArrowRight size={18} />
                 </button>
-                <span className="premium-pill">Positionierung, SEO & Premium-Design in einem System</span>
               </div>
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="grid gap-4"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid gap-6"
           >
-            {quickWins.map((item, index) => {
+            {quickWins.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="premium-grid-card" style={{ transitionDelay: `${index * 30}ms` }}>
-                  <div className="relative z-10 flex items-start gap-4">
-                    <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_22px_44px_-26px_rgba(15,23,42,0.55)]">
-                      <Icon size={20} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.text}</p>
-                    </div>
+                <div key={item.title} className="group relative rounded-[2rem] border border-border bg-card p-8 shadow-sm transition-all duration-500 hover:shadow-xl overflow-hidden flex gap-6 items-start">
+                  {/* Hover Glow der Karten */}
+                  <div className="absolute -right-12 -top-12 w-32 h-32 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500 blur-2xl pointer-events-none" />
+                  
+                  <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110">
+                    <Icon size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{item.text}</p>
                   </div>
                 </div>
               );

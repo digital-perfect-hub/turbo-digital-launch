@@ -26,42 +26,54 @@ const AdminLayout = () => {
     }
   }, [user, isAdmin, loading, navigate]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Laden...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-500 font-medium">Laden...</div>;
   if (!user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       <aside className="w-72 shrink-0 border-r border-slate-800 bg-slate-950 text-white flex flex-col">
         <div className="border-b border-slate-800 p-6">
-          <h2 className="text-lg font-bold tracking-[-0.03em]">Admin Panel</h2>
-          <p className="mt-1 text-xs text-slate-400 truncate">{user.email}</p>
+          {/* Admin Panel Logo in Deinem Orange */}
+          <h2 className="text-2xl font-black tracking-tight text-[#FF4B2C]">Admin Panel</h2>
+          <p className="mt-1 text-xs text-slate-400 truncate font-medium">{user.email}</p>
         </div>
-        <nav className="flex-1 p-3 space-y-1.5 overflow-auto">
+        
+        <nav className="flex-1 p-4 space-y-1.5 overflow-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition-all ${
+                `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-300 ${
                   isActive
-                    ? "bg-white text-slate-950 font-semibold shadow-[0_18px_40px_-24px_rgba(255,255,255,0.2)]"
-                    : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                    ? "bg-[#FF4B2C] text-white shadow-lg shadow-[#FF4B2C]/20"
+                    : "text-slate-400 hover:bg-[#FF4B2C]/10 hover:text-[#FF4B2C]"
                 }`
               }
             >
-              <item.icon size={17} />
-              {item.label}
+              {/* Hier ist der Fix: Eine Funktion, die isActive sauber an das Icon und den Text weitergibt */}
+              {({ isActive }) => (
+                <>
+                  <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  {item.label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-slate-800 p-3">
-          <button onClick={() => { signOut(); navigate("/"); }} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition-colors hover:bg-slate-900 hover:text-white">
-            <LogOut size={17} /> Abmelden
+        
+        <div className="border-t border-slate-800 p-4">
+          <button 
+            onClick={() => { signOut(); navigate("/"); }} 
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-400 transition-colors hover:bg-[#FF4B2C]/10 hover:text-[#FF4B2C]"
+          >
+            <LogOut size={18} /> Abmelden
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto bg-[linear-gradient(180deg,#f8fafc,#eef2f7)]">
+      
+      <main className="flex-1 overflow-auto bg-[#F8FAFC]">
         <Outlet />
       </main>
     </div>

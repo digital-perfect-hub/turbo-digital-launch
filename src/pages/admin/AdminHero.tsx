@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ImagePlus, Layers3, Sparkles } from "lucide-react";
+import { AlertTriangle, ImagePlus, Layers3, Sparkles, LayoutTemplate, Type, ImageIcon, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { buildRenderImageUrl } from "@/lib/image";
 import heroFallback from "@/assets/hero-bg.jpg";
@@ -27,10 +29,26 @@ const HERO_EDITABLE_COLUMNS = [
   "background_image_path",
   "background_mobile_image_path",
   "overlay_opacity",
+  "visual_kicker",
+  "visual_title",
+  "visual_badge",
+  "layer_kicker",
+  "layer_title",
+  "show_bottom_box1",
+  "bottom_box1_kicker",
+  "bottom_box1_title",
+  "show_bottom_box2",
+  "bottom_box2_kicker",
+  "bottom_box2_title",
 ] as const;
 
 const LEGACY_HERO_COLUMNS = HERO_EDITABLE_COLUMNS.filter(
-  (key) => !["background_image_path", "background_mobile_image_path", "overlay_opacity"].includes(key),
+  (key) => ![
+    "background_image_path", "background_mobile_image_path", "overlay_opacity",
+    "visual_kicker", "visual_title", "visual_badge", "layer_kicker", "layer_title",
+    "show_bottom_box1", "bottom_box1_kicker", "bottom_box1_title",
+    "show_bottom_box2", "bottom_box2_kicker", "bottom_box2_title"
+  ].includes(key),
 );
 
 const AdminHero = () => {
@@ -71,7 +89,7 @@ const AdminHero = () => {
       void created_at;
       void updated_at;
 
-      const payload = supportedColumns.reduce<Record<string, string | number | null>>((acc, key) => {
+      const payload = supportedColumns.reduce<Record<string, any>>((acc, key) => {
         if (key === "overlay_opacity") {
           const numeric = Number(rawData[key]);
           acc[key] = Number.isFinite(numeric) ? Math.max(0, Math.min(100, numeric)) : 58;
@@ -108,13 +126,20 @@ const AdminHero = () => {
 
   return (
     <div className="max-w-6xl p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Hero-Bereich bearbeiten</h1>
-        <p className="mt-2 text-sm text-slate-500">Großer Hero-Hintergrund, Visual-Card, Overlay und Kennzahlen zentral pflegen.</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Hero-Bereich bearbeiten</h1>
+          <p className="mt-2 text-sm text-slate-500">Großer Hero-Hintergrund, Visual-Card, Overlay und Kennzahlen zentral pflegen.</p>
+        </div>
+        <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending} className="rounded-xl bg-[#FF4B2C] hover:bg-[#E03A1E] text-white px-6 py-5 shadow-md shadow-[#FF4B2C]/20 transition-transform hover:scale-105">
+          {mutation.isPending ? "Speichere..." : "Hero speichern"}
+        </Button>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <section className="glass-card overflow-hidden p-4 md:p-5">
+        
+        {/* LINKE SPALTE: DEINE LIVE-VORSCHAU (KOMPLETT UNANGETASTET) */}
+        <section className="glass-card overflow-hidden p-4 md:p-5 self-start sticky top-6">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
             <ImagePlus size={16} className="text-gold-dark" /> Live-Vorschau
           </div>
@@ -157,76 +182,157 @@ const AdminHero = () => {
           ) : null}
         </section>
 
-        <section className="glass-card p-6 space-y-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <Sparkles size={16} className="text-gold-dark" /> Inhalte
-          </div>
-
-          <div className="space-y-2">
-            <Label>Badge-Text</Label>
-            <Input value={form.badge_text || ""} onChange={(e) => setForm({ ...form, badge_text: e.target.value })} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Hauptüberschrift</Label>
-            <Textarea rows={4} value={form.headline || ""} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
-            <p className="text-xs text-slate-500">Zeilenumbrüche sind erlaubt und werden im Hero sauber übernommen.</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Unterüberschrift</Label>
-            <Textarea rows={5} value={form.subheadline || ""} onChange={(e) => setForm({ ...form, subheadline: e.target.value })} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>CTA-Button Text</Label>
-            <Input value={form.cta_text || ""} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Hero-Hintergrund Desktop</Label>
-              <Input value={form.background_image_path || ""} onChange={(e) => setForm({ ...form, background_image_path: e.target.value })} placeholder="hero/background-desktop.webp" />
-            </div>
-            <div className="space-y-2">
-              <Label>Hero-Hintergrund Mobile</Label>
-              <Input value={form.background_mobile_image_path || ""} onChange={(e) => setForm({ ...form, background_mobile_image_path: e.target.value })} placeholder="hero/background-mobile.webp" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Rechtes Hero-Visual</Label>
-            <Input value={form.image_path || ""} onChange={(e) => setForm({ ...form, image_path: e.target.value })} placeholder="hero/digital-perfect-visual.webp" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Overlay-Stärke ({overlayOpacity}%)</Label>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              value={overlayOpacity}
-              onChange={(e) => setForm({ ...form, overlay_opacity: Number(e.target.value) })}
-              className="w-full"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {[1, 2, 3].map((nr) => (
-              <div key={nr} className="space-y-3 rounded-[1.2rem] border border-slate-200 bg-white/70 p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  <Layers3 size={13} /> Stat {nr}
-                </div>
-                <Input value={form[`stat${nr}_value`] || ""} onChange={(e) => setForm({ ...form, [`stat${nr}_value`]: e.target.value })} placeholder="Wert" />
-                <Input value={form[`stat${nr}_label`] || ""} onChange={(e) => setForm({ ...form, [`stat${nr}_label`]: e.target.value })} placeholder="Label" />
+        {/* RECHTE SPALTE: DAS NEUE TAB-SYSTEM */}
+        <section className="glass-card p-6">
+          <Tabs defaultValue="texte" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100 rounded-xl p-1 gap-1">
+              <TabsTrigger value="texte" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><Type size={14} className="mr-1.5 hidden sm:inline-block"/> Texte</TabsTrigger>
+              <TabsTrigger value="medien" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><ImageIcon size={14} className="mr-1.5 hidden sm:inline-block"/> Medien</TabsTrigger>
+              <TabsTrigger value="stats" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><Layers3 size={14} className="mr-1.5 hidden sm:inline-block"/> KPIs</TabsTrigger>
+              <TabsTrigger value="layer" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><LayoutTemplate size={14} className="mr-1.5 hidden sm:inline-block"/> Layer</TabsTrigger>
+            </TabsList>
+            
+            {/* TAB 1: TEXTE */}
+            <TabsContent value="texte" className="space-y-5 mt-0 outline-none">
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">Badge-Text</Label>
+                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.badge_text || ""} onChange={(e) => setForm({ ...form, badge_text: e.target.value })} />
               </div>
-            ))}
-          </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">Hauptüberschrift</Label>
+                <Textarea rows={4} className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C] resize-none" value={form.headline || ""} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
+                <p className="text-xs text-slate-500">Zeilenumbrüche sind erlaubt und werden im Hero sauber übernommen.</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">Unterüberschrift</Label>
+                <Textarea rows={4} className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C] resize-none" value={form.subheadline || ""} onChange={(e) => setForm({ ...form, subheadline: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">CTA-Button Text</Label>
+                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.cta_text || ""} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
+              </div>
+            </TabsContent>
 
-          <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
-            {mutation.isPending ? "Speichere..." : "Hero speichern"}
-          </Button>
+            {/* TAB 2: MEDIEN */}
+            <TabsContent value="medien" className="space-y-5 mt-0 outline-none">
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">Hero-Hintergrund Desktop (URL/Pfad)</Label>
+                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.background_image_path || ""} onChange={(e) => setForm({ ...form, background_image_path: e.target.value })} placeholder="hero/background-desktop.webp" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">Hero-Hintergrund Mobile (URL/Pfad)</Label>
+                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.background_mobile_image_path || ""} onChange={(e) => setForm({ ...form, background_mobile_image_path: e.target.value })} placeholder="hero/background-mobile.webp" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-semibold">Rechtes Hero-Visual (URL/Pfad)</Label>
+                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.image_path || ""} onChange={(e) => setForm({ ...form, image_path: e.target.value })} placeholder="hero/digital-perfect-visual.webp" />
+              </div>
+              <div className="space-y-2 pt-4 border-t border-slate-100">
+                <Label className="text-slate-700 font-semibold">Overlay-Stärke ({overlayOpacity}%)</Label>
+                <input
+                  type="range" min={0} max={100} step={1} value={overlayOpacity}
+                  onChange={(e) => setForm({ ...form, overlay_opacity: Number(e.target.value) })}
+                  className="w-full accent-[#FF4B2C] cursor-pointer"
+                />
+              </div>
+            </TabsContent>
+
+            {/* TAB 3: KPIs */}
+            <TabsContent value="stats" className="space-y-4 mt-0 outline-none">
+              {[1, 2, 3].map((nr) => (
+                <div key={nr} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                    Statistik {nr}
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-1 block">Wert (z.B. 98%)</Label>
+                      <Input className="rounded-xl border-slate-200 bg-white" value={form[`stat${nr}_value`] || ""} onChange={(e) => setForm({ ...form, [`stat${nr}_value`]: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-1 block">Label (z.B. Fokus)</Label>
+                      <Input className="rounded-xl border-slate-200 bg-white" value={form[`stat${nr}_label`] || ""} onChange={(e) => setForm({ ...form, [`stat${nr}_label`]: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </TabsContent>
+
+            {/* TAB 4: LAYER & BOXEN */}
+            <TabsContent value="layer" className="space-y-6 mt-0 outline-none">
+              
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Oberer Bereich (Visual Kicker)</Label>
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Kicker</Label>
+                  <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.visual_kicker || ""} onChange={(e) => setForm({...form, visual_kicker: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Beschreibungstext</Label>
+                  <Textarea rows={2} className="rounded-xl bg-white border-slate-200 resize-none text-sm" value={form.visual_title || ""} onChange={(e) => setForm({...form, visual_title: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Badge rechts</Label>
+                  <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.visual_badge || ""} onChange={(e) => setForm({...form, visual_badge: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Innerer Layer (Auf Bild oben links)</Label>
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Kicker</Label>
+                  <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.layer_kicker || ""} onChange={(e) => setForm({...form, layer_kicker: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-500">Titel</Label>
+                  <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.layer_title || ""} onChange={(e) => setForm({...form, layer_title: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-6">
+                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Untere Info-Boxen (Optional)</Label>
+                
+                <div className="space-y-4 pb-4 border-b border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-slate-700 font-bold">Box 1 (Links) anzeigen?</Label>
+                    <Switch checked={form.show_bottom_box1 !== false} onCheckedChange={(c) => setForm({...form, show_bottom_box1: c})} className="data-[state=checked]:bg-[#FF4B2C]" />
+                  </div>
+                  {form.show_bottom_box1 !== false && (
+                    <div className="space-y-3 pl-3 border-l-2 border-[#FF4B2C]/20">
+                      <div>
+                        <Label className="text-xs text-slate-500">Kicker</Label>
+                        <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.bottom_box1_kicker || ""} onChange={(e) => setForm({...form, bottom_box1_kicker: e.target.value})} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Text</Label>
+                        <Textarea rows={2} className="rounded-xl bg-white border-slate-200 resize-none text-sm" value={form.bottom_box1_title || ""} onChange={(e) => setForm({...form, bottom_box1_title: e.target.value})} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-slate-700 font-bold">Box 2 (Rechts) anzeigen?</Label>
+                    <Switch checked={form.show_bottom_box2 !== false} onCheckedChange={(c) => setForm({...form, show_bottom_box2: c})} className="data-[state=checked]:bg-[#FF4B2C]" />
+                  </div>
+                  {form.show_bottom_box2 !== false && (
+                    <div className="space-y-3 pl-3 border-l-2 border-[#FF4B2C]/20">
+                      <div>
+                        <Label className="text-xs text-slate-500">Kicker</Label>
+                        <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.bottom_box2_kicker || ""} onChange={(e) => setForm({...form, bottom_box2_kicker: e.target.value})} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Text</Label>
+                        <Textarea rows={2} className="rounded-xl bg-white border-slate-200 resize-none text-sm" value={form.bottom_box2_title || ""} onChange={(e) => setForm({...form, bottom_box2_title: e.target.value})} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </TabsContent>
+          </Tabs>
         </section>
       </div>
     </div>

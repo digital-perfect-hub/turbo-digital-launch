@@ -20,6 +20,20 @@ type HeroRecord = {
   image_url?: string | null;
   image_path?: string | null;
   image?: string | null;
+  background_image_path?: string | null;
+  background_mobile_image_path?: string | null;
+  overlay_opacity?: number | null;
+  visual_kicker?: string | null;
+  visual_title?: string | null;
+  visual_badge?: string | null;
+  layer_kicker?: string | null;
+  layer_title?: string | null;
+  show_bottom_box1?: boolean | null;
+  bottom_box1_kicker?: string | null;
+  bottom_box1_title?: string | null;
+  show_bottom_box2?: boolean | null;
+  bottom_box2_kicker?: string | null;
+  bottom_box2_title?: string | null;
 };
 
 const fallbackHero: Required<Pick<HeroRecord, "badge_text" | "headline" | "subheadline" | "cta_text">> = {
@@ -41,6 +55,12 @@ const proofItems = [
   { icon: BarChart3, text: "Conversion, Sichtbarkeit und Performance im selben System" },
   { icon: ShieldCheck, text: "Robuste Fallbacks, damit leere Admin-Daten nicht alles zerstören" },
 ];
+
+const resolveImage = (path?: string | null, fallback: string = heroFallback, width = 1600) => {
+  const trimmed = String(path || "").trim();
+  if (!trimmed) return fallback;
+  return trimmed.startsWith("http") ? trimmed : buildRenderImageUrl(trimmed, { width, quality: 86 });
+};
 
 const HeroSection = () => {
   const { settings } = useGlobalTheme();
@@ -70,6 +90,13 @@ const HeroSection = () => {
   const heroSubheadline = safeText(hero?.subheadline, fallbackHero.subheadline);
   const heroCta = safeText(hero?.cta_text, fallbackHero.cta_text);
 
+  const visualKicker = safeText(hero?.visual_kicker, "Hero Visual");
+  const visualTitle = safeText(hero?.visual_title, "Ein starkes Bild sagt mehr als 1000 Worte.");
+  const visualBadge = safeText(hero?.visual_badge, "Premium Intro");
+  
+  const layerKicker = safeText(hero?.layer_kicker, "Conversion Layer");
+  const layerTitle = safeText(hero?.layer_title, "Premium Hero mit Bild, Signalwerten und CTA-Führung");
+
   const statItems = [
     { label: hero?.stat1_label, value: hero?.stat1_value },
     { label: hero?.stat2_label, value: hero?.stat2_value },
@@ -83,13 +110,19 @@ const HeroSection = () => {
 
   const effectiveStats = statItems.length > 0 ? statItems : fallbackStats;
 
-  const heroImagePath = hero?.image_path || hero?.image_url || hero?.image;
-  const heroImageSrc = heroImagePath ? buildRenderImageUrl(heroImagePath, { width: 1600, quality: 86 }) : heroFallback;
+  const heroImageSrc = resolveImage(hero?.image_path || hero?.image_url || hero?.image, heroFallback, 1200);
+  const bgImageSrc = resolveImage(hero?.background_image_path, heroFallback, 1920);
+  const overlayAlpha = typeof hero?.overlay_opacity === 'number' ? Math.max(0, Math.min(100, hero.overlay_opacity)) / 100 : 0.58;
 
   return (
     <section id="hero" className="dark-section relative overflow-hidden pt-[158px] lg:pt-[178px]">
-      <div className="absolute inset-0 noise-overlay opacity-35" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#eef3f9] to-transparent" />
+      <div className="absolute inset-0 z-0">
+        <img src={bgImageSrc} alt="Hero Background" className="h-full w-full object-cover" loading="eager" />
+      </div>
+      
+      <div className="absolute inset-0 z-0" style={{ backgroundColor: `rgba(6,13,36,${overlayAlpha})` }} />
+      <div className="absolute inset-0 z-0 noise-overlay opacity-35" />
+      <div className="absolute inset-x-0 bottom-0 z-0 h-40 bg-gradient-to-t from-[#eef3f9] to-transparent" />
 
       <div className="section-container relative z-10 py-14 md:py-20 lg:py-24">
         <div className="grid items-center gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
@@ -136,7 +169,7 @@ const HeroSection = () => {
               transition={{ duration: 0.55, delay: 0.18 }}
               className="mt-10 flex flex-wrap items-center gap-4"
             >
-              <button onClick={() => scrollTo("#kontakt")} className="btn-primary !px-7 !py-4 !text-base">
+              <button onClick={() => scrollTo("#kontakt")} className="btn-primary !px-7 !py-4 !text-base" style={{ '--tw-hover-bg': 'var(--cta-hover)' } as any}>
                 {heroCta}
                 <ArrowRight size={18} />
               </button>
@@ -174,14 +207,15 @@ const HeroSection = () => {
             <div className={`premium-dark-card overflow-hidden p-4 sm:p-5 lg:p-6 ${isLoading ? "premium-skeleton" : ""}`}>
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.18),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,31,83,0.18),transparent_22%)]" />
               <div className="relative z-10 space-y-4">
+                
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-slate-300">Hero Visual</p>
-                    <p className="mt-2 text-sm text-slate-400">Großes Hero-Bild kann jetzt direkt über den Admin per Storage-Pfad gepflegt werden.</p>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-slate-300">{visualKicker}</p>
+                    <p className="mt-2 text-sm text-slate-400">{visualTitle}</p>
                   </div>
                   <span className="premium-pill border-white/10 bg-white/5 text-slate-100">
                     <Globe size={13} className="text-gold" />
-                    Premium Website Intro
+                    {visualBadge}
                   </span>
                 </div>
 
@@ -189,21 +223,30 @@ const HeroSection = () => {
                   <img src={heroImageSrc} alt={settings.company_name || "Digital-Perfect Hero"} className="h-[430px] w-full object-cover" loading="eager" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),rgba(15,23,42,0.62))]" />
 
+                  {/* Layer Oben Links */}
                   <div className="absolute left-4 top-4 rounded-2xl border border-white/15 bg-slate-950/60 px-4 py-3 backdrop-blur-xl sm:left-6 sm:top-6">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">Conversion Layer</p>
-                    <p className="mt-2 text-sm font-semibold text-white">Premium Hero mit Bild, Signalwerten und CTA-Führung</p>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">{layerKicker}</p>
+                    <p className="mt-2 text-sm font-semibold text-white">{layerTitle}</p>
                   </div>
+                  
+                  {/* SCHALTER-LOGIK: Die zwei Boxen unten */}
+                  {(hero?.show_bottom_box1 !== false || hero?.show_bottom_box2 !== false) && (
+                    <div className="absolute bottom-4 left-4 right-4 grid gap-3 sm:bottom-6 sm:left-6 sm:right-6 sm:grid-cols-2">
+                      {hero?.show_bottom_box1 !== false && (
+                        <div className="rounded-[1.4rem] border border-white/12 bg-slate-950/65 p-4 backdrop-blur-xl">
+                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">{safeText(hero?.bottom_box1_kicker, "Design-System")}</p>
+                          <p className="mt-2 text-sm leading-relaxed text-white/90">{safeText(hero?.bottom_box1_title, "Farben, Typografie und Radien greifen vollautomatisch.")}</p>
+                        </div>
+                      )}
+                      {hero?.show_bottom_box2 !== false && (
+                        <div className="rounded-[1.4rem] border border-white/12 bg-slate-950/65 p-4 backdrop-blur-xl">
+                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">{safeText(hero?.bottom_box2_kicker, "Admin steuerbar")}</p>
+                          <p className="mt-2 text-sm leading-relaxed text-white/90">{safeText(hero?.bottom_box2_title, "Bildpfad, Texte und Kennzahlen bleiben zentral pflegbar.")}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                  <div className="absolute bottom-4 left-4 right-4 grid gap-3 sm:grid-cols-2 lg:left-6 lg:right-6 lg:bottom-6">
-                    <div className="rounded-[1.4rem] border border-white/12 bg-slate-950/65 p-4 backdrop-blur-xl">
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">Design-System</p>
-                      <p className="mt-2 text-sm leading-relaxed text-white/90">Orange, Mitternachtsblau und klare Kontraste sorgen endlich für Tiefe statt Theme-Chaos.</p>
-                    </div>
-                    <div className="rounded-[1.4rem] border border-white/12 bg-slate-950/65 p-4 backdrop-blur-xl">
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">Admin steuerbar</p>
-                      <p className="mt-2 text-sm leading-relaxed text-white/90">Bildpfad, Headline, Subheadline und Kennzahlen bleiben künftig zentral pflegbar.</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

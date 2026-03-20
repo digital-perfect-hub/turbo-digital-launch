@@ -1,6 +1,5 @@
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { ArrowRight, Eye, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Eye, ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -12,10 +11,10 @@ type ProductItem = Database["public"]["Tables"]["products"]["Row"];
 const fallbackProducts: ProductItem[] = [
   {
     id: "fallback-1",
-    title: "Google Bewertungsständer NFC + QR",
-    description: "Mehr lokale Bewertungen mit einem Scan oder Tap – perfekt für Restaurants, Studios und Dienstleister.",
+    title: "Premium Website Audit",
+    description: "Tiefgehende Analyse deiner aktuellen Website inklusive Conversion-Schwächen und technischer SEO-Fehler.",
     image_url: null,
-    price: 89,
+    price: 299,
     is_visible: true,
     sort_order: 0,
     created_at: new Date(0).toISOString(),
@@ -23,10 +22,10 @@ const fallbackProducts: ProductItem[] = [
   },
   {
     id: "fallback-2",
-    title: "Premium Tischaufsteller für Vertrauensaufbau",
-    description: "Saubere Markenwirkung am Point of Sale und direkter Weg zu mehr Social Proof für dein Unternehmen.",
+    title: "NFC Google Bewertungsaufsteller",
+    description: "Hochwertiger Acryl-Aufsteller für deinen Point of Sale. Kunden tappen einfach mit dem Handy und bewerten dich.",
     image_url: null,
-    price: 119,
+    price: 89,
     is_visible: true,
     sort_order: 1,
     created_at: new Date(0).toISOString(),
@@ -34,89 +33,96 @@ const fallbackProducts: ProductItem[] = [
   },
 ];
 
-const PRODUCTS_SELECT = "id, title, description, image_url, price, is_visible, sort_order, created_at, updated_at";
-
 const ShopSection = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { getSetting } = useSiteSettings();
 
-  const { data: products = [] } = useQuery({
+  const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
-    queryFn: async (): Promise<ProductItem[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select(PRODUCTS_SELECT)
+        .select("*")
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
 
       if (error) throw error;
-      return (data as ProductItem[]) ?? [];
+      return data as ProductItem[];
     },
   });
 
-  const effectiveProducts = products.length > 0 ? products : fallbackProducts;
+  const effectiveProducts = products?.length ? products : fallbackProducts;
+
+  if (!isLoading && effectiveProducts.length === 0) return null;
 
   return (
-    <section id="shop" className="bg-background py-24 md:py-32" ref={ref}>
-      <div className="section-container">
+    <section id="shop" className="bg-background py-24 sm:py-32 relative overflow-hidden" aria-label="Produkte & Pakete">
+      <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
-          className="mb-14 max-w-4xl"
+          className="mb-16 md:mb-24 text-center max-w-3xl mx-auto"
         >
-          <p className="section-label">{getSetting("home_shop_kicker")}</p>
-          <h2 className="section-title">{getSetting("home_shop_title")}</h2>
-          <p className="text-lg leading-relaxed text-muted-foreground">{getSetting("home_shop_description")}</p>
+          <p className="section-label">{getSetting("home_shop_kicker", "Pakete & Produkte")}</p>
+          <h2 className="section-title mt-4">{getSetting("home_shop_title", "Klare Lösungen. Fixe Preise.")}</h2>
+          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+            Zubuchbare Leistungen und Produkte, die deinen Umsatz direkt hebeln. Transparent, messbar und auf Performance getrimmt.
+          </p>
         </motion.div>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:max-w-5xl">
+        <div className="grid gap-8 lg:gap-10 md:grid-cols-2 lg:grid-cols-3">
           {effectiveProducts.map((product, index) => (
-            <motion.article
+            <motion.div
               key={product.id}
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              className="premium-card overflow-hidden"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className={`group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm hover:shadow-xl transition-all duration-500 ${isLoading ? "animate-pulse" : ""}`}
             >
-              <div className="relative h-[250px] overflow-hidden border-b bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.15),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)]" style={{ borderColor: "var(--surface-card-border)" }}>
+              {/* Dynamischer Background Glow */}
+              <div className="absolute -top-32 -left-32 w-64 h-64 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 group-hover:opacity-[0.06] transition-opacity duration-500 blur-3xl pointer-events-none" />
+
+              {/* Bild-Bereich */}
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100/50">
                 {product.image_url ? (
                   <img
-                    src={buildRenderImageUrl(product.image_url, { width: 1200, quality: 84 })}
+                    src={buildRenderImageUrl(product.image_url, { width: 600, quality: 85 })}
                     alt={product.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="flex h-full items-end justify-between gap-4 p-6">
-                    <div>
-                      <div className="premium-pill">Local SEO Booster</div>
-                      <p className="mt-4 max-w-xs text-lg font-bold leading-tight text-[var(--surface-card-text)]">Mehr Vertrauen und mehr Bewertungen direkt am Kontaktpunkt.</p>
-                    </div>
-                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-secondary text-white shadow-[0_26px_50px_-30px_rgba(15,23,42,0.55)]">
-                      <Star size={28} />
-                    </div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                    <ShoppingBag size={48} className="text-slate-300" strokeWidth={1} />
                   </div>
                 )}
+                <div className="absolute top-5 right-5 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-md px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground shadow-sm">
+                  <Eye size={14} className="text-primary" /> Shop
+                </div>
               </div>
 
-              <div className="relative z-10 p-6">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground" style={{ borderColor: "var(--surface-card-border)" }}>
-                  <Eye size={13} />
-                  Sichtbar im Shop
-                </div>
-                <h3 className="text-xl font-bold text-[var(--surface-card-text)]">{product.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--surface-card-muted)]">{product.description || "Produktbeschreibung kann zentral im Admin gepflegt werden."}</p>
-                <div className="mt-6 flex items-center justify-between gap-4">
-                  <span className="text-2xl font-extrabold text-[var(--surface-card-text)]">€{Number(product.price).toFixed(2).replace(".", ",")}</span>
-                  <button className="btn-outline !px-5 !py-3 !text-sm">
-                    Mehr erfahren
-                    <ArrowRight size={16} />
+              {/* Content-Bereich */}
+              <div className="flex flex-1 flex-col p-8">
+                <h3 className="text-2xl font-bold text-foreground leading-tight mb-3">{product.title}</h3>
+                <p className="text-muted-foreground leading-relaxed flex-1">
+                  {product.description || "Detailbeschreibung folgt."}
+                </p>
+
+                <div className="mt-8 pt-6 border-t border-border flex items-center justify-between gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Preis</span>
+                    <span className="text-3xl font-black text-foreground tracking-tight">
+                      €{Number(product.price).toFixed(2).replace(".", ",")}
+                    </span>
+                  </div>
+                  <button className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-300 hover:bg-primary hover:text-white hover:scale-105">
+                    <ArrowRight size={24} />
                   </button>
                 </div>
               </div>
-            </motion.article>
+            </motion.div>
           ))}
         </div>
       </div>
