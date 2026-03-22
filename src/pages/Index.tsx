@@ -14,6 +14,7 @@ import ContactSection from "@/components/ContactSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import ForumTeaser from "@/components/forum/ForumTeaser";
 
 const Index = () => {
   return (
@@ -28,6 +29,7 @@ const Index = () => {
           <WhyChooseSection />
           <AudienceSection />
           <ServicesSection />
+          <ForumTeaser />
           <ShopSection />
           <PortfolioSection />
           <TeamSection />

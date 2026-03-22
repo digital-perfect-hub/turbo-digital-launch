@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 // Achte darauf, dass 'Settings' als Icon von lucide-react importiert ist (hast du schon).
-import { FileText, HelpCircle, ImageIcon, LayoutDashboard, LogOut, MessageSquare, Palette, Package, Settings, Type, Menu, PanelBottom } from "lucide-react";
+import { FileText, HelpCircle, ImageIcon, LayoutDashboard, LogOut, MessageSquare, Palette, Package, Settings, Type, Menu, PanelBottom, MessagesSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
@@ -14,6 +14,7 @@ const navItems = [
   { to: "/admin/services", icon: Settings, label: "Leistungen" },
   { to: "/admin/portfolio", icon: ImageIcon, label: "Portfolio" },
   { to: "/admin/products", icon: Package, label: "Produkte" },
+  { to: "/admin/forum", icon: MessagesSquare, label: "Forum" },
   { to: "/admin/faq", icon: HelpCircle, label: "FAQ" },
   { to: "/admin/leads", icon: MessageSquare, label: "Anfragen" },
   { to: "/admin/settings", icon: Settings, label: "Einstellungen" }, // <--- ERSETZT DAS ALTE SEO

@@ -44,6 +44,282 @@ export type Database = {
         }
         Relationships: []
       }
+
+      forum_categories: {
+        Row: {
+          ad_cta_text: string | null
+          ad_enabled: boolean
+          ad_headline: string | null
+          ad_html_code: string | null
+          ad_image_url: string | null
+          ad_link_url: string | null
+          ad_subheadline: string | null
+          assigned_ad_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          ad_cta_text?: string | null
+          ad_enabled?: boolean
+          ad_headline?: string | null
+          ad_html_code?: string | null
+          ad_image_url?: string | null
+          ad_link_url?: string | null
+          ad_subheadline?: string | null
+          assigned_ad_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          ad_cta_text?: string | null
+          ad_enabled?: boolean
+          ad_headline?: string | null
+          ad_html_code?: string | null
+          ad_image_url?: string | null
+          ad_link_url?: string | null
+          ad_subheadline?: string | null
+          assigned_ad_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
+      forum_redirects: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          is_active: boolean
+          source_path: string
+          target_path: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          is_active?: boolean
+          source_path: string
+          target_path: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          is_active?: boolean
+          source_path?: string
+          target_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      forum_replies: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_spam: boolean
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_spam?: boolean
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_spam?: boolean
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_reply_likes: {
+        Row: {
+          created_at: string
+          id: string
+          reply_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reply_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_reply_likes_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_threads: {
+        Row: {
+          ad_cta_text: string | null
+          ad_html_code: string | null
+          ad_image_alt: string | null
+          ad_image_url: string | null
+          ad_link_url: string | null
+          ad_type: string | null
+          admin_notes: string | null
+          author_id: string | null
+          author_name: string | null
+          category_id: string | null
+          content: string
+          created_at: string
+          featured_image_alt: string | null
+          featured_image_url: string | null
+          id: string
+          is_active: boolean
+          is_answered: boolean
+          is_locked: boolean
+          is_pinned: boolean
+          last_activity_at: string
+          raw_html_content: string | null
+          seo_description: string | null
+          seo_title: string | null
+          show_ad: boolean
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          ad_cta_text?: string | null
+          ad_html_code?: string | null
+          ad_image_alt?: string | null
+          ad_image_url?: string | null
+          ad_link_url?: string | null
+          ad_type?: string | null
+          admin_notes?: string | null
+          author_id?: string | null
+          author_name?: string | null
+          category_id?: string | null
+          content: string
+          created_at?: string
+          featured_image_alt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_answered?: boolean
+          is_locked?: boolean
+          is_pinned?: boolean
+          last_activity_at?: string
+          raw_html_content?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_ad?: boolean
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          ad_cta_text?: string | null
+          ad_html_code?: string | null
+          ad_image_alt?: string | null
+          ad_image_url?: string | null
+          ad_link_url?: string | null
+          ad_type?: string | null
+          admin_notes?: string | null
+          author_id?: string | null
+          author_name?: string | null
+          category_id?: string | null
+          content?: string
+          created_at?: string
+          featured_image_alt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_answered?: boolean
+          is_locked?: boolean
+          is_pinned?: boolean
+          last_activity_at?: string
+          raw_html_content?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_ad?: boolean
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_threads_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "forum_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
       global_settings: {
         Row: {
           accent_color_hex: string | null
@@ -502,6 +778,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_thread_view: {
+        Args: {
+          t_id: string
+        }
+        Returns: undefined
+      }
+
+      resolve_forum_redirect: {
+        Args: {
+          p_source_path: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

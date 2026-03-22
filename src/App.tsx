@@ -14,6 +14,8 @@ import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
 import ProductDetail from "./pages/ProductDetail";
+import Forum from "./pages/Forum";
+import ForumThread from "./pages/ForumThread";
 
 // Admin Seiten
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -29,6 +31,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminForum from "./pages/admin/AdminForum";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,9 @@ const App = () => (
               <Route path="/datenschutz" element={<Datenschutz />} />
               <Route path="/agb" element={<AGB />} />
               <Route path="/produkt/:slug" element={<ProductDetail />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/forum/kategorie/:categorySlug" element={<Forum />} />
+              <Route path="/forum/:slug" element={<ForumThread />} />
 
               {/* Admin Backend Routen */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -66,6 +72,7 @@ const App = () => (
                 <Route path="footer" element={<AdminFooter />} />
                 <Route path="portfolio" element={<AdminPortfolio />} />
                 <Route path="products" element={<AdminProducts />} />
+                <Route path="forum" element={<AdminForum />} />
                 <Route path="faq" element={<AdminFAQ />} />
                 <Route path="leads" element={<AdminLeads />} />
                 <Route path="settings" element={<AdminSettings />} />

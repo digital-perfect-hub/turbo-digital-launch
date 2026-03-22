@@ -3,25 +3,57 @@ export type ImageRenderOptions = {
   quality?: number;
 };
 
+const SUPABASE_BASE_URL = (import.meta.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
 const STORAGE_PUBLIC_SEGMENT = "/storage/v1/object/public/";
 const STORAGE_RENDER_SEGMENT = "/storage/v1/render/image/public/";
+const LEGACY_RENDER_SEGMENT = "/render/image/public/";
+
+const encodeObjectPath = (objectPath: string) =>
+  objectPath
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 
 const toRenderPath = (bucket: string, objectPath: string, options: ImageRenderOptions) => {
   const width = options.width ?? 600;
   const quality = options.quality ?? 80;
+  const encodedBucket = encodeURIComponent(bucket);
+  const encodedObjectPath = encodeObjectPath(objectPath);
+  const base = SUPABASE_BASE_URL ? `${SUPABASE_BASE_URL}/storage/v1` : "/storage/v1";
 
-  return `/render/image/public/${encodeURIComponent(bucket)}/${encodeURIComponent(objectPath)}?width=${width}&quality=${quality}`;
+  return `${base}/render/image/public/${encodedBucket}/${encodedObjectPath}?width=${width}&quality=${quality}`;
+};
+
+const normalizeKnownStoragePath = (value: string, options: ImageRenderOptions) => {
+  const pathWithoutQuery = value.split("?")[0];
+
+  for (const segment of [STORAGE_PUBLIC_SEGMENT, STORAGE_RENDER_SEGMENT, LEGACY_RENDER_SEGMENT]) {
+    if (!pathWithoutQuery.includes(segment)) continue;
+
+    const [, rawPath = ""] = pathWithoutQuery.split(segment);
+    const decodedRawPath = decodeURIComponent(rawPath);
+    const [bucket, ...rest] = decodedRawPath.split("/").filter(Boolean);
+
+    if (bucket && rest.length) {
+      return toRenderPath(bucket, rest.join("/"), options);
+    }
+  }
+
+  return null;
 };
 
 /**
- * Builds a URL for the Render-API:
- * /render/image/public/<BUCKET>/<OBJECT_PATH>?width=600&quality=80
+ * Builds a URL for the Supabase Render-API:
+ * https://<project>.supabase.co/storage/v1/render/image/public/<BUCKET>/<OBJECT_PATH>?width=600&quality=80
  *
  * Supported DB formats:
  * - bucket/path/to/image.jpg
  * - /storage/v1/object/public/bucket/path/to/image.jpg
- * - full https://.../storage/v1/object/public/bucket/path/to/image.jpg
- * - existing /render/image/public/... URLs are normalized with width/quality params
+ * - https://.../storage/v1/object/public/bucket/path/to/image.jpg
+ * - /storage/v1/render/image/public/bucket/path/to/image.jpg?... 
+ * - https://.../storage/v1/render/image/public/bucket/path/to/image.jpg?... 
+ * - legacy /render/image/public/... URLs are normalized too
  */
 export const buildRenderImageUrl = (
   storagePath: string | null | undefined,
@@ -32,36 +64,17 @@ export const buildRenderImageUrl = (
   const trimmed = storagePath.trim();
   if (!trimmed) return "";
 
-  const width = options.width ?? 600;
-  const quality = options.quality ?? 80;
-
-  const normalizeStorageSegments = (value: string) => {
-    if (value.includes(STORAGE_PUBLIC_SEGMENT)) {
-      const [, rawPath = ""] = value.split(STORAGE_PUBLIC_SEGMENT);
-      const [bucket, ...rest] = rawPath.split("/");
-      if (bucket && rest.length) return toRenderPath(bucket, rest.join("/"), { width, quality });
-    }
-
-    if (value.includes(STORAGE_RENDER_SEGMENT)) {
-      const [, rawPath = ""] = value.split(STORAGE_RENDER_SEGMENT);
-      const [bucket, ...rest] = rawPath.split("/");
-      if (bucket && rest.length) return toRenderPath(bucket, decodeURIComponent(rest.join("/")), { width, quality });
-    }
-
-    return null;
-  };
-
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     try {
       const url = new URL(trimmed);
-      const normalized = normalizeStorageSegments(url.pathname);
+      const normalized = normalizeKnownStoragePath(url.pathname, options);
       return normalized ?? trimmed;
     } catch {
       return trimmed;
     }
   }
 
-  const normalizedStoragePath = normalizeStorageSegments(trimmed);
+  const normalizedStoragePath = normalizeKnownStoragePath(trimmed, options);
   if (normalizedStoragePath) return normalizedStoragePath;
 
   const [bucket, ...rest] = trimmed.split("/");
@@ -71,5 +84,5 @@ export const buildRenderImageUrl = (
     return trimmed;
   }
 
-  return toRenderPath(bucket, objectPath, { width, quality });
+  return toRenderPath(bucket, objectPath, options);
 };

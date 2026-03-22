@@ -2,6 +2,18 @@ import { useEffect, useMemo } from "react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 
+type StructuredData = Record<string, unknown> | Array<Record<string, unknown>>;
+
+type SEOProps = {
+  title?: string;
+  description?: string;
+  image?: string;
+  canonical?: string;
+  type?: string;
+  noIndex?: boolean;
+  structuredData?: StructuredData | null;
+};
+
 const truncate = (value: string, maxChars: number) => {
   const v = (value || "").trim();
   if (!v) return "";
@@ -42,38 +54,78 @@ const upsertLink = (rel: string, href: string) => {
   el.setAttribute("href", href);
 };
 
-const SEO = () => {
+const cleanupStructuredData = () => {
+  document.head.querySelectorAll('script[data-seo-structured="true"]').forEach((node) => node.remove());
+};
+
+const upsertStructuredData = (structuredData?: StructuredData | null) => {
+  cleanupStructuredData();
+
+  if (!structuredData) return;
+
+  const payloads = Array.isArray(structuredData) ? structuredData : [structuredData];
+
+  payloads.forEach((payload, index) => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.dataset.seoStructured = "true";
+    script.dataset.seoStructuredIndex = String(index);
+    script.text = JSON.stringify(payload);
+    document.head.appendChild(script);
+  });
+};
+
+const SEO = ({
+  title,
+  description,
+  image,
+  canonical,
+  type = "website",
+  noIndex = false,
+  structuredData = null,
+}: SEOProps) => {
   const { getSetting } = useSiteSettings();
 
-  const metaTitle = useMemo(() => {
+  const defaultTitle = useMemo(() => {
     const fallback = "Premium Webdesign & SEO Agentur";
     return truncate(getSetting("meta_title", fallback), 60);
   }, [getSetting]);
 
-  const metaDescription = useMemo(() => {
+  const defaultDescription = useMemo(() => {
     const fallback = "Maximale Performance und messbare Anfragen durch Conversion-optimiertes Webdesign & SEO.";
     return truncate(getSetting("meta_description", fallback), 155);
   }, [getSetting]);
 
-  const ogImageRaw = useMemo(() => getSetting("og_image", ""), [getSetting]);
+  const resolvedTitle = useMemo(() => truncate(title || defaultTitle, 60), [title, defaultTitle]);
+  const resolvedDescription = useMemo(
+    () => truncate(description || defaultDescription, 155),
+    [description, defaultDescription],
+  );
+
+  const ogImageRaw = useMemo(() => image || getSetting("og_image", ""), [image, getSetting]);
   const ogImageUrl = useMemo(() => {
     if (!ogImageRaw) return "";
     if (ogImageRaw.startsWith("http")) return ogImageRaw;
     return buildRenderImageUrl(ogImageRaw, { width: 1200, quality: 80 });
   }, [ogImageRaw]);
 
+  const resolvedCanonical = canonical || (typeof window !== "undefined" ? window.location.href : "");
+
   useEffect(() => {
-    if (metaTitle) document.title = metaTitle;
-    upsertMeta({ name: "description" }, metaDescription);
-    upsertMeta({ property: "og:title" }, metaTitle);
-    upsertMeta({ property: "og:description" }, metaDescription);
+    if (resolvedTitle) document.title = resolvedTitle;
+    upsertMeta({ name: "description" }, resolvedDescription);
+    upsertMeta({ property: "og:title" }, resolvedTitle);
+    upsertMeta({ property: "og:description" }, resolvedDescription);
     upsertMeta({ property: "og:image" }, ogImageUrl);
-    upsertMeta({ property: "og:type" }, "website");
-    upsertLink("canonical", window.location.href);
-  }, [metaTitle, metaDescription, ogImageUrl]);
+    upsertMeta({ property: "og:type" }, type);
+    upsertMeta({ name: "robots" }, noIndex ? "noindex,follow" : "index,follow");
+    upsertLink("canonical", resolvedCanonical);
+    upsertStructuredData(structuredData);
+
+    return cleanupStructuredData;
+  }, [resolvedTitle, resolvedDescription, ogImageUrl, resolvedCanonical, type, noIndex, structuredData]);
 
   return null;
 };
 
 export default SEO;
-

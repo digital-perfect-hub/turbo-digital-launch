@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
@@ -81,7 +82,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
     <header className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${headerClassName}`}>
       <div className="section-container">
         <div className="flex items-center justify-between">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="relative z-10 flex items-center gap-3 group outline-none">
+          <Link to="/" className="relative z-10 flex items-center gap-3 group outline-none">
             {!settings.use_text_logo && logoUrl ? (
               <img src={logoUrl} alt={brandName} className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
             ) : (
@@ -92,7 +93,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
                 )}
               </span>
             )}
-          </button>
+          </Link>
 
           <nav className="hidden lg:flex items-center gap-8">
             {topLevelLinks.map((item) => {
@@ -150,6 +151,27 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
                 </div>
               );
             })}
+
+            <Link
+              to="/forum"
+              className={`relative flex items-center gap-1.5 py-1 text-sm uppercase tracking-widest outline-none transition-colors duration-300 ${navTypographyClasses}`}
+              style={{ color: desktopNavColor }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = desktopNavHoverColor)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = desktopNavColor)}
+            >
+              Forum
+              {settings.nav_show_underline && (
+                <span
+                  className={`absolute -bottom-1 left-0 h-[2px] w-full ${
+                    settings.nav_animate_underline
+                      ? "origin-left scale-x-0 transition-transform duration-300 ease-out hover:scale-x-100"
+                      : "opacity-0 transition-opacity duration-300 hover:opacity-100"
+                  }`}
+                  style={{ backgroundColor: forceSolid ? "#FF4B2C" : "var(--nav-underline,#FF4B2C)" }}
+                />
+              )}
+            </Link>
+
 
             <button
               onClick={() => handleLinkClick("#kontakt")}
@@ -212,6 +234,17 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
                   </div>
                 );
               })}
+              <div className={`flex flex-col border-b pb-4 ${forceSolid ? "border-white/10" : "border-border/50"}`}>
+                <Link
+                  to="/forum"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={`flex-1 text-left text-xl outline-none ${forceSolid ? "text-white" : "text-foreground"} ${navTypographyClasses}`}
+                >
+                  Forum
+                </Link>
+              </div>
+
+
               <button onClick={() => handleLinkClick("#kontakt")} className="btn-primary mt-6 w-full !py-4 text-lg shadow-xl">
                 Projekt anfragen
               </button>
