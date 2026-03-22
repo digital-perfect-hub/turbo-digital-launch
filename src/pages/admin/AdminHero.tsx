@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRenderImageUrl, buildRawImageUrl } from "@/lib/image";
 import heroFallback from "@/assets/hero-bg.jpg";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
@@ -119,7 +119,8 @@ const AdminHero = () => {
   const resolveStorageImage = (value?: string | null) => {
     const trimmed = String(value || "").trim();
     if (!trimmed) return heroFallback;
-    return buildRenderImageUrl(trimmed, { width: 1600, quality: 86 });
+    // Architektur-Fix: Kompromissloser Wechsel auf die Raw-URL für 100% Funktionalität ohne Render-API
+    return buildRawImageUrl(trimmed);
   };
 
   const heroVisualPreview = resolveStorageImage(form.image_path);

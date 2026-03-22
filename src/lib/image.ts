@@ -86,3 +86,40 @@ export const buildRenderImageUrl = (
 
   return toRenderPath(bucket, objectPath, options);
 };
+
+/**
+ * Architektur-Fix: Bypasst die Render-API und lädt das rohe Bild direkt aus dem öffentlichen Bucket.
+ * Wird strategisch im Admin-Panel genutzt, um den 403 Forbidden Fehler des Free-Tiers zu umgehen.
+ */
+export const buildRawImageUrl = (
+  storagePath: string | null | undefined,
+): string => {
+  if (!storagePath) return "";
+
+  const trimmed = storagePath.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  // Falls der Pfad bereits ein voller Storage-Pfad ist
+  if (trimmed.includes(STORAGE_PUBLIC_SEGMENT)) {
+    const base = SUPABASE_BASE_URL ? SUPABASE_BASE_URL : "";
+    return `${base}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+  }
+
+  const segments = trimmed.split("/").filter(Boolean);
+  const bucket = segments[0];
+  const objectPath = segments.slice(1).join("/");
+
+  if (!bucket || !objectPath) {
+    return trimmed;
+  }
+
+  const encodedBucket = encodeURIComponent(bucket);
+  const encodedObjectPath = encodeObjectPath(objectPath);
+  const base = SUPABASE_BASE_URL ? `${SUPABASE_BASE_URL}/storage/v1` : "/storage/v1";
+
+  return `${base}/object/public/${encodedBucket}/${encodedObjectPath}`;
+};

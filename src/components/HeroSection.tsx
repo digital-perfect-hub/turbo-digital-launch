@@ -3,7 +3,7 @@ import { ArrowRight, BadgeCheck, BarChart3, Globe, ShieldCheck, Sparkles } from 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRenderImageUrl, buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import heroFallback from "@/assets/hero-bg.jpg";
@@ -58,10 +58,11 @@ const proofItems = [
   { icon: ShieldCheck, text: "Robuste Fallbacks, damit leere Admin-Daten nicht alles zerstören" },
 ];
 
-const resolveImage = (path?: string | null, fallback: string = heroFallback, width = 1600) => {
+const resolveImage = (path?: string | null, fallback: string = heroFallback) => {
   const trimmed = String(path || "").trim();
   if (!trimmed) return fallback;
-  return buildRenderImageUrl(trimmed, { width, quality: 86 });
+  // Architektur-Fix: Kompromissloser Wechsel auf die Raw-URL für 100% Funktionalität ohne Render-API
+  return buildRawImageUrl(trimmed);
 };
 
 const HeroSection = () => {
@@ -114,8 +115,8 @@ const HeroSection = () => {
 
   const effectiveStats = statItems.length > 0 ? statItems : fallbackStats;
 
-  const heroImageSrc = resolveImage(hero?.image_path || hero?.image_url || hero?.image, heroFallback, 1200);
-  const bgImageSrc = resolveImage(hero?.background_image_path, heroFallback, 1920);
+  const heroImageSrc = resolveImage(hero?.image_path || hero?.image_url || hero?.image, heroFallback);
+  const bgImageSrc = resolveImage(hero?.background_image_path, heroFallback);
   const overlayAlpha = typeof hero?.overlay_opacity === 'number' ? Math.max(0, Math.min(100, hero.overlay_opacity)) / 100 : 0.58;
 
   return (
@@ -224,6 +225,7 @@ const HeroSection = () => {
                 </div>
 
                 <div className="relative overflow-hidden rounded-[1.7rem] border border-white/10 bg-slate-900">
+                  {/* Das rohe Bild zieht er sich jetzt ohne 403 Blockade */}
                   <img src={heroImageSrc} alt={settings.company_name || "Digital-Perfect Hero"} className="h-[430px] w-full object-cover" loading="eager" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),rgba(15,23,42,0.62))]" />
 
