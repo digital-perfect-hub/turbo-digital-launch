@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,11 +10,13 @@ import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
 
 const AdminServices = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const qc = useQueryClient();
   const { data: services = [], isLoading } = useQuery({
     queryKey: ["admin-services"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").order("sort_order");
+      const { data, error } = await supabase.from("services").select("*").eq("site_id", siteId).order("sort_order");
       if (error) throw error;
       return data;
     },
@@ -26,7 +30,7 @@ const AdminServices = () => {
         const { error } = await supabase.from("services").update({ title: item.title, description: item.description, icon_name: item.icon_name, sort_order: item.sort_order, is_visible: item.is_visible }).eq("id", item.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("services").insert({ title: item.title, description: item.description, icon_name: item.icon_name, sort_order: item.sort_order });
+        const { error } = await supabase.from("services").insert({ site_id: siteId, title: item.title, description: item.description, icon_name: item.icon_name, sort_order: item.sort_order });
         if (error) throw error;
       }
     },

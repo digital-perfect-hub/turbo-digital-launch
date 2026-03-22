@@ -1,0 +1,264 @@
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Globe, Plus, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useSiteContext } from "@/context/SiteContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+
+type SiteForm = {
+  id?: string;
+  name: string;
+  slug: string;
+  primary_domain: string;
+  description: string;
+  is_default: boolean;
+  is_active: boolean;
+};
+
+const emptyForm: SiteForm = {
+  name: "",
+  slug: "",
+  primary_domain: "",
+  description: "",
+  is_default: false,
+  is_active: true,
+};
+
+const AdminSites = () => {
+  const qc = useQueryClient();
+  const { isGlobalAdmin } = useAuth();
+  const { activeSiteId, setActiveSiteId, refetchSites, availableSites } = useSiteContext();
+  const [form, setForm] = useState<SiteForm>(emptyForm);
+
+  const { data: sites = [], isLoading } = useQuery({
+    queryKey: ["sites-admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sites" as never)
+        .select("*, site_domains(hostname, is_primary)")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const siteOptions = useMemo(() => {
+    return isGlobalAdmin && sites.length ? sites : availableSites;
+  }, [availableSites, isGlobalAdmin, sites]);
+
+  const saveSite = useMutation({
+    mutationFn: async (values: SiteForm) => {
+      const payload = {
+        id: values.id,
+        name: values.name,
+        slug: values.slug,
+        description: values.description || null,
+        primary_domain: values.primary_domain || null,
+        is_default: values.is_default,
+        is_active: values.is_active,
+      };
+
+      const { data, error } = await supabase
+        .from("sites" as never)
+        .upsert(payload, { onConflict: "slug" })
+        .select("id, primary_domain")
+        .single();
+
+      if (error) throw error;
+
+      if (values.primary_domain) {
+        const { error: domainError } = await supabase.from("site_domains" as never).upsert(
+          {
+            site_id: (data as any).id,
+            hostname: values.primary_domain,
+            is_primary: true,
+          },
+          { onConflict: "hostname" },
+        );
+
+        if (domainError) throw domainError;
+      }
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["sites-admin"] }),
+        qc.invalidateQueries({ queryKey: ["available-sites"] }),
+      ]);
+      refetchSites();
+      setForm(emptyForm);
+      toast.success("Site gespeichert.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Site konnte nicht gespeichert werden.");
+    },
+  });
+
+  useEffect(() => {
+    if (!form.slug && form.name) {
+      setForm((prev) => ({
+        ...prev,
+        slug: prev.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 60),
+      }));
+    }
+  }, [form.name, form.slug]);
+
+  return (
+    <div className="max-w-7xl p-6 md:p-10">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Sites & White-Label</h1>
+          <p className="mt-2 text-sm text-slate-500">Mandanten, Domains und der aktive Admin-Kontext für dein White-Label-System.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" variant="outline" className="rounded-xl" onClick={() => refetchSites()}>
+            <RefreshCw size={16} className="mr-2" /> Kontext neu laden
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center gap-3 text-lg font-bold text-slate-900">
+            <Building2 size={20} className="text-[#FF4B2C]" /> Aktive Site & Zugriff
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Aktive Site im Admin</Label>
+              <select
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none"
+                value={activeSiteId}
+                onChange={(event) => setActiveSiteId(event.target.value)}
+              >
+                {siteOptions.map((site: any) => (
+                  <option key={site.id} value={site.id}>
+                    {site.name} {site.primary_domain ? `(${site.primary_domain})` : ""}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">Alle Admin-Queries laufen ab jetzt gegen diese Site-ID.</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              <p><strong>Global Admin:</strong> {isGlobalAdmin ? "Ja" : "Nein"}</p>
+              <p className="mt-2"><strong>Verfügbare Sites:</strong> {siteOptions.length}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center gap-3 text-lg font-bold text-slate-900">
+            <Plus size={20} className="text-[#FF4B2C]" /> Neue Site anlegen / bearbeiten
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Slug</Label>
+              <Input value={form.slug} onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Primäre Domain / Hostname</Label>
+              <Input value={form.primary_domain} onChange={(event) => setForm((prev) => ({ ...prev, primary_domain: event.target.value }))} placeholder="kunde-a.de" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Beschreibung</Label>
+              <Textarea rows={4} value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} />
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-6">
+            <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+              <Switch checked={form.is_default} onCheckedChange={(checked) => setForm((prev) => ({ ...prev, is_default: checked }))} />
+              Als Default-Site markieren
+            </label>
+            <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+              <Switch checked={form.is_active} onCheckedChange={(checked) => setForm((prev) => ({ ...prev, is_active: checked }))} />
+              Site aktiv
+            </label>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <Button className="rounded-xl bg-[#FF4B2C] text-white hover:bg-[#E03A1E]" onClick={() => saveSite.mutate(form)} disabled={saveSite.isPending || !form.name || !form.slug}>
+              {saveSite.isPending ? "Speichere..." : "Site speichern"}
+            </Button>
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setForm(emptyForm)}>
+              Formular leeren
+            </Button>
+          </div>
+        </section>
+      </div>
+
+      <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center gap-3 text-lg font-bold text-slate-900">
+          <Globe size={20} className="text-[#FF4B2C]" /> Angelegte Sites
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {(isGlobalAdmin ? sites : availableSites).map((site: any) => {
+            const primaryDomain = site.primary_domain || site.site_domains?.find((entry: any) => entry.is_primary)?.hostname || null;
+            return (
+              <article key={site.id} className={`rounded-[1.5rem] border p-5 ${site.id === activeSiteId ? "border-[#FF4B2C] bg-[#FFF4F1]" : "border-slate-200 bg-slate-50"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">{site.name}</h3>
+                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{site.slug}</p>
+                  </div>
+                  {site.is_default ? <span className="rounded-full bg-[#0E1F53] px-3 py-1 text-xs font-bold text-white">Default</span> : null}
+                </div>
+                <div className="mt-4 space-y-2 text-sm text-slate-600">
+                  <p><strong>Domain:</strong> {primaryDomain || "—"}</p>
+                  <p><strong>Status:</strong> {site.is_active ? "Aktiv" : "Inaktiv"}</p>
+                </div>
+                <div className="mt-5 flex gap-2">
+                  <Button variant="outline" className="rounded-xl" onClick={() => setActiveSiteId(site.id)}>Aktiv setzen</Button>
+                  {isGlobalAdmin ? (
+                    <Button
+                      variant="ghost"
+                      className="rounded-xl"
+                      onClick={() =>
+                        setForm({
+                          id: site.id,
+                          name: site.name || "",
+                          slug: site.slug || "",
+                          primary_domain: primaryDomain || "",
+                          description: site.description || "",
+                          is_default: !!site.is_default,
+                          is_active: !!site.is_active,
+                        })
+                      }
+                    >
+                      Bearbeiten
+                    </Button>
+                  ) : null}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {!isLoading && !(isGlobalAdmin ? sites : availableSites).length ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-slate-500">
+            Noch keine Sites gefunden. Spiele zuerst die Prio-C-SQL ein.
+          </div>
+        ) : null}
+      </section>
+    </div>
+  );
+};
+
+export default AdminSites;

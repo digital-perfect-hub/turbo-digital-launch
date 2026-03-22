@@ -4,14 +4,18 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 const FAQSection = () => {
   const { getSetting } = useSiteSettings();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const { data: faqs = [] } = useQuery({
-    queryKey: ["faq_items"],
+    queryKey: ["faq_items", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("faq_items").select("*").order("sort_order");
+      const { data, error } = await supabase.from("faq_items").select("*").eq("site_id", siteId).order("sort_order");
       if (error) throw error;
       return data;
     },

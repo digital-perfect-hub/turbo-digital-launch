@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { uploadBrandingAsset } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,13 +31,15 @@ const emptyPortfolioItem = (sortOrder: number): PortfolioPayload => ({
 
 const AdminPortfolio = () => {
   const qc = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [editing, setEditing] = useState<(Partial<PortfolioRecord> & { id?: string }) | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["admin_portfolio_items"],
+    queryKey: ["admin_portfolio_items", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("portfolio_items").select(PORTFOLIO_SELECT).order("sort_order");
+      const { data, error } = await supabase.from("portfolio_items").select(PORTFOLIO_SELECT).eq("site_id", siteId).order("sort_order");
       if (error) throw error;
       return data as PortfolioRecord[];
     },
@@ -52,7 +57,7 @@ const AdminPortfolio = () => {
         const { error } = await supabase.from("portfolio_items").update(rest).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("portfolio_items").insert(payload as PortfolioPayload);
+        const { error } = await supabase.from("portfolio_items").insert({ ...(payload as PortfolioPayload), site_id: siteId });
         if (error) throw error;
       }
     },
@@ -82,13 +87,9 @@ const AdminPortfolio = () => {
     if (!file || !editing) return;
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `portfolio/${crypto.randomUUID()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('branding').upload(filePath, file);
+      const filePath = await uploadBrandingAsset(file, "portfolio", siteId);
       if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('branding').getPublicUrl(filePath);
-      
-      setEditing({ ...editing, image_url: publicUrl });
+      setEditing({ ...editing, image_url: filePath });
       toast.success("Bild erfolgreich hochgeladen!");
     } catch (error: any) {
       toast.error("Upload fehlgeschlagen: " + error.message);
@@ -158,7 +159,7 @@ const AdminPortfolio = () => {
                 <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
                   <div className="h-16 w-24 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-1">
                     {editing.image_url ? (
-                      <img src={editing.image_url.startsWith("http") ? editing.image_url : buildRenderImageUrl(editing.image_url, { width: 160 })} alt="Preview" className="max-h-full object-cover" />
+                      <img src={buildRenderImageUrl(editing.image_url, { width: 160 })} alt="Preview" className="max-h-full object-cover" />
                     ) : <ImageIcon className="text-slate-300" />}
                   </div>
                   <div>
@@ -210,7 +211,7 @@ const AdminPortfolio = () => {
             <div key={item.id} className="group flex items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#FF4B2C]/30 hover:shadow-md">
               <div className="flex min-w-0 items-center gap-5">
                 {item.image_url ? (
-                  <img src={item.image_url.startsWith("http") ? item.image_url : buildRenderImageUrl(item.image_url, { width: 160, quality: 78 })} alt="" className="h-16 w-24 rounded-xl object-cover shadow-sm" />
+                  <img src={buildRenderImageUrl(item.image_url, { width: 160, quality: 78 })} alt="" className="h-16 w-24 rounded-xl object-cover shadow-sm" />
                 ) : (
                   <div className="h-16 w-24 rounded-xl bg-slate-100 flex items-center justify-center text-[0.65rem] uppercase font-bold tracking-wider text-slate-400">Kein Bild</div>
                 )}

@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,11 +10,13 @@ import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
 
 const AdminFAQ = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const qc = useQueryClient();
   const { data: faqs = [], isLoading } = useQuery({
     queryKey: ["admin-faq"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("faq_items").select("*").order("sort_order");
+      const { data, error } = await supabase.from("faq_items").select("*").eq("site_id", siteId).order("sort_order");
       if (error) throw error;
       return data;
     },
@@ -27,7 +31,7 @@ const AdminFAQ = () => {
         const { error } = await supabase.from("faq_items").update(payload).eq("id", item.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("faq_items").insert(payload);
+        const { error } = await supabase.from("faq_items").insert({ ...payload, site_id: siteId });
         if (error) throw error;
       }
     },

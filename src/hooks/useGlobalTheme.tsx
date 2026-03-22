@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 export type GlobalThemeSettings = {
   id: string;
@@ -135,10 +137,14 @@ const hexToHslParts = (hex: string | null | undefined, fallback: string): string
 };
 
 export const useGlobalTheme = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["global_settings"],
+    queryKey: ["global_settings", siteId],
+    enabled: Boolean(siteId),
     queryFn: async () => {
-      const { data, error } = await supabase.from("global_settings").select("*").limit(1).maybeSingle();
+      const { data, error } = await supabase.from("global_settings").select("*").eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
       return (data as unknown as GlobalThemeSettings | null) ?? null;
     },
@@ -185,10 +191,8 @@ export const useGlobalTheme = () => {
     document.title = baseTitle;
 
     if (settings.favicon_path) {
-      const resolvedFavicon = settings.favicon_path.startsWith("http") 
-        ? settings.favicon_path 
-        : buildRenderImageUrl(settings.favicon_path, { width: 128, quality: 100 });
-        
+      const resolvedFavicon = buildRenderImageUrl(settings.favicon_path, { width: 128, quality: 100 });
+
       let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
       if (!link) {
         link = document.createElement('link');
@@ -238,9 +242,9 @@ export const useGlobalTheme = () => {
 
   }, [settings]);
 
-  const resolvedLogoUrl = settings.logo_path?.startsWith("http") 
-    ? settings.logo_path 
-    : buildRenderImageUrl(settings.logo_path, { width: 320, quality: 80 });
+  const resolvedLogoUrl = settings.logo_path
+    ? buildRenderImageUrl(settings.logo_path, { width: 320, quality: 80 })
+    : "";
 
   return {
     settings,

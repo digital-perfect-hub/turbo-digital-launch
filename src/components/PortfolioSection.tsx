@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type PortfolioItem = Database["public"]["Tables"]["portfolio_items"]["Row"];
 
@@ -60,13 +62,16 @@ const PORTFOLIO_SELECT = "id, title, description, image_url, url, tags, sort_ord
 
 const PortfolioSection = () => {
   const { getSetting } = useSiteSettings();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const { data: portfolioItems = [], isLoading } = useQuery({
-    queryKey: ["portfolio_items"],
+    queryKey: ["portfolio_items", siteId],
     queryFn: async (): Promise<PortfolioItem[]> => {
       const { data, error } = await supabase
         .from("portfolio_items")
         .select(PORTFOLIO_SELECT)
+        .eq("site_id", siteId)
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
@@ -95,9 +100,7 @@ const PortfolioSection = () => {
             const hasImage = Boolean(item.image_url);
             
             // BUGFIX: Wenn die URL schon fertig von Supabase kommt ("http..."), nicht nochmal durch Render-API jagen
-            const imageSrc = hasImage 
-              ? (item.image_url!.startsWith("http") ? item.image_url : buildRenderImageUrl(item.image_url, { width: 1200, quality: 84 })) 
-              : "";
+            const imageSrc = hasImage ? buildRenderImageUrl(item.image_url, { width: 1200, quality: 84 }) : "";
 
             return (
               <motion.article

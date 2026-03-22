@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 import heroFallback from "@/assets/hero-bg.jpg";
 
 type HeroRecord = {
@@ -59,15 +61,17 @@ const proofItems = [
 const resolveImage = (path?: string | null, fallback: string = heroFallback, width = 1600) => {
   const trimmed = String(path || "").trim();
   if (!trimmed) return fallback;
-  return trimmed.startsWith("http") ? trimmed : buildRenderImageUrl(trimmed, { width, quality: 86 });
+  return buildRenderImageUrl(trimmed, { width, quality: 86 });
 };
 
 const HeroSection = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { settings } = useGlobalTheme();
   const { data: hero, isLoading } = useQuery({
-    queryKey: ["hero_content"],
+    queryKey: ["hero_content", siteId],
     queryFn: async (): Promise<HeroRecord | null> => {
-      const { data, error } = await supabase.from("hero_content").select("*").limit(1).maybeSingle();
+      const { data, error } = await supabase.from("hero_content").select("*").eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
       return (data as HeroRecord | null) ?? null;
     },

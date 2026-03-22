@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { toast } from "sonner";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { uploadBrandingAsset } from "@/lib/storage";
 
 const GLOBAL_SETTINGS_EDITABLE_COLUMNS = [
   "primary_color_hex", "secondary_color_hex", "accent_color_hex",
@@ -21,6 +24,8 @@ const GLOBAL_SETTINGS_EDITABLE_COLUMNS = [
 
 const AdminBranding = () => {
   const queryClient = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { settings, isLoading } = useGlobalTheme();
   const [form, setForm] = useState<any>({});
   const [isUploading, setIsUploading] = useState(false);
@@ -40,14 +45,14 @@ const AdminBranding = () => {
       const { data: updatedRows, error: updateError } = await supabase
         .from("global_settings")
         .update(payload)
-        .eq("id", rowId)
+        .eq("site_id", siteId)
         .select("id");
 
       if (updateError) throw updateError;
       if (!updatedRows?.length) {
         const { error: upsertError } = await supabase
           .from("global_settings")
-          .upsert({ id: rowId, ...payload }, { onConflict: "id" });
+          .upsert({ id: rowId, site_id: siteId, ...payload }, { onConflict: "site_id" });
         if (upsertError) throw upsertError;
       }
     },
@@ -63,12 +68,8 @@ const AdminBranding = () => {
     if (!file) return;
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `logos/${crypto.randomUUID()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('branding').upload(filePath, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('branding').getPublicUrl(filePath);
-      setForm({ ...form, logo_path: publicUrl, use_text_logo: false });
+      const filePath = await uploadBrandingAsset(file, "logos", siteId);
+      setForm({ ...form, logo_path: filePath, use_text_logo: false });
       toast.success("Logo erfolgreich hochgeladen!");
     } catch (error: any) {
       toast.error("Upload fehlgeschlagen: " + error.message);
@@ -77,7 +78,7 @@ const AdminBranding = () => {
     }
   };
 
-  const logoPreview = form.logo_path?.startsWith("http") ? form.logo_path : buildRenderImageUrl(form.logo_path, { width: 480, quality: 82 });
+  const logoPreview = form.logo_path ? buildRenderImageUrl(form.logo_path, { width: 480, quality: 82 }) : "";
 
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 

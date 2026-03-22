@@ -1,28 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
 import { ImageIcon, MessageSquare, Package, Sparkles, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 const AdminDashboard = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { data: portfolioCount = 0 } = useQuery({
-    queryKey: ["admin-portfolio-count"],
+    queryKey: ["admin-portfolio-count", siteId],
     queryFn: async () => {
-      const { count } = await supabase.from("portfolio_items").select("*", { count: "exact", head: true });
+      const { count } = await supabase.from("portfolio_items").select("*", { count: "exact", head: true }).eq("site_id", siteId);
       return count ?? 0;
     },
   });
 
   const { data: productCount = 0 } = useQuery({
-    queryKey: ["admin-product-count"],
+    queryKey: ["admin-product-count", siteId],
     queryFn: async () => {
-      const { count } = await supabase.from("products").select("*", { count: "exact", head: true });
+      const { count } = await supabase.from("products").select("*", { count: "exact", head: true }).eq("site_id", siteId);
       return count ?? 0;
     },
   });
 
   const { data: leadCount = 0 } = useQuery({
-    queryKey: ["admin-lead-count"],
+    queryKey: ["admin-lead-count", siteId],
     queryFn: async () => {
-      const { count } = await supabase.from("leads").select("*", { count: "exact", head: true });
+      const { count } = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("site_id", siteId);
       return count ?? 0;
     },
   });

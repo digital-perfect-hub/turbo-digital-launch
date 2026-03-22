@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useForumFeaturedThreads } from "@/hooks/useForum";
 import { getForumRenderImageUrl } from "@/lib/forumHtml";
+import { defaultForumTeaserContent, useSiteSettings } from "@/hooks/useSiteSettings";
+import { stripHtmlToText } from "@/lib/content";
 
 const formatDate = (value?: string | null) =>
   value
@@ -16,22 +18,16 @@ const formatDate = (value?: string | null) =>
       }).format(new Date(value))
     : "";
 
-const stripHtml = (value?: string | null) => {
-  if (!value) return "";
-  return value
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-};
-
-const getSnippet = (value?: string | null, fallback?: string | null) => {
-  const source = stripHtml(value) || stripHtml(fallback);
-  if (!source) return "Praxisnahe Antworten, Insights und Diskussionen aus unserer Community.";
+const getSnippet = (value?: string | null, fallback?: string | null, emptyText = defaultForumTeaserContent.empty_text) => {
+  const source = stripHtmlToText(value) || stripHtmlToText(fallback);
+  if (!source) return emptyText;
   return source.length > 140 ? `${source.slice(0, 137).trimEnd()}...` : source;
 };
 
 const ForumTeaser = () => {
   const { data: threads = [], isLoading } = useForumFeaturedThreads(3);
+  const { getJsonSetting } = useSiteSettings();
+  const content = getJsonSetting("forum_teaser_content", defaultForumTeaserContent);
 
   return (
     <section className="relative overflow-hidden py-20">
@@ -43,19 +39,15 @@ const ForumTeaser = () => {
               <div className="max-w-3xl">
                 <Badge className="rounded-full border-none bg-[#0E1F53] px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white">
                   <Sparkles className="mr-2 h-3.5 w-3.5" />
-                  Community Funnel
+                  {content.badge}
                 </Badge>
-                <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
-                  Die aktivsten Diskussionen aus unserem Forum 🚀
-                </h2>
-                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">
-                  Hol dir direkt Praxiswissen, Erfahrungen und konkrete Antworten aus der Digital-Perfect Community.
-                </p>
+                <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">{content.title}</h2>
+                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">{content.description}</p>
               </div>
 
               <Button asChild className="rounded-full bg-[#FF4B2C] px-7 text-white hover:bg-[#ff5f44]">
-                <Link to="/forum" className="inline-flex items-center gap-2">
-                  Zur Community
+                <Link to={content.cta_link || "/forum"} className="inline-flex items-center gap-2">
+                  {content.cta_text}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -77,7 +69,7 @@ const ForumTeaser = () => {
                 ))
               : threads.map((thread) => {
                   const imageUrl = getForumRenderImageUrl(thread.featured_image_url, 960, 80);
-                  const snippet = getSnippet(thread.seo_description || thread.raw_html_content, thread.content);
+                  const snippet = getSnippet(thread.seo_description || thread.raw_html_content, thread.content, content.empty_text);
 
                   return (
                     <Link key={thread.id} to={`/forum/${thread.slug}`} className="group block h-full">
@@ -95,7 +87,7 @@ const ForumTeaser = () => {
                         ) : (
                           <div className="flex aspect-[16/9] items-end bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.16),transparent_30%),linear-gradient(135deg,#0E1F53_0%,#182f70_100%)] p-6 text-white">
                             <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/85">
-                              Community Thread
+                              {content.fallback_chip}
                             </span>
                           </div>
                         )}
@@ -103,7 +95,7 @@ const ForumTeaser = () => {
                         <CardContent className="flex flex-1 flex-col p-6">
                           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
                             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-[#0E1F53]">
-                              {thread.author_name || "Digital-Perfect"}
+                              {thread.author_name || content.fallback_author}
                             </span>
                             {thread.category?.name ? (
                               <span className="rounded-full bg-[#FF4B2C]/8 px-3 py-1 font-semibold text-[#FF4B2C]">

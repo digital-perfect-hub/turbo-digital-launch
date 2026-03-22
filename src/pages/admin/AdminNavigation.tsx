@@ -7,9 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 const AdminNavigation = () => {
   const qc = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ label: "", url: "", parent_id: "" });
   
@@ -25,11 +29,11 @@ const AdminNavigation = () => {
   });
 
   const { data: themeSettings } = useQuery({
-    queryKey: ["global_settings_nav"],
+    queryKey: ["global_settings_nav", siteId],
     queryFn: async () => {
       const { data, error } = await supabase.from("global_settings")
         .select("id, nav_text_color_hex, nav_hover_color_hex, nav_font_weight, nav_font_style, nav_font_family, nav_show_underline, nav_underline_color_hex, nav_animate_underline")
-        .limit(1).maybeSingle();
+        .eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -51,9 +55,9 @@ const AdminNavigation = () => {
   }, [themeSettings]);
 
   const { data: links = [], isLoading: linksLoading } = useQuery({
-    queryKey: ["navigation_links"],
+    queryKey: ["navigation_links", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("navigation_links").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("navigation_links").select("*").eq("site_id", siteId).order("sort_order", { ascending: true }).order("created_at", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -62,7 +66,7 @@ const AdminNavigation = () => {
   const saveStyling = useMutation({
     mutationFn: async (values: typeof styling) => {
       const rowId = themeSettings?.id || "default";
-      const { error } = await supabase.from("global_settings").upsert({ id: rowId, ...values }, { onConflict: "id" });
+      const { error } = await supabase.from("global_settings").upsert({ id: rowId, site_id: siteId, ...values }, { onConflict: "site_id" });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -75,6 +79,7 @@ const AdminNavigation = () => {
   const saveLink = useMutation({
     mutationFn: async () => {
       const payload = {
+        site_id: siteId,
         label: form.label,
         url: form.url,
         parent_id: form.parent_id === "none" || !form.parent_id ? null : form.parent_id,

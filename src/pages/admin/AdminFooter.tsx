@@ -8,9 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 const AdminFooter = () => {
   const qc = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [form, setForm] = useState<any>({
     footer_description: "",
     social_instagram_url: "",
@@ -21,10 +25,11 @@ const AdminFooter = () => {
   });
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["global_settings_footer"],
+    queryKey: ["global_settings_footer", siteId],
     queryFn: async () => {
       const { data, error } = await supabase.from("global_settings")
         .select("id, footer_description, social_instagram_url, social_linkedin_url, show_socials, footer_nav_links, footer_legal_links")
+        .eq("site_id", siteId)
         .limit(1).maybeSingle();
       if (error) throw error;
       return data;
@@ -44,7 +49,7 @@ const AdminFooter = () => {
   const mutation = useMutation({
     mutationFn: async (values: typeof form) => {
       const rowId = settings?.id || "default";
-      const { error } = await supabase.from("global_settings").upsert({ id: rowId, ...values }, { onConflict: "id" });
+      const { error } = await supabase.from("global_settings").upsert({ id: rowId, site_id: siteId, ...values }, { onConflict: "site_id" });
       if (error) throw error;
     },
     onSuccess: () => {

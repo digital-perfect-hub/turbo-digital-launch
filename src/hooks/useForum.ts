@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database, TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type ForumCategoryRow = Database["public"]["Tables"]["forum_categories"]["Row"];
 type ForumThreadRow = Database["public"]["Tables"]["forum_threads"]["Row"];
@@ -56,62 +58,37 @@ const normalizeForumErrorMessage = (error: unknown, fallback: string) => {
 
   if (!message) return fallback;
 
-  if (message.includes("forum_rate_limit_reply")) {
-    return "Bitte warte kurz, bevor du die nächste Antwort sendest.";
-  }
-
-  if (message.includes("forum_rate_limit_like")) {
-    return "Du bist gerade zu schnell unterwegs. Warte bitte einen Moment vor dem nächsten Like.";
-  }
-
-  if (message.includes("forum_reply_locked")) {
-    return "Dieser Thread ist geschlossen. Neue Antworten sind hier aktuell nicht möglich.";
-  }
-
-  if (message.includes("forum_reply_min_length")) {
-    return "Deine Antwort ist noch zu kurz. Schreib bitte etwas Substanzielleres.";
-  }
-
-  if (message.includes("forum_reply_max_length")) {
-    return "Deine Antwort ist zu lang. Kürze sie bitte etwas.";
-  }
-
-  if (message.includes("forum_reply_url_limit")) {
-    return "Zu viele Links in einer Antwort. Bitte reduziere die Anzahl der URLs.";
-  }
-
-  if (message.includes("forum_reply_duplicate")) {
-    return "Diese Antwort wurde so oder sehr ähnlich schon gepostet.";
-  }
-
-  if (message.includes("forum_reply_burst_limit")) {
-    return "Zu viele Antworten in kurzer Zeit. Warte bitte kurz, bevor du weiterschreibst.";
-  }
-
-  if (message.includes("forum_like_own_reply")) {
-    return "Eigene Antworten kannst du nicht liken.";
-  }
-
-  if (message.includes("forum_like_reply_unavailable")) {
-    return "Dieser Beitrag kann aktuell nicht geliked werden.";
-  }
+  if (message.includes("forum_rate_limit_reply")) return "Bitte warte kurz, bevor du die nächste Antwort sendest.";
+  if (message.includes("forum_rate_limit_like")) return "Du bist gerade zu schnell unterwegs. Warte bitte einen Moment vor dem nächsten Like.";
+  if (message.includes("forum_reply_locked")) return "Dieser Thread ist geschlossen. Neue Antworten sind hier aktuell nicht möglich.";
+  if (message.includes("forum_reply_min_length")) return "Deine Antwort ist noch zu kurz. Schreib bitte etwas Substanzielleres.";
+  if (message.includes("forum_reply_max_length")) return "Deine Antwort ist zu lang. Kürze sie bitte etwas.";
+  if (message.includes("forum_reply_url_limit")) return "Zu viele Links in einer Antwort. Bitte reduziere die Anzahl der URLs.";
+  if (message.includes("forum_reply_duplicate")) return "Diese Antwort wurde so oder sehr ähnlich schon gepostet.";
+  if (message.includes("forum_reply_burst_limit")) return "Zu viele Antworten in kurzer Zeit. Warte bitte kurz, bevor du weiterschreibst.";
+  if (message.includes("forum_like_own_reply")) return "Eigene Antworten kannst du nicht liken.";
+  if (message.includes("forum_like_reply_unavailable")) return "Dieser Beitrag kann aktuell nicht geliked werden.";
 
   return message || fallback;
 };
 
 export const useForumCategories = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
+
   return useQuery({
-    queryKey: ["forum-categories"],
+    queryKey: ["forum-categories", siteId],
     queryFn: async (): Promise<ForumCategory[]> => {
       const [{ data: categories, error: categoriesError }, { data: threadRows, error: threadRowsError }] =
         await Promise.all([
           supabase
-            .from("forum_categories")
+             .from("forum_categories")
             .select("*")
+            .eq("site_id", siteId)
             .eq("is_active", true)
             .order("sort_order", { ascending: true })
             .order("name", { ascending: true }),
-          supabase.from("forum_threads").select("category_id, is_active, status"),
+          supabase.from("forum_threads").select("category_id, is_active, status").eq("site_id", siteId),
         ]);
 
       if (categoriesError) throw categoriesError;
@@ -133,12 +110,16 @@ export const useForumCategories = () => {
 };
 
 export const useForumFeaturedThreads = (limit = 3) => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
+
   return useQuery({
-    queryKey: ["forum-featured-threads", limit],
+    queryKey: ["forum-featured-threads", siteId, limit],
     queryFn: async (): Promise<ForumFeaturedThread[]> => {
       const { data: threads, error: threadsError } = await supabase
-        .from("forum_threads")
+         .from("forum_threads")
         .select("*")
+        .eq("site_id", siteId)
         .eq("is_active", true)
         .eq("status", "published")
         .order("views", { ascending: false })
@@ -152,10 +133,10 @@ export const useForumFeaturedThreads = (limit = 3) => {
 
       const [{ data: replies, error: repliesError }, { data: categories, error: categoriesError }] = await Promise.all([
         threadIds.length
-          ? supabase.from("forum_replies").select("thread_id, is_active, is_spam").in("thread_id", threadIds)
+          ? supabase.from("forum_replies").select("thread_id, is_active, is_spam").eq("site_id", siteId).in("thread_id", threadIds)
           : Promise.resolve({ data: [], error: null }),
         categoryIds.length
-          ? supabase.from("forum_categories").select("id, name, slug").in("id", categoryIds)
+          ? supabase.from("forum_categories").select("id, name, slug").eq("site_id", siteId).in("id", categoryIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
 
@@ -180,9 +161,13 @@ export const useForumFeaturedThreads = (limit = 3) => {
   });
 };
 
-export const useForumThreads = (categorySlug?: string) => {
+// THE FIX: Added page and limit parameters to prevent data hemorrhage
+export const useForumThreads = (categorySlug?: string, page = 1, limit = 50) => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
+
   return useQuery({
-    queryKey: ["forum-threads", categorySlug ?? null],
+    queryKey: ["forum-threads", siteId, categorySlug ?? null, page, limit],
     queryFn: async (): Promise<ForumThreadListItem[]> => {
       let categoryId: string | null = null;
 
@@ -190,6 +175,7 @@ export const useForumThreads = (categorySlug?: string) => {
         const { data: category, error: categoryError } = await supabase
           .from("forum_categories")
           .select("id")
+          .eq("site_id", siteId)
           .eq("slug", categorySlug)
           .eq("is_active", true)
           .maybeSingle();
@@ -199,13 +185,18 @@ export const useForumThreads = (categorySlug?: string) => {
         categoryId = category.id;
       }
 
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
       let threadQuery = supabase
-        .from("forum_threads")
+         .from("forum_threads")
         .select("*")
+        .eq("site_id", siteId)
         .eq("is_active", true)
         .eq("status", "published")
         .order("is_pinned", { ascending: false })
-        .order("last_activity_at", { ascending: false });
+        .order("last_activity_at", { ascending: false })
+        .range(from, to);
 
       if (categoryId) {
         threadQuery = threadQuery.eq("category_id", categoryId);
@@ -219,10 +210,10 @@ export const useForumThreads = (categorySlug?: string) => {
 
       const [{ data: replies, error: repliesError }, { data: categories, error: categoriesError }] = await Promise.all([
         threadIds.length
-          ? supabase.from("forum_replies").select("thread_id, is_active, is_spam").in("thread_id", threadIds)
+          ? supabase.from("forum_replies").select("thread_id, is_active, is_spam").eq("site_id", siteId).in("thread_id", threadIds)
           : Promise.resolve({ data: [], error: null }),
         categoryIds.length
-          ? supabase.from("forum_categories").select("id, name, slug").in("id", categoryIds)
+          ? supabase.from("forum_categories").select("id, name, slug").eq("site_id", siteId).in("id", categoryIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
 
@@ -248,16 +239,19 @@ export const useForumThreads = (categorySlug?: string) => {
 };
 
 export const useForumThread = (slug?: string) => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const trackedIdRef = useRef<string | null>(null);
 
   const query = useQuery({
-    queryKey: ["forum-thread", slug ?? null],
+    queryKey: ["forum-thread", siteId, slug ?? null],
     enabled: Boolean(slug),
     retry: false,
     queryFn: async (): Promise<ForumThreadDetail | null> => {
       const { data: thread, error: threadError } = await supabase
         .from("forum_threads")
         .select("*")
+        .eq("site_id", siteId)
         .eq("slug", slug as string)
         .eq("is_active", true)
         .eq("status", "published")
@@ -270,6 +264,7 @@ export const useForumThread = (slug?: string) => {
         ? await supabase
             .from("forum_categories")
             .select("id, name, slug, description")
+            .eq("site_id", siteId)
             .eq("id", thread.category_id)
             .maybeSingle()
         : { data: null, error: null };
@@ -297,20 +292,28 @@ export const useForumThread = (slug?: string) => {
   };
 };
 
-export const useForumReplies = (threadId?: string) => {
+// THE FIX: Added page and limit parameters to prevent data hemorrhage on replies
+export const useForumReplies = (threadId?: string, page = 1, limit = 100) => {
   const { user } = useAuth();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   return useQuery({
-    queryKey: ["forum-replies", threadId ?? null, user?.id ?? null],
+    queryKey: ["forum-replies", siteId, threadId ?? null, user?.id ?? null, page, limit],
     enabled: Boolean(threadId),
     queryFn: async (): Promise<ForumReply[]> => {
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
       const { data: replies, error: repliesError } = await supabase
         .from("forum_replies")
         .select("*")
+        .eq("site_id", siteId)
         .eq("thread_id", threadId as string)
         .eq("is_active", true)
         .eq("is_spam", false)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .range(from, to);
 
       if (repliesError) throw repliesError;
 
@@ -318,9 +321,9 @@ export const useForumReplies = (threadId?: string) => {
       if (!replyIds.length) return [];
 
       const [likesResult, userLikesResult] = await Promise.all([
-        supabase.from("forum_reply_likes").select("reply_id").in("reply_id", replyIds),
+        supabase.from("forum_reply_likes").select("reply_id").eq("site_id", siteId).in("reply_id", replyIds),
         user?.id
-          ? supabase.from("forum_reply_likes").select("reply_id").eq("user_id", user.id).in("reply_id", replyIds)
+          ? supabase.from("forum_reply_likes").select("reply_id").eq("site_id", siteId).eq("user_id", user.id).in("reply_id", replyIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
 
@@ -367,21 +370,18 @@ export const useForumRedirect = (sourcePath?: string, enabled = true) => {
 export const useAddForumReply = (threadId?: string) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   return useMutation({
     mutationFn: async (content: string) => {
       const trimmed = content.trim();
-      if (!user?.id) {
-        throw new Error("Du musst eingeloggt sein, um zu antworten.");
-      }
-      if (!threadId) {
-        throw new Error("Thread-ID fehlt.");
-      }
-      if (!trimmed) {
-        throw new Error("Bitte schreibe zuerst eine Antwort.");
-      }
+      if (!user?.id) throw new Error("Du musst eingeloggt sein, um zu antworten.");
+      if (!threadId) throw new Error("Thread-ID fehlt.");
+      if (!trimmed) throw new Error("Bitte schreibe zuerst eine Antwort.");
 
       const payload: TablesInsert<"forum_replies"> = {
+        site_id: siteId,
         thread_id: threadId,
         author_id: user.id,
         author_name: formatAuthorName(user),
@@ -393,7 +393,7 @@ export const useAddForumReply = (threadId?: string) => {
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["forum-replies", threadId ?? null] }),
+        queryClient.invalidateQueries({ queryKey: ["forum-replies", siteId, threadId ?? null] }),
         queryClient.invalidateQueries({ queryKey: ["forum-threads"] }),
         queryClient.invalidateQueries({ queryKey: ["forum-thread"] }),
         queryClient.invalidateQueries({ queryKey: ["forum-categories"] }),
@@ -410,17 +410,18 @@ export const useAddForumReply = (threadId?: string) => {
 export const useToggleForumReplyLike = (threadId?: string) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   return useMutation({
     mutationFn: async (reply: Pick<ForumReply, "id" | "user_has_liked">) => {
-      if (!user?.id) {
-        throw new Error("Du musst eingeloggt sein, um Likes zu setzen.");
-      }
+      if (!user?.id) throw new Error("Du musst eingeloggt sein, um Likes zu setzen.");
 
       if (reply.user_has_liked) {
         const { error } = await supabase
-          .from("forum_reply_likes")
+           .from("forum_reply_likes")
           .delete()
+          .eq("site_id", siteId)
           .eq("reply_id", reply.id)
           .eq("user_id", user.id);
 
@@ -429,6 +430,7 @@ export const useToggleForumReplyLike = (threadId?: string) => {
       }
 
       const payload: TablesInsert<"forum_reply_likes"> = {
+        site_id: siteId,
         reply_id: reply.id,
         user_id: user.id,
       };
@@ -437,7 +439,7 @@ export const useToggleForumReplyLike = (threadId?: string) => {
       if (error) throw new Error(normalizeForumErrorMessage(error, "Like konnte nicht gespeichert werden."));
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["forum-replies", threadId ?? null, user?.id ?? null] });
+      await queryClient.invalidateQueries({ queryKey: ["forum-replies", siteId, threadId ?? null, user?.id ?? null] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Like konnte nicht gespeichert werden.");

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type ProductRecord = Database["public"]["Tables"]["products"]["Row"];
 
@@ -146,18 +148,21 @@ const normalizeColor = (value: string | null | undefined) => {
 };
 
 const ProductDetail = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { slug = "" } = useParams();
   const location = useLocation();
   const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const { data: product, isLoading, error } = useQuery({
-    queryKey: ["product-detail", slug],
+    queryKey: ["product-detail", siteId, slug],
     enabled: Boolean(slug),
     queryFn: async (): Promise<ProductRecord | null> => {
       const { data, error } = await supabase
         .from("products")
         .select(PRODUCT_SELECT)
+        .eq("site_id", siteId)
         .eq("slug", slug)
         .eq("is_visible", true)
         .maybeSingle();
@@ -171,9 +176,7 @@ const ProductDetail = () => {
   const upsells = useMemo(() => normalizeUpsells(product?.upsells), [product?.upsells]);
   const detailImage = useMemo(() => {
     if (!product?.image_url) return "";
-    return product.image_url.startsWith("http")
-      ? product.image_url
-      : buildRenderImageUrl(product.image_url, { width: 1600, quality: 86 });
+    return buildRenderImageUrl(product.image_url, { width: 1600, quality: 86 });
   }, [product?.image_url]);
   const longDescriptionParagraphs = useMemo(() => splitParagraphs(product?.long_description), [product?.long_description]);
   const selectedUpsells = useMemo(() => upsells.filter((item) => selectedUpsellIds.includes(item.id)), [selectedUpsellIds, upsells]);

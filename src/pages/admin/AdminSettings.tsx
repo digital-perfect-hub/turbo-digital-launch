@@ -10,17 +10,22 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { buildSiteAssetPath } from "@/lib/storage";
 
 const AdminSettings = () => {
   const qc = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [form, setForm] = useState<any>({});
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["global_settings_all"],
+    queryKey: ["global_settings_all", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("global_settings").select("*").limit(1).maybeSingle();
+      const { data, error } = await supabase.from("global_settings").select("*").eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
       return data || {};
     },
@@ -53,11 +58,12 @@ const AdminSettings = () => {
         enable_tab_retention: values.enable_tab_retention,
         tab_retention_texts: values.tab_retention_texts,
       };
-      const { error } = await supabase.from("global_settings").upsert({ id: rowId, ...payload }, { onConflict: "id" });
+      const { error } = await supabase.from("global_settings").upsert({ id: rowId, site_id: siteId, ...payload }, { onConflict: "site_id" });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["global_settings"] });
+      qc.invalidateQueries({ queryKey: ["global_settings_all"] });
       toast.success("Einstellungen erfolgreich gespeichert!");
     },
     onError: (err: any) => toast.error(err.message),
@@ -68,12 +74,10 @@ const AdminSettings = () => {
     if (!file) return;
     setLoader(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${field === "favicon_path" ? "favicons" : "logos"}/${crypto.randomUUID()}.${fileExt}`;
+      const filePath = buildSiteAssetPath(siteId, field === "favicon_path" ? "favicons" : "logos", file);
       const { error: uploadError } = await supabase.storage.from('branding').upload(filePath, file);
       if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('branding').getPublicUrl(filePath);
-      setForm({ ...form, [field]: publicUrl });
+      setForm({ ...form, [field]: filePath });
       toast.success("Erfolgreich hochgeladen!");
     } catch (error: any) {
       toast.error("Upload fehlgeschlagen: " + error.message);
@@ -124,7 +128,7 @@ const AdminSettings = () => {
                 <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
                   <div className="h-16 w-16 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-2">
                     {form.favicon_path ? (
-                      <img src={form.favicon_path.startsWith("http") ? form.favicon_path : buildRenderImageUrl(form.favicon_path, { width: 64 })} alt="Favicon" className="max-h-full object-contain" />
+                      <img src={buildRenderImageUrl(form.favicon_path, { width: 64 })} alt="Favicon" className="max-h-full object-contain" />
                     ) : <ImageIcon className="text-slate-300" />}
                   </div>
                   <div>
@@ -142,7 +146,7 @@ const AdminSettings = () => {
                 <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
                   <div className="h-16 w-32 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-2">
                     {form.logo_path ? (
-                      <img src={form.logo_path.startsWith("http") ? form.logo_path : buildRenderImageUrl(form.logo_path, { width: 128 })} alt="Logo" className="max-h-full object-contain" />
+                      <img src={buildRenderImageUrl(form.logo_path, { width: 128 })} alt="Logo" className="max-h-full object-contain" />
                     ) : <ImageIcon className="text-slate-300" />}
                   </div>
                   <div>

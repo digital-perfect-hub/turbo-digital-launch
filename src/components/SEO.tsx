@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { buildRenderImageUrl } from "@/lib/image";
 
 type StructuredData = Record<string, unknown> | Array<Record<string, unknown>>;
@@ -84,30 +84,23 @@ const SEO = ({
   noIndex = false,
   structuredData = null,
 }: SEOProps) => {
-  const { getSetting } = useSiteSettings();
+  const { settings } = useGlobalTheme();
 
   const defaultTitle = useMemo(() => {
-    const fallback = "Premium Webdesign & SEO Agentur";
-    return truncate(getSetting("meta_title", fallback), 60);
-  }, [getSetting]);
+    const fallback = settings.meta_title || settings.website_title || settings.company_name || "Premium Webdesign & SEO Agentur";
+    return truncate(fallback, 60);
+  }, [settings.company_name, settings.meta_title, settings.website_title]);
 
   const defaultDescription = useMemo(() => {
-    const fallback = "Maximale Performance und messbare Anfragen durch Conversion-optimiertes Webdesign & SEO.";
-    return truncate(getSetting("meta_description", fallback), 155);
-  }, [getSetting]);
+    const fallback = settings.meta_description || "Maximale Performance und messbare Anfragen durch Conversion-optimiertes Webdesign & SEO.";
+    return truncate(fallback, 155);
+  }, [settings.meta_description]);
 
   const resolvedTitle = useMemo(() => truncate(title || defaultTitle, 60), [title, defaultTitle]);
-  const resolvedDescription = useMemo(
-    () => truncate(description || defaultDescription, 155),
-    [description, defaultDescription],
-  );
+  const resolvedDescription = useMemo(() => truncate(description || defaultDescription, 155), [description, defaultDescription]);
 
-  const ogImageRaw = useMemo(() => image || getSetting("og_image", ""), [image, getSetting]);
-  const ogImageUrl = useMemo(() => {
-    if (!ogImageRaw) return "";
-    if (ogImageRaw.startsWith("http")) return ogImageRaw;
-    return buildRenderImageUrl(ogImageRaw, { width: 1200, quality: 80 });
-  }, [ogImageRaw]);
+  const ogImageRaw = useMemo(() => image || settings.og_image_path || settings.logo_path || "", [image, settings.logo_path, settings.og_image_path]);
+  const ogImageUrl = useMemo(() => (ogImageRaw ? buildRenderImageUrl(ogImageRaw, { width: 1200, quality: 80 }) : ""), [ogImageRaw]);
 
   const resolvedCanonical = canonical || (typeof window !== "undefined" ? window.location.href : "");
 

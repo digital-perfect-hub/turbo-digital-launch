@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { buildRenderImageUrl } from "@/lib/image";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { buildSiteAssetPath } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -164,14 +167,16 @@ const toFormState = (item?: Partial<ProductRecord> & { id?: string }, nextSortOr
 
 const AdminProducts = () => {
   const qc = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [editing, setEditing] = useState<ProductFormState | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["admin-products"],
+    queryKey: ["admin-products", siteId],
     queryFn: async (): Promise<ProductRecord[]> => {
-      const { data, error } = await supabase.from("products").select(PRODUCTS_SELECT).order("sort_order", { ascending: true });
+      const { data, error } = await supabase.from("products").select(PRODUCTS_SELECT).eq("site_id", siteId).order("sort_order", { ascending: true });
       if (error) throw error;
       return (data as ProductRecord[]) ?? [];
     },
@@ -184,9 +189,7 @@ const AdminProducts = () => {
 
   const previewImage = useMemo(() => {
     if (!editing?.image_url) return "";
-    return editing.image_url.startsWith("http")
-      ? editing.image_url
-      : buildRenderImageUrl(editing.image_url, { width: 640, quality: 84 });
+    return buildRenderImageUrl(editing.image_url, { width: 640, quality: 84 });
   }, [editing?.image_url]);
 
   const previewFeatures = useMemo(() => parseFeaturesInput(editing?.featuresText || ""), [editing?.featuresText]);
@@ -250,7 +253,7 @@ const AdminProducts = () => {
         return;
       }
 
-      const { error } = await supabase.from("products").insert(payload);
+      const { error } = await supabase.from("products").insert({ ...payload, site_id: siteId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -279,17 +282,12 @@ const AdminProducts = () => {
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const filePath = `products/${crypto.randomUUID()}.${fileExt}`;
+      const filePath = buildSiteAssetPath(siteId, "products", file);
       const { error: uploadError } = await supabase.storage.from("branding").upload(filePath, file);
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("branding").getPublicUrl(filePath);
-
-      setEditing((prev) => (prev ? { ...prev, image_url: publicUrl } : prev));
-      toast.success("Produktbild erfolgreich hochgeladen.");
+      setEditing((prev) => (prev ? { ...prev, image_url: filePath } : prev));
+toast.success("Produktbild erfolgreich hochgeladen.");
     } catch (error: any) {
       toast.error(`Upload fehlgeschlagen: ${error.message}`);
     } finally {
@@ -745,9 +743,7 @@ const AdminProducts = () => {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {products.map((product) => {
             const previewUrl = product.image_url
-              ? product.image_url.startsWith("http")
-                ? product.image_url
-                : buildRenderImageUrl(product.image_url, { width: 640, quality: 84 })
+              ? buildRenderImageUrl(product.image_url, { width: 640, quality: 84 })
               : "";
             const featurePreview = normalizeFeatures(product.features).slice(0, 3);
             const upsellCount = normalizeUpsells(product.upsells).length;

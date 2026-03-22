@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { buildRenderImageUrl } from "@/lib/image";
 import heroFallback from "@/assets/hero-bg.jpg";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type HeroForm = Record<string, any>;
 
@@ -53,10 +55,12 @@ const LEGACY_HERO_COLUMNS = HERO_EDITABLE_COLUMNS.filter(
 
 const AdminHero = () => {
   const qc = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { data: hero, isLoading } = useQuery({
-    queryKey: ["hero_content"],
+    queryKey: ["hero_content", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hero_content").select("*").limit(1).single();
+      const { data, error } = await supabase.from("hero_content").select("*").eq("site_id", siteId).limit(1).single();
       if (error) throw error;
       return data;
     },
@@ -99,7 +103,7 @@ const AdminHero = () => {
         return acc;
       }, {});
 
-      const { error } = await supabase.from("hero_content").update(payload).eq("id", hero.id);
+      const { error } = await supabase.from("hero_content").update(payload).eq("site_id", siteId).eq("id", hero.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -115,7 +119,7 @@ const AdminHero = () => {
   const resolveStorageImage = (value?: string | null) => {
     const trimmed = String(value || "").trim();
     if (!trimmed) return heroFallback;
-    return trimmed.startsWith("http") ? trimmed : buildRenderImageUrl(trimmed, { width: 1800, quality: 86 });
+    return buildRenderImageUrl(trimmed, { width: 1600, quality: 86 });
   };
 
   const heroVisualPreview = resolveStorageImage(form.image_path);

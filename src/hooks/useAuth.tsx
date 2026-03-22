@@ -6,6 +6,7 @@ interface AuthCtx {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isGlobalAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -18,26 +19,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const checkAdmin = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!data);
+    const [globalAdminResult, siteRoleResult] = await Promise.all([
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle(),
+      supabase
+        .from("user_site_roles" as never)
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1),
+    ]);
+
+    const hasGlobalAdmin = Boolean(globalAdminResult.data);
+    const hasSiteAccess = Array.isArray(siteRoleResult.data) ? siteRoleResult.data.length > 0 : false;
+
+    setIsGlobalAdmin(hasGlobalAdmin);
+    setIsAdmin(hasGlobalAdmin || hasSiteAccess);
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        void checkAdmin(session.user.id);
       } else {
         setIsAdmin(false);
+        setIsGlobalAdmin(false);
       }
       setLoading(false);
     });
@@ -46,7 +63,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        void checkAdmin(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setIsGlobalAdmin(false);
       }
       setLoading(false);
     });
@@ -69,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isGlobalAdmin, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

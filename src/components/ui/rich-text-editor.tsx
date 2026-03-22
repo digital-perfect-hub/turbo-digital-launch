@@ -220,7 +220,7 @@ export const RichTextEditor = ({
 
       <EditorContent editor={editor} className="min-h-[320px] bg-white" />
       <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 text-xs text-slate-500">
-        Erlaubte Uploads: JPG, PNG, WEBP bis 2 MB. Bilder werden über den forum-assets Bucket und die Render-API eingebunden.
+        Erlaubte Uploads: JPG, PNG, WEBP bis 2 MB. Bilder werden über Supabase Storage gespeichert und per Render-API ausgeliefert.
       </div>
     </div>
   );

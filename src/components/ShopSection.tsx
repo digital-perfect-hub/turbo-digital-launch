@@ -7,6 +7,8 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { buildRenderImageUrl } from "@/lib/image";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type ProductItem = Database["public"]["Tables"]["products"]["Row"];
 
@@ -29,13 +31,16 @@ const normalizeFeatures = (value: Json | null | undefined): string[] => {
 
 const ShopSection = () => {
   const { getSetting } = useSiteSettings();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", siteId],
     queryFn: async (): Promise<ProductItem[]> => {
       const { data, error } = await supabase
         .from("products")
         .select("id, title, slug, description, long_description, target_audience, demo_url, price, features, image_url, checkout_url, sort_order, is_visible, created_at, updated_at")
+        .eq("site_id", siteId)
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
 
@@ -67,9 +72,7 @@ const ShopSection = () => {
           {products.map((product, index) => {
             const features = normalizeFeatures(product.features);
             const productImage = product.image_url
-              ? product.image_url.startsWith("http")
-                ? product.image_url
-                : buildRenderImageUrl(product.image_url, { width: 720, quality: 84 })
+              ? buildRenderImageUrl(product.image_url, { width: 720, quality: 84 })
               : "";
 
             return (

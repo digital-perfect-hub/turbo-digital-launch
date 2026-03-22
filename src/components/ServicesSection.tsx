@@ -17,6 +17,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type ServiceItem = {
   id: string;
@@ -59,13 +61,16 @@ const safeText = (value: string | null | undefined, fallback: string) => {
 
 const ServicesSection = () => {
   const { getSetting } = useSiteSettings();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const { data: services, isLoading } = useQuery({
-    queryKey: ["services"],
+    queryKey: ["services", siteId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
         .select("*")
+        .eq("site_id", siteId)
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
 

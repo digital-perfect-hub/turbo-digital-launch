@@ -6,6 +6,8 @@ import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type TeamRow = {
   id: string;
@@ -73,13 +75,16 @@ const toUiMember = (row: TeamRow): UiTeamMember | null => {
 
 const TeamSection = () => {
   const { getSetting } = useSiteSettings();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const { data: teamMembers = [] } = useQuery({
-    queryKey: ["team_members"],
+    queryKey: ["team_members", siteId],
     queryFn: async (): Promise<UiTeamMember[]> => {
       const { data, error } = await supabase
         .from("team_members")
         .select("*")
+        .eq("site_id", siteId)
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
 
@@ -103,7 +108,10 @@ const TeamSection = () => {
           <p className="section-label">{getSetting("home_team_kicker", "Team & Verantwortung")}</p>
           <h2 className="section-title">{getSetting("home_team_title", "Wer hinter Strategie, Design und Performance steht")}</h2>
           <p className="text-lg leading-relaxed text-muted-foreground">
-            Mehr Vertrauen entsteht, wenn klar ist, wer liefert. Diese Sektion ist für White-Label-Setups gedacht und lädt nur sichtbare Teamprofile aus Supabase.
+            {getSetting(
+              "home_team_description",
+              "Mehr Vertrauen entsteht, wenn klar ist, wer liefert. Diese Sektion lädt nur sichtbare Teamprofile aus Supabase.",
+            )}
           </p>
         </motion.div>
 

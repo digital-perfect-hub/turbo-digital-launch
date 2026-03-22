@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,6 +22,8 @@ type HeaderProps = {
 };
 
 const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openMobileDropdowns, setOpenMobileDropdowns] = useState<Record<string, boolean>>({});
@@ -27,9 +31,9 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const { logoUrl, settings } = useGlobalTheme();
 
   const { data: links = [] } = useQuery({
-    queryKey: ["navigation_links_frontend"],
+    queryKey: ["navigation_links_frontend", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("navigation_links").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("navigation_links").select("*").eq("site_id", siteId).order("sort_order", { ascending: true }).order("created_at", { ascending: true });
       if (error) throw error;
       return data as NavLink[];
     },

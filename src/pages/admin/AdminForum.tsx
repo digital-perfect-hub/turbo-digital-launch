@@ -24,6 +24,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { buildSiteAssetPath } from "@/lib/storage";
 import { buildRenderImageUrl } from "@/lib/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -205,6 +208,8 @@ const getSafeImageUrl = (value: string, width = 1200, quality = 84) => {
 const AdminForum = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const [activeTab, setActiveTab] = useState("threads");
   const [categoryForm, setCategoryForm] = useState<CategoryFormState | null>(null);
@@ -220,11 +225,12 @@ const AdminForum = () => {
   const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ["admin-forum-categories"],
+    queryKey: ["admin-forum-categories", siteId],
     queryFn: async (): Promise<ForumCategoryRow[]> => {
       const { data, error } = await supabase
         .from("forum_categories")
         .select("*")
+        .eq("site_id", siteId)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
 
@@ -234,11 +240,12 @@ const AdminForum = () => {
   });
 
   const { data: threads = [], isLoading: threadsLoading } = useQuery({
-    queryKey: ["admin-forum-threads"],
+    queryKey: ["admin-forum-threads", siteId],
     queryFn: async (): Promise<ForumThreadRow[]> => {
       const { data, error } = await supabase
         .from("forum_threads")
         .select("*")
+        .eq("site_id", siteId)
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
@@ -247,11 +254,12 @@ const AdminForum = () => {
   });
 
   const { data: replies = [], isLoading: repliesLoading } = useQuery({
-    queryKey: ["admin-forum-replies"],
+    queryKey: ["admin-forum-replies", siteId],
     queryFn: async (): Promise<ForumReplyRow[]> => {
       const { data, error } = await supabase
         .from("forum_replies")
         .select("*")
+        .eq("site_id", siteId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -411,9 +419,9 @@ const AdminForum = () => {
 
   const invalidateForumQueries = async () => {
     await Promise.all([
-      qc.invalidateQueries({ queryKey: ["admin-forum-categories"] }),
-      qc.invalidateQueries({ queryKey: ["admin-forum-threads"] }),
-      qc.invalidateQueries({ queryKey: ["admin-forum-replies"] }),
+      qc.invalidateQueries({ queryKey: ["admin-forum-categories", siteId] }),
+      qc.invalidateQueries({ queryKey: ["admin-forum-threads", siteId] }),
+      qc.invalidateQueries({ queryKey: ["admin-forum-replies", siteId] }),
       qc.invalidateQueries({ queryKey: ["forum-categories"] }),
       qc.invalidateQueries({ queryKey: ["forum-threads"] }),
       qc.invalidateQueries({ queryKey: ["forum-thread"] }),
@@ -425,6 +433,7 @@ const AdminForum = () => {
   const saveCategory = useMutation({
     mutationFn: async (values: CategoryFormState) => {
       const payload: ForumCategoryInsert = {
+        site_id: siteId,
         name: values.name.trim(),
         slug: slugify(values.slug || values.name),
         description: values.description.trim() || null,
@@ -475,6 +484,7 @@ const AdminForum = () => {
     mutationFn: async (values: ThreadFormState) => {
       const rawHtml = values.raw_html_content.trim() || "<p></p>";
       const payload: ForumThreadInsert = {
+        site_id: siteId,
         title: values.title.trim(),
         slug: slugify(values.slug || values.title),
         content: stripHtml(rawHtml),

@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const AdminLeads = () => {
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["admin-leads"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("leads").select("*").eq("site_id", siteId).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },

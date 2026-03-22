@@ -8,6 +8,8 @@ import { buildRenderImageUrl } from "@/lib/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type TestimonialRow = {
   id: string;
@@ -63,15 +65,18 @@ const TESTIMONIALS_SELECT = "*";
 
 const TestimonialsSection = () => {
   const { getSetting } = useSiteSettings();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
   const { data: testimonials = [] } = useQuery({
-    queryKey: ["testimonials"],
+    queryKey: ["testimonials", siteId],
     queryFn: async (): Promise<UiTestimonial[]> => {
       const { data, error } = await supabase
         .from("testimonials")
         .select(TESTIMONIALS_SELECT)
+        .eq("site_id", siteId)
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
 
@@ -91,8 +96,10 @@ const TestimonialsSection = () => {
     api.on("select", onSelect);
 
     const timer = window.setInterval(() => {
-      api.canScrollNext() ? api.scrollNext() : api.scrollTo(0);
-    }, 6500);
+      if (!api) return;
+      const nextIndex = (api.selectedScrollSnap() + 1) % effectiveTestimonials.length;
+      api.scrollTo(nextIndex);
+    }, 5000);
 
     return () => {
       window.clearInterval(timer);
@@ -101,19 +108,22 @@ const TestimonialsSection = () => {
   }, [api, effectiveTestimonials.length]);
 
   return (
-    <section id="stimmen" className="bg-surface py-20 sm:py-24 md:py-28" aria-label="Testimonials">
+    <section className="bg-background py-24 sm:py-32" id="testimonials">
       <div className="section-container">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto mb-12 max-w-3xl text-center"
+          transition={{ duration: 0.6 }}
+          className="mx-auto max-w-3xl text-center"
         >
-          <p className="section-label">{getSetting("home_testimonials_kicker", "Kundenstimmen")}</p>
-          <h2 className="section-title">{getSetting("home_testimonials_title", "Das sagen unsere Kundinnen & Kunden")}</h2>
-          <p className="text-lg leading-relaxed text-muted-foreground">
-            Echte Stimmen schaffen Vertrauen. Diese Sektion zieht ihre Inhalte jetzt direkt aus Supabase und respektiert strikt den Sichtbarkeitsstatus.
+          <p className="section-label mx-auto">{getSetting("home_testimonials_kicker", "Kundenstimmen")}</p>
+          <h2 className="section-title mt-4">{getSetting("home_testimonials_title", "Das sagen unsere Kundinnen & Kunden")}</h2>
+          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+            {getSetting(
+              "home_testimonials_description",
+              "Echte Rückmeldungen aus Projekten, Relaunches und laufenden SEO-Setups – direkt aus der Praxis.",
+            )}
           </p>
         </motion.div>
 
@@ -121,38 +131,38 @@ const TestimonialsSection = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6 }}
-          className="mx-auto max-w-6xl"
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="mt-12"
         >
-          <Carousel setApi={setApi} opts={{ align: "start", loop: effectiveTestimonials.length > 1 }} className="w-full">
-            <CarouselContent>
+          <Carousel setApi={setApi} opts={{ loop: effectiveTestimonials.length > 1, align: "start" }}>
+            <CarouselContent className="-ml-4">
               {effectiveTestimonials.map((item) => (
-                <CarouselItem key={item.id} className="md:basis-1/2 xl:basis-1/3">
+                <CarouselItem key={item.id} className="pl-4 md:basis-1/2 xl:basis-1/3">
                   <Card className="premium-card h-full border-0 shadow-none">
-                    <CardContent className="flex h-full flex-col p-6 md:p-7">
-                      <div className="mb-5 flex items-start justify-between gap-4">
-                        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                          <Quote size={22} />
+                    <CardContent className="flex h-full flex-col p-7 md:p-8">
+                      <div className="mb-6 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-14 w-14 border-2" style={{ borderColor: "var(--surface-card-border)" }}>
+                            {item.image_url ? <AvatarImage src={buildRenderImageUrl(item.image_url, { width: 180, quality: 82 })} alt={item.name} /> : null}
+                            <AvatarFallback className="bg-secondary text-white">{item.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-bold text-[var(--surface-card-text)]">{item.name}</div>
+                            <div className="text-sm text-[var(--surface-card-muted)]">{item.role}</div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 text-primary">
-                          {Array.from({ length: item.rating }).map((_, index) => (
-                            <Star key={index} size={15} className="fill-current" />
-                          ))}
+                        <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                          <Quote size={18} />
                         </div>
                       </div>
 
-                      <p className="flex-1 text-base leading-relaxed text-[var(--surface-card-text)]">„{item.text}“</p>
-
-                      <div className="mt-6 flex items-center gap-4 border-t pt-5" style={{ borderColor: "var(--surface-card-border)" }}>
-                        <Avatar className="h-12 w-12 border" style={{ borderColor: "var(--surface-card-border)" }}>
-                          {item.image_url ? <AvatarImage src={buildRenderImageUrl(item.image_url, { width: 180, quality: 80 })} alt={item.name} /> : null}
-                          <AvatarFallback className="bg-secondary text-white">{item.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-base font-bold text-[var(--surface-card-text)]">{item.name}</p>
-                          <p className="text-sm text-[var(--surface-card-muted)]">{item.role}</p>
-                        </div>
+                      <div className="mb-5 flex items-center gap-1.5 text-primary">
+                        {Array.from({ length: item.rating }).map((_, index) => (
+                          <Star key={index} size={16} className="fill-current" />
+                        ))}
                       </div>
+
+                      <p className="flex-1 text-base leading-8 text-[var(--surface-card-muted)]">“{item.text}”</p>
                     </CardContent>
                   </Card>
                 </CarouselItem>
@@ -161,12 +171,13 @@ const TestimonialsSection = () => {
           </Carousel>
 
           {effectiveTestimonials.length > 1 ? (
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-6 flex items-center justify-center gap-2">
               {effectiveTestimonials.map((item, index) => (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => api?.scrollTo(index)}
-                  className={`h-2 rounded-full transition-all ${current === index ? "w-10 bg-primary" : "w-3 bg-primary/25 hover:bg-primary/40"}`}
+                  className={`h-2.5 rounded-full transition-all ${current === index ? "w-10 bg-primary" : "w-2.5 bg-slate-300"}`}
                   aria-label={`Zu Testimonial ${index + 1} wechseln`}
                 />
               ))}

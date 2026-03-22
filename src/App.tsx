@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { SiteProvider } from "./context/SiteContext";
 import { useGlobalTheme } from "./hooks/useGlobalTheme";
 
 // Öffentliche Seiten
@@ -32,6 +33,11 @@ import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminForum from "./pages/admin/AdminForum";
+import AdminContent from "./pages/admin/AdminContent";
+import AdminTeam from "./pages/admin/AdminTeam";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
+import AdminLegal from "./pages/admin/AdminLegal";
+import AdminSites from "./pages/admin/AdminSites";
 
 const queryClient = new QueryClient();
 
@@ -44,12 +50,13 @@ const ThemeBootstrap = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ThemeBootstrap>
-            <Routes>
+      <SiteProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ThemeBootstrap>
+              <Routes>
               {/* Frontend Routen */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -73,6 +80,11 @@ const App = () => (
                 <Route path="portfolio" element={<AdminPortfolio />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="forum" element={<AdminForum />} />
+                <Route path="content" element={<AdminContent />} />
+                <Route path="team" element={<AdminTeam />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="legal" element={<AdminLegal />} />
+                <Route path="sites" element={<AdminSites />} />
                 <Route path="faq" element={<AdminFAQ />} />
                 <Route path="leads" element={<AdminLeads />} />
                 <Route path="settings" element={<AdminSettings />} />
@@ -80,10 +92,11 @@ const App = () => (
 
               {/* 404 Fallback */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ThemeBootstrap>
-        </BrowserRouter>
-      </TooltipProvider>
+              </Routes>
+            </ThemeBootstrap>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SiteProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

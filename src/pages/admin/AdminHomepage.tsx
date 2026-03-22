@@ -10,12 +10,15 @@ import { toast } from "sonner";
 import { Save } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useSiteContext } from "@/context/SiteContext";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { upsertSiteSetting } from "@/lib/site-settings";
 
 import {
   defaultAudienceItems,
   defaultProcessSteps,
   defaultSiteText,
-  defaultTestimonials,
+  defaultTrustPoints,
   defaultWhyChoosePoints,
   useSiteSettings,
 } from "@/hooks/useSiteSettings";
@@ -24,12 +27,11 @@ const jsonDefaults: Record<string, unknown> = {
   home_why_choose_points: defaultWhyChoosePoints,
   home_audience_items: defaultAudienceItems,
   home_process_steps: defaultProcessSteps,
-  home_testimonials: defaultTestimonials,
+  home_trust_points: defaultTrustPoints,
 };
 
 const textGroups = {
   intro: [
-    { key: "home_header_topbar", label: "Topbar Text" },
     { key: "home_intro_title", label: "Intro Titel" },
     { key: "home_intro_body", label: "Intro Text", multiline: true },
   ],
@@ -56,6 +58,10 @@ const textGroups = {
   contactFaq: [
     { key: "home_testimonials_kicker", label: "Testimonials Kicker" },
     { key: "home_testimonials_title", label: "Testimonials Titel" },
+    { key: "home_testimonials_description", label: "Testimonials Beschreibung", multiline: true },
+    { key: "home_team_kicker", label: "Team Kicker" },
+    { key: "home_team_title", label: "Team Titel" },
+    { key: "home_team_description", label: "Team Beschreibung", multiline: true },
     { key: "home_faq_kicker", label: "FAQ Kicker" },
     { key: "home_faq_title", label: "FAQ Titel" },
     { key: "home_contact_kicker", label: "Kontakt Kicker" },
@@ -65,9 +71,9 @@ const textGroups = {
 
 const jsonFields = [
   { key: "home_why_choose_points", label: "Warum-Wir Punkte (JSON)" },
+  { key: "home_trust_points", label: "Trust Punkte (JSON)" },
   { key: "home_audience_items", label: "Zielgruppen Items (JSON)" },
   { key: "home_process_steps", label: "Ablauf Schritte (JSON)" },
-  { key: "home_testimonials", label: "Testimonials (JSON - Fallback)" },
 ];
 
 const quillModules = {
@@ -82,6 +88,8 @@ const quillModules = {
 
 const AdminHomepage = () => {
   const queryClient = useQueryClient();
+  const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { settings, isLoading } = useSiteSettings();
   const [form, setForm] = useState<Record<string, string>>({});
 
@@ -108,30 +116,22 @@ const AdminHomepage = () => {
   const mutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       const promises = Object.entries(values).map(async ([key, value]) => {
-        let valToSave: string | Record<string, unknown> | unknown[] = value;
+        let valToSave = value;
         if (jsonFields.some((f) => f.key === key)) {
           try {
-            valToSave = JSON.parse(value);
+            JSON.parse(value);
+            valToSave = value;
           } catch (e) {
             console.warn(`Could not parse JSON for ${key}`);
           }
         }
         
-        const { data, error: selectError } = await supabase.from("site_settings").select("id").eq("key", key);
-        if (selectError) throw selectError;
-
-        if (data && data.length > 0) {
-          const { error } = await supabase.from("site_settings").update({ value: valToSave }).eq("key", key);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase.from("site_settings").insert({ key, value: valToSave });
-          if (error) throw error;
-        }
+        await upsertSiteSetting(siteId, key, valToSave);
       });
       await Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["site_settings"] });
+      queryClient.invalidateQueries({ queryKey: ["site_settings", siteId] });
       toast.success("Homepage-Inhalte erfolgreich gespeichert.");
     },
     onError: (error: any) => {
