@@ -117,12 +117,16 @@ const HeroSection = () => {
 
   const heroImageSrc = resolveImage(hero?.image_path || hero?.image_url || hero?.image, heroFallback);
   const bgImageSrc = resolveImage(hero?.background_image_path, heroFallback);
+  const bgMobileImageSrc = hero?.background_mobile_image_path ? resolveImage(hero?.background_mobile_image_path, bgImageSrc) : bgImageSrc;
   const overlayAlpha = typeof hero?.overlay_opacity === 'number' ? Math.max(0, Math.min(100, hero.overlay_opacity)) / 100 : 0.58;
 
   return (
     <section id="hero" className="dark-section relative overflow-hidden pt-[158px] lg:pt-[178px]">
       <div className="absolute inset-0 z-0">
-        <img src={bgImageSrc} alt="Hero Background" className="h-full w-full object-cover" loading="eager" />
+        <picture>
+          <source media="(max-width: 768px)" srcSet={bgMobileImageSrc} />
+          <img src={bgImageSrc} alt="Hero Background" className="h-full w-full object-cover" loading="eager" />
+        </picture>
       </div>
       
       <div className="absolute inset-0 z-0" style={{ backgroundColor: `rgba(6,13,36,${overlayAlpha})` }} />
