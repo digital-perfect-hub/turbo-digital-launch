@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -29,6 +29,7 @@ const emptyPortfolioItem = (sortOrder: number): PortfolioPayload => ({
 const AdminPortfolio = () => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<(Partial<PortfolioRecord> & { id?: string }) | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin_portfolio_items"],
@@ -75,6 +76,27 @@ const AdminPortfolio = () => {
     onError: (err: any) => toast.error(err.message || "Fehler beim Löschen"),
   });
 
+  // NEU: Echter Datei-Upload
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editing) return;
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `portfolio/${crypto.randomUUID()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('branding').upload(filePath, file);
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('branding').getPublicUrl(filePath);
+      
+      setEditing({ ...editing, image_url: publicUrl });
+      toast.success("Bild erfolgreich hochgeladen!");
+    } catch (error: any) {
+      toast.error("Upload fehlgeschlagen: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 
   return (
@@ -85,67 +107,80 @@ const AdminPortfolio = () => {
           <p className="text-sm text-slate-500 mt-1">Verwalte deine Referenz-Projekte.</p>
         </div>
         {!editing && (
-          <Button onClick={() => setEditing(emptyPortfolioItem(nextSortOrder))} className="bg-slate-900 text-white hover:bg-slate-800 rounded-xl">
+          <Button onClick={() => setEditing(emptyPortfolioItem(nextSortOrder))} className="bg-[#FF4B2C] text-white hover:bg-[#E03A1E] rounded-xl shadow-md shadow-[#FF4B2C]/20">
             <Plus size={16} className="mr-2" /> Neues Projekt
           </Button>
         )}
       </div>
 
       {editing ? (
-        <div className="rounded-[1.5rem] border border-border bg-card p-6 md:p-8 shadow-sm mb-8 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="text-slate-700">Projekttitel</Label>
-              <Input 
-                value={editing.title || ""} 
-                onChange={(e) => setEditing({ ...editing, title: e.target.value })} 
-                placeholder="z.B. Relaunch Muster GmbH" 
-                className="rounded-xl bg-slate-50 border-slate-200"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-slate-700">Bild-URL (Storage Pfad)</Label>
-              <Input 
-                value={editing.image_url || ""} 
-                onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} 
-                placeholder="z.B. portfolio/projekt1.jpg" 
-                className="rounded-xl bg-slate-50 border-slate-200"
-              />
-            </div>
-            
-            {/* HIER WAR DER FEHLER: Das Live-URL Feld hat komplett gefehlt! */}
-            <div className="space-y-2">
-              <Label className="text-slate-700">Live-URL (Link zum Projekt)</Label>
-              <Input 
-                value={editing.url || ""} 
-                onChange={(e) => setEditing({ ...editing, url: e.target.value })} 
-                placeholder="https://mein-projekt.de" 
-                className="rounded-xl bg-slate-50 border-slate-200"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-slate-700">Tags (Komma-getrennt)</Label>
-              <Input 
-                value={editing.tags?.join(", ") || ""} 
-                onChange={(e) => {
-                  const tagsArray = e.target.value.split(",").map(t => t.trim()).filter(Boolean);
-                  setEditing({ ...editing, tags: tagsArray });
-                }} 
-                placeholder="Webdesign, SEO, E-Commerce" 
-                className="rounded-xl bg-slate-50 border-slate-200"
-              />
-            </div>
-          </div>
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 md:p-8 shadow-sm mb-8 space-y-6">
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-slate-700">Projekttitel</Label>
+                <Input 
+                  value={editing.title || ""} 
+                  onChange={(e) => setEditing({ ...editing, title: e.target.value })} 
+                  placeholder="z.B. Relaunch Muster GmbH" 
+                  className="rounded-xl bg-slate-50 border-slate-200 focus:border-[#FF4B2C]"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label className="text-slate-700">Beschreibung</Label>
-            <Textarea 
-              rows={4} 
-              value={editing.description || ""} 
-              onChange={(e) => setEditing({ ...editing, description: e.target.value })} 
-              className="rounded-xl bg-slate-50 border-slate-200 resize-none"
-            />
+              <div className="space-y-2">
+                <Label className="text-slate-700">Live-URL (Link zum Projekt)</Label>
+                <Input 
+                  value={editing.url || ""} 
+                  onChange={(e) => setEditing({ ...editing, url: e.target.value })} 
+                  placeholder="https://mein-projekt.de" 
+                  className="rounded-xl bg-slate-50 border-slate-200 focus:border-[#FF4B2C]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-700">Tags (Komma-getrennt)</Label>
+                <Input 
+                  value={editing.tags?.join(", ") || ""} 
+                  onChange={(e) => {
+                    const tagsArray = e.target.value.split(",").map(t => t.trim()).filter(Boolean);
+                    setEditing({ ...editing, tags: tagsArray });
+                  }} 
+                  placeholder="Webdesign, SEO, E-Commerce" 
+                  className="rounded-xl bg-slate-50 border-slate-200 focus:border-[#FF4B2C]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* NEU: Echter Bild-Upload */}
+              <div className="space-y-3">
+                <Label className="text-slate-700 font-bold">Projektbild</Label>
+                <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
+                  <div className="h-16 w-24 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-1">
+                    {editing.image_url ? (
+                      <img src={editing.image_url.startsWith("http") ? editing.image_url : buildRenderImageUrl(editing.image_url, { width: 160 })} alt="Preview" className="max-h-full object-cover" />
+                    ) : <ImageIcon className="text-slate-300" />}
+                  </div>
+                  <div>
+                    <Label htmlFor="portfolio-image-upload" className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:border-[#FF4B2C] hover:text-[#FF4B2C] transition-all">
+                      {isUploading ? "Lädt..." : <><Upload size={14} className="mr-2" /> Bild hochladen</>}
+                    </Label>
+                    <input id="portfolio-image-upload" type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={isUploading} />
+                    <p className="mt-2 text-xs text-slate-500">Wird sicher in Supabase gespeichert.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Beschreibung</Label>
+                <Textarea 
+                  rows={4} 
+                  value={editing.description || ""} 
+                  onChange={(e) => setEditing({ ...editing, description: e.target.value })} 
+                  className="rounded-xl bg-slate-50 border-slate-200 resize-none focus:border-[#FF4B2C]"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-between border-t border-slate-100 pt-6">
@@ -153,17 +188,18 @@ const AdminPortfolio = () => {
               <Switch 
                 checked={editing.is_visible ?? true} 
                 onCheckedChange={(checked) => setEditing({ ...editing, is_visible: checked })} 
+                className="data-[state=checked]:bg-[#FF4B2C]"
               />
               <Label className="cursor-pointer font-medium text-slate-700">Im Frontend anzeigen</Label>
             </div>
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setEditing(null)} className="rounded-xl">Abbrechen</Button>
+              <Button variant="ghost" onClick={() => setEditing(null)} className="rounded-xl text-slate-500">Abbrechen</Button>
               <Button 
                 onClick={() => saveMutation.mutate(editing)} 
                 disabled={saveMutation.isPending}
-                className="rounded-xl bg-primary text-white hover:opacity-90"
+                className="rounded-xl bg-[#FF4B2C] text-white hover:bg-[#E03A1E] shadow-md shadow-[#FF4B2C]/20"
               >
-                Speichern
+                Projekt speichern
               </Button>
             </div>
           </div>
@@ -171,34 +207,34 @@ const AdminPortfolio = () => {
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="group flex items-center justify-between gap-4 rounded-[1.25rem] border border-slate-200 bg-white p-4 pr-6 shadow-sm transition-all hover:border-primary/20 hover:shadow-md">
+            <div key={item.id} className="group flex items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#FF4B2C]/30 hover:shadow-md">
               <div className="flex min-w-0 items-center gap-5">
                 {item.image_url ? (
-                  <img src={buildRenderImageUrl(item.image_url, { width: 160, quality: 78 })} alt="" className="h-14 w-20 rounded-xl object-cover shadow-sm" />
+                  <img src={item.image_url.startsWith("http") ? item.image_url : buildRenderImageUrl(item.image_url, { width: 160, quality: 78 })} alt="" className="h-16 w-24 rounded-xl object-cover shadow-sm" />
                 ) : (
-                  <div className="h-14 w-20 rounded-xl bg-slate-100 flex items-center justify-center text-[0.65rem] uppercase font-bold tracking-wider text-slate-400">Kein Bild</div>
+                  <div className="h-16 w-24 rounded-xl bg-slate-100 flex items-center justify-center text-[0.65rem] uppercase font-bold tracking-wider text-slate-400">Kein Bild</div>
                 )}
                 <div className="min-w-0">
                   <div className="truncate font-bold text-slate-900 text-lg">{item.title}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-medium">
-                    <span className={item.is_visible ? "text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md" : "text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md"}>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-medium">
+                    <span className={item.is_visible ? "text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200" : "text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200"}>
                       {item.is_visible ? "Sichtbar" : "Versteckt"}
                     </span>
                     {item.url && (
-                      <a href={item.url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                      <a href={item.url} target="_blank" rel="noreferrer" className="text-[#FF4B2C] hover:underline flex items-center gap-1">
                         Live ansehen
                       </a>
                     )}
                     {item.tags && item.tags.length > 0 && (
-                      <span className="text-slate-400">{item.tags.join(" • ")}</span>
+                      <span className="text-slate-400 font-normal">{item.tags.join(" • ")}</span>
                     )}
                   </div>
                 </div>
               </div>
               <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button size="sm" variant="secondary" onClick={() => setEditing(item)} className="rounded-lg">Bearbeiten</Button>
-                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteMutation.mutate(item.id)}>
-                  <Trash2 size={16} />
+                <Button size="sm" variant="outline" onClick={() => setEditing(item)} className="rounded-lg border-slate-200 text-slate-600 hover:text-[#FF4B2C]">Bearbeiten</Button>
+                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => { if(window.confirm("Projekt löschen?")) deleteMutation.mutate(item.id) }}>
+                  <Trash2 size={18} />
                 </Button>
               </div>
             </div>

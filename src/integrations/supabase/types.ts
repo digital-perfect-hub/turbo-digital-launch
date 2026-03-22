@@ -277,37 +277,70 @@ export type Database = {
       }
       products: {
         Row: {
+          checkout_url: string | null
           created_at: string
+          cta_color: string | null
+          cta_text: string | null
+          demo_url: string | null
           description: string | null
+          features: Json | null
           id: string
           image_url: string | null
           is_visible: boolean | null
-          price: number
+          long_description: string | null
+          price: string
+          slug: string
           sort_order: number | null
+          stripe_price_id: string | null
+          target_audience: string | null
+          tax_rate: number | null
           title: string
           updated_at: string
+          upsells: Json | null
         }
         Insert: {
+          checkout_url?: string | null
           created_at?: string
+          cta_color?: string | null
+          cta_text?: string | null
+          demo_url?: string | null
           description?: string | null
+          features?: Json | null
           id?: string
           image_url?: string | null
           is_visible?: boolean | null
-          price: number
+          long_description?: string | null
+          price: string
+          slug: string
           sort_order?: number | null
+          stripe_price_id?: string | null
+          target_audience?: string | null
+          tax_rate?: number | null
           title: string
           updated_at?: string
+          upsells?: Json | null
         }
         Update: {
+          checkout_url?: string | null
           created_at?: string
+          cta_color?: string | null
+          cta_text?: string | null
+          demo_url?: string | null
           description?: string | null
+          features?: Json | null
           id?: string
           image_url?: string | null
           is_visible?: boolean | null
-          price?: number
+          long_description?: string | null
+          price?: string
+          slug?: string
           sort_order?: number | null
+          stripe_price_id?: string | null
+          target_audience?: string | null
+          tax_rate?: number | null
           title?: string
           updated_at?: string
+          upsells?: Json | null
         }
         Relationships: []
       }

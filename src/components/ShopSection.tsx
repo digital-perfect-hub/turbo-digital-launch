@@ -1,129 +1,170 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, ShoppingBag } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { buildRenderImageUrl } from "@/lib/image";
+import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
+import { Button } from "@/components/ui/button";
 
 type ProductItem = Database["public"]["Tables"]["products"]["Row"];
 
-const fallbackProducts: ProductItem[] = [
-  {
-    id: "fallback-1",
-    title: "Premium Website Audit",
-    description: "Tiefgehende Analyse deiner aktuellen Website inklusive Conversion-Schwächen und technischer SEO-Fehler.",
-    image_url: null,
-    price: 299,
-    is_visible: true,
-    sort_order: 0,
-    created_at: new Date(0).toISOString(),
-    updated_at: new Date(0).toISOString(),
-  },
-  {
-    id: "fallback-2",
-    title: "NFC Google Bewertungsaufsteller",
-    description: "Hochwertiger Acryl-Aufsteller für deinen Point of Sale. Kunden tappen einfach mit dem Handy und bewerten dich.",
-    image_url: null,
-    price: 89,
-    is_visible: true,
-    sort_order: 1,
-    created_at: new Date(0).toISOString(),
-    updated_at: new Date(0).toISOString(),
-  },
-];
+const normalizeFeatures = (value: Json | null | undefined): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[\n,]/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
 
 const ShopSection = () => {
   const { getSetting } = useSiteSettings();
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
-    queryFn: async () => {
+    queryFn: async (): Promise<ProductItem[]> => {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("id, title, slug, description, long_description, target_audience, demo_url, price, features, image_url, checkout_url, sort_order, is_visible, created_at, updated_at")
         .eq("is_visible", true)
         .order("sort_order", { ascending: true });
 
       if (error) throw error;
-      return data as ProductItem[];
+      return (data as ProductItem[]) ?? [];
     },
   });
 
-  const effectiveProducts = products?.length ? products : fallbackProducts;
-
-  if (!isLoading && effectiveProducts.length === 0) return null;
+  if (!isLoading && products.length === 0) return null;
 
   return (
-    <section id="shop" className="bg-background py-24 sm:py-32 relative overflow-hidden" aria-label="Produkte & Pakete">
+    <section id="shop" className="relative overflow-hidden bg-background py-24 sm:py-32" aria-label="Produkte & Pakete">
       <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
-          className="mb-16 md:mb-24 text-center max-w-3xl mx-auto"
+          className="mx-auto mb-16 max-w-3xl text-center md:mb-24"
         >
-          <p className="section-label">{getSetting("home_shop_kicker", "Pakete & Produkte")}</p>
-          <h2 className="section-title mt-4">{getSetting("home_shop_title", "Klare Lösungen. Fixe Preise.")}</h2>
+          <p className="section-label">{getSetting("home_shop_kicker", defaultSiteText.home_shop_kicker)}</p>
+          <h2 className="section-title mt-4">{getSetting("home_shop_title", defaultSiteText.home_shop_title)}</h2>
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            Zubuchbare Leistungen und Produkte, die deinen Umsatz direkt hebeln. Transparent, messbar und auf Performance getrimmt.
+            {getSetting("home_shop_description", defaultSiteText.home_shop_description)}
           </p>
         </motion.div>
 
-        <div className="grid gap-8 lg:gap-10 md:grid-cols-2 lg:grid-cols-3">
-          {effectiveProducts.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm hover:shadow-xl transition-all duration-500 ${isLoading ? "animate-pulse" : ""}`}
-            >
-              {/* Dynamischer Background Glow */}
-              <div className="absolute -top-32 -left-32 w-64 h-64 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 group-hover:opacity-[0.06] transition-opacity duration-500 blur-3xl pointer-events-none" />
+        <div className="grid gap-8 md:grid-cols-2 lg:gap-10 xl:grid-cols-3">
+          {products.map((product, index) => {
+            const features = normalizeFeatures(product.features);
+            const productImage = product.image_url
+              ? product.image_url.startsWith("http")
+                ? product.image_url
+                : buildRenderImageUrl(product.image_url, { width: 720, quality: 84 })
+              : "";
 
-              {/* Bild-Bereich */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100/50">
-                {product.image_url ? (
-                  <img
-                    src={buildRenderImageUrl(product.image_url, { width: 600, quality: 85 })}
-                    alt={product.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-                    <ShoppingBag size={48} className="text-slate-300" strokeWidth={1} />
+            return (
+              <motion.article
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                className={`group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-xl ${
+                  isLoading ? "animate-pulse" : ""
+                }`}
+              >
+                <div className="pointer-events-none absolute -right-24 -top-28 h-56 w-56 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_72%)] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
+
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100/70">
+                  {productImage ? (
+                    <img
+                      src={productImage}
+                      alt={product.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-slate-100">
+                      <ImageIcon size={44} className="text-slate-300" strokeWidth={1.5} />
+                    </div>
+                  )}
+
+                  <div className="absolute left-5 top-5 inline-flex items-center rounded-full bg-background/92 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#0E1F53] shadow-sm backdrop-blur-md">
+                    Produkt
                   </div>
-                )}
-                <div className="absolute top-5 right-5 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-md px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground shadow-sm">
-                  <Eye size={14} className="text-primary" /> Shop
                 </div>
-              </div>
 
-              {/* Content-Bereich */}
-              <div className="flex flex-1 flex-col p-8">
-                <h3 className="text-2xl font-bold text-foreground leading-tight mb-3">{product.title}</h3>
-                <p className="text-muted-foreground leading-relaxed flex-1">
-                  {product.description || "Detailbeschreibung folgt."}
-                </p>
-
-                <div className="mt-8 pt-6 border-t border-border flex items-center justify-between gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Preis</span>
-                    <span className="text-3xl font-black text-foreground tracking-tight">
-                      €{Number(product.price).toFixed(2).replace(".", ",")}
-                    </span>
+                <div className="flex flex-1 flex-col p-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      {product.slug ? (
+                        <Link to={`/produkt/${product.slug}`} className="transition-colors hover:text-[#FF4B2C]">
+                          <h3 className="text-2xl font-bold leading-tight text-foreground">{product.title}</h3>
+                        </Link>
+                      ) : (
+                        <h3 className="text-2xl font-bold leading-tight text-foreground">{product.title}</h3>
+                      )}
+                      <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                        {product.description || "Klare Leistung, fixer Preis und direkter Weg zum Checkout."}
+                      </p>
+                    </div>
+                    <div className="shrink-0 rounded-2xl bg-[#FF4B2C]/10 px-4 py-3 text-right">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF4B2C]">Preis</div>
+                      <div className="mt-1 text-2xl font-black tracking-tight text-[#0E1F53]">{product.price}</div>
+                    </div>
                   </div>
-                  <button className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-300 hover:bg-primary hover:text-white hover:scale-105">
-                    <ArrowRight size={24} />
-                  </button>
+
+                  <ul className="mt-8 space-y-3">
+                    {features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700">
+                        <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                          <CheckCircle2 size={14} />
+                        </span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-8 space-y-3 border-t border-border pt-6">
+                    {product.checkout_url ? (
+                      <Button
+                        asChild
+                        className="h-14 w-full rounded-2xl bg-[#FF4B2C] text-base font-bold text-white shadow-lg shadow-[#FF4B2C]/20 transition-transform hover:scale-[1.01] hover:bg-[#E03A1E]"
+                      >
+                        <a href={product.checkout_url} target="_blank" rel="noreferrer">
+                          Jetzt sichern
+                          <ArrowUpRight size={18} />
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button disabled className="h-14 w-full rounded-2xl text-base font-bold">
+                        Checkout folgt
+                      </Button>
+                    )}
+
+                    {product.slug && (
+                      <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-border text-sm font-semibold">
+                        <Link to={`/produkt/${product.slug}`}>
+                          Details ansehen
+                          <ArrowRight size={16} />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>

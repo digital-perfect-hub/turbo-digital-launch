@@ -6,6 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Save } from "lucide-react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 import {
   defaultAudienceItems,
   defaultProcessSteps,
@@ -14,8 +19,6 @@ import {
   defaultWhyChoosePoints,
   useSiteSettings,
 } from "@/hooks/useSiteSettings";
-import { toast } from "sonner";
-import { Save } from "lucide-react";
 
 const jsonDefaults: Record<string, unknown> = {
   home_why_choose_points: defaultWhyChoosePoints,
@@ -24,7 +27,6 @@ const jsonDefaults: Record<string, unknown> = {
   home_testimonials: defaultTestimonials,
 };
 
-// Logisch gruppierte Textfelder
 const textGroups = {
   intro: [
     { key: "home_header_topbar", label: "Topbar Text" },
@@ -67,6 +69,16 @@ const jsonFields = [
   { key: "home_process_steps", label: "Ablauf Schritte (JSON)" },
   { key: "home_testimonials", label: "Testimonials (JSON - Fallback)" },
 ];
+
+const quillModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    ['link'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['clean']
+  ]
+};
 
 const AdminHomepage = () => {
   const queryClient = useQueryClient();
@@ -133,13 +145,14 @@ const AdminHomepage = () => {
         <div key={field.key} className={`space-y-2 ${field.multiline ? 'md:col-span-2' : ''}`}>
           <Label htmlFor={field.key} className="text-slate-700 font-semibold">{field.label}</Label>
           {field.multiline ? (
-            <Textarea
-              id={field.key}
-              rows={4}
-              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-              value={form[field.key] || ""}
-              onChange={(event) => setForm((prev) => ({ ...prev, [field.key]: event.target.value }))}
-            />
+            <div className="bg-white rounded-xl overflow-hidden border border-slate-200 focus-within:border-[#FF4B2C] transition-colors [&_.ql-editor]:min-h-[180px] [&_.ql-toolbar]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-slate-200 [&_.ql-container]:border-none">
+              <ReactQuill
+                theme="snow"
+                modules={quillModules}
+                value={form[field.key] || ""}
+                onChange={(val) => setForm((prev) => ({ ...prev, [field.key]: val }))}
+              />
+            </div>
           ) : (
             <Input
               id={field.key}
@@ -183,25 +196,11 @@ const AdminHomepage = () => {
             <TabsTrigger value="json" className="rounded-xl py-3 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all">Daten (JSON)</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="intro" className="mt-0 outline-none">
-            {renderFields(textGroups.intro)}
-          </TabsContent>
-
-          <TabsContent value="whyTrust" className="mt-0 outline-none">
-            {renderFields(textGroups.whyTrust)}
-          </TabsContent>
-
-          <TabsContent value="servicesShop" className="mt-0 outline-none">
-            {renderFields(textGroups.servicesShop)}
-          </TabsContent>
-
-          <TabsContent value="audienceProcess" className="mt-0 outline-none">
-            {renderFields(textGroups.audienceProcess)}
-          </TabsContent>
-
-          <TabsContent value="contactFaq" className="mt-0 outline-none">
-            {renderFields(textGroups.contactFaq)}
-          </TabsContent>
+          <TabsContent value="intro" className="mt-0 outline-none">{renderFields(textGroups.intro)}</TabsContent>
+          <TabsContent value="whyTrust" className="mt-0 outline-none">{renderFields(textGroups.whyTrust)}</TabsContent>
+          <TabsContent value="servicesShop" className="mt-0 outline-none">{renderFields(textGroups.servicesShop)}</TabsContent>
+          <TabsContent value="audienceProcess" className="mt-0 outline-none">{renderFields(textGroups.audienceProcess)}</TabsContent>
+          <TabsContent value="contactFaq" className="mt-0 outline-none">{renderFields(textGroups.contactFaq)}</TabsContent>
 
           <TabsContent value="json" className="mt-0 outline-none">
             <div className="grid gap-6 md:grid-cols-2 mt-6">

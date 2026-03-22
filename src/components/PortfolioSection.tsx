@@ -93,7 +93,11 @@ const PortfolioSection = () => {
         <div className="grid gap-5 xl:grid-cols-3">
           {effectiveItems.map((item, index) => {
             const hasImage = Boolean(item.image_url);
-            const imageSrc = hasImage ? buildRenderImageUrl(item.image_url, { width: 1200, quality: 84 }) : "";
+            
+            // BUGFIX: Wenn die URL schon fertig von Supabase kommt ("http..."), nicht nochmal durch Render-API jagen
+            const imageSrc = hasImage 
+              ? (item.image_url!.startsWith("http") ? item.image_url : buildRenderImageUrl(item.image_url, { width: 1200, quality: 84 })) 
+              : "";
 
             return (
               <motion.article

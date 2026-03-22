@@ -3,15 +3,24 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "./hooks/useAuth";
+import { useGlobalTheme } from "./hooks/useGlobalTheme";
+
+// Öffentliche Seiten
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
+import ProductDetail from "./pages/ProductDetail";
+
+// Admin Seiten
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminFooter from "./pages/admin/AdminFooter";
+import AdminBranding from "./pages/admin/AdminBranding";
+import AdminNavigation from "./pages/admin/AdminNavigation";
 import AdminHomepage from "./pages/admin/AdminHomepage";
 import AdminHero from "./pages/admin/AdminHero";
 import AdminServices from "./pages/admin/AdminServices";
@@ -19,23 +28,13 @@ import AdminPortfolio from "./pages/admin/AdminPortfolio";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminLeads from "./pages/admin/AdminLeads";
-import AdminSEO from "./pages/admin/AdminSEO";
-import AdminBranding from "./pages/admin/AdminBranding";
-import { useGlobalTheme } from "./hooks/useGlobalTheme";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
 
+// Bootstraps unser Theme, damit alle CSS-Variablen greifen
 const ThemeBootstrap = ({ children }: { children: React.ReactNode }) => {
-  const { isLoading } = useGlobalTheme();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
-        Frontend-Theme wird geladen...
-      </div>
-    );
-  }
-
+  useGlobalTheme();
   return <>{children}</>;
 };
 
@@ -48,23 +47,31 @@ const App = () => (
         <BrowserRouter>
           <ThemeBootstrap>
             <Routes>
+              {/* Frontend Routen */}
               <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/impressum" element={<Impressum />} />
               <Route path="/datenschutz" element={<Datenschutz />} />
               <Route path="/agb" element={<AGB />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/produkt/:slug" element={<ProductDetail />} />
+
+              {/* Admin Backend Routen */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="branding" element={<AdminBranding />} />
+                <Route path="navigation" element={<AdminNavigation />} /> {/* NEUE ROUTE */}
                 <Route path="homepage" element={<AdminHomepage />} />
                 <Route path="hero" element={<AdminHero />} />
                 <Route path="services" element={<AdminServices />} />
+                <Route path="footer" element={<AdminFooter />} />
                 <Route path="portfolio" element={<AdminPortfolio />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="faq" element={<AdminFAQ />} />
                 <Route path="leads" element={<AdminLeads />} />
-                <Route path="seo" element={<AdminSEO />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
+
+              {/* 404 Fallback */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ThemeBootstrap>

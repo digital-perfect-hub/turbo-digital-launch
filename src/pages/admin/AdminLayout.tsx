@@ -1,11 +1,14 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { FileText, HelpCircle, ImageIcon, LayoutDashboard, LogOut, MessageSquare, Palette, Package, Settings, Type } from "lucide-react";
+// Achte darauf, dass 'Settings' als Icon von lucide-react importiert ist (hast du schon).
+import { FileText, HelpCircle, ImageIcon, LayoutDashboard, LogOut, MessageSquare, Palette, Package, Settings, Type, Menu, PanelBottom } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/branding", icon: Palette, label: "Branding & Theme" },
+  { to: "/admin/navigation", icon: Menu, label: "Navigation" },
+  { to: "/admin/footer", icon: PanelBottom, label: "Footer" },
   { to: "/admin/homepage", icon: FileText, label: "Homepage Inhalte" },
   { to: "/admin/hero", icon: Type, label: "Hero-Bereich" },
   { to: "/admin/services", icon: Settings, label: "Leistungen" },
@@ -13,7 +16,7 @@ const navItems = [
   { to: "/admin/products", icon: Package, label: "Produkte" },
   { to: "/admin/faq", icon: HelpCircle, label: "FAQ" },
   { to: "/admin/leads", icon: MessageSquare, label: "Anfragen" },
-  { to: "/admin/seo", icon: Settings, label: "SEO" },
+  { to: "/admin/settings", icon: Settings, label: "Einstellungen" }, // <--- ERSETZT DAS ALTE SEO
 ];
 
 const AdminLayout = () => {
@@ -33,7 +36,6 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-slate-50 flex">
       <aside className="w-72 shrink-0 border-r border-slate-800 bg-slate-950 text-white flex flex-col">
         <div className="border-b border-slate-800 p-6">
-          {/* Admin Panel Logo in Deinem Orange */}
           <h2 className="text-2xl font-black tracking-tight text-[#FF4B2C]">Admin Panel</h2>
           <p className="mt-1 text-xs text-slate-400 truncate font-medium">{user.email}</p>
         </div>
@@ -52,7 +54,6 @@ const AdminLayout = () => {
                 }`
               }
             >
-              {/* Hier ist der Fix: Eine Funktion, die isActive sauber an das Icon und den Text weitergibt */}
               {({ isActive }) => (
                 <>
                   <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />

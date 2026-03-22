@@ -7,6 +7,9 @@ const Footer = () => {
   const brandName = settings.company_name || "Digital-Perfect";
   const fontClass = settings.logo_font_family === 'serif' ? 'font-serif' : settings.logo_font_family === 'mono' ? 'font-mono' : '';
 
+  const navLinks = Array.isArray(settings.footer_nav_links) ? settings.footer_nav_links : [];
+  const legalLinks = Array.isArray(settings.footer_legal_links) ? settings.footer_legal_links : [];
+
   return (
     <footer className="text-white pt-24 pb-12 relative overflow-hidden" style={{ backgroundColor: 'var(--footer-bg, #020617)' }}>
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_50%)] opacity-[0.05] blur-[100px] pointer-events-none" />
@@ -29,35 +32,50 @@ const Footer = () => {
                 </span>
               )}
             </div>
+            
             <p className="text-slate-400 leading-relaxed mb-8">
-              Premium Webdesign, SEO und digitale Vertriebsmaschinen für Agenturen und Brands, die den Standard setzen wollen.
+              {settings.footer_description || "Premium Webdesign, SEO und digitale Vertriebsmaschinen für Agenturen und Brands."}
             </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all text-white hover:text-primary">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all text-white hover:text-primary">
-                <Linkedin size={20} />
-              </a>
-            </div>
+            
+            {settings.show_socials !== false && (
+              <div className="flex items-center gap-4">
+                {settings.social_instagram_url && (
+                  <a href={settings.social_instagram_url} target="_blank" rel="noreferrer" className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all text-white hover:text-primary">
+                    <Instagram size={20} />
+                  </a>
+                )}
+                {settings.social_linkedin_url && (
+                  <a href={settings.social_linkedin_url} target="_blank" rel="noreferrer" className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all text-white hover:text-primary">
+                    <Linkedin size={20} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
             <h4 className="text-lg font-bold mb-6 text-white">Navigation</h4>
             <ul className="space-y-4 text-slate-400">
-              <li><button onClick={() => document.querySelector('#leistungen')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors outline-none">Leistungen</button></li>
-              <li><button onClick={() => document.querySelector('#portfolio')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors outline-none">Projekte</button></li>
-              <li><button onClick={() => document.querySelector('#ablauf')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors outline-none">Ablauf</button></li>
-              <li><button onClick={() => document.querySelector('#shop')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors outline-none">Shop</button></li>
+              {navLinks.map((link: any, idx: number) => (
+                <li key={idx}>
+                  {link.url.startsWith("#") ? (
+                    <button onClick={() => document.querySelector(link.url)?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-primary transition-colors outline-none">{link.label}</button>
+                  ) : (
+                    <a href={link.url} className="hover:text-primary transition-colors">{link.label}</a>
+                  )}
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-bold mb-6 text-white">Rechtliches</h4>
             <ul className="space-y-4 text-slate-400">
-              <li><Link to="/impressum" className="hover:text-primary transition-colors">Impressum</Link></li>
-              <li><Link to="/datenschutz" className="hover:text-primary transition-colors">Datenschutz</Link></li>
-              <li><Link to="/agb" className="hover:text-primary transition-colors">AGB</Link></li>
+              {legalLinks.map((link: any, idx: number) => (
+                <li key={idx}>
+                  <Link to={link.url} className="hover:text-primary transition-colors">{link.label}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
