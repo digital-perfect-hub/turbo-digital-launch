@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Palette, Type, Upload, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { Palette, Type, Upload, Image as ImageIcon, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ const GLOBAL_SETTINGS_EDITABLE_COLUMNS = [
   "font_family", "company_name", "logo_path", "use_text_logo", 
   "text_logo_color_hex", "show_logo_dot", "logo_dot_color_hex", "logo_font_family", "cta_hover_hex", "footer_bg_hex",
   "imprint_company", "imprint_address", "imprint_contact", "imprint_legal",
+  "loader_heading", "loader_subtext", "loader_bg_hex", "loader_text_hex"
 ] as const;
 
 const AdminBranding = () => {
@@ -148,6 +149,46 @@ const AdminBranding = () => {
               </div>
             </div>
           </section>
+
+          {/* LADEBILDSCHIRM SEKTION */}
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
+              <Type size={24} className="text-[#FF4B2C]" /> Ladebildschirm
+            </div>
+            <p className="text-sm text-slate-500 mb-6">
+              Personalisiere den Gatekeeper-Ladebildschirm, den deine Besucher beim Aufrufen sehen.
+            </p>
+            <div className="grid gap-5 md:grid-cols-2 mb-6">
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-bold">Lade-Titel</Label>
+                <Input
+                  value={form.loader_heading || ""}
+                  onChange={(e) => setForm({ ...form, loader_heading: e.target.value })}
+                  placeholder="DIGITAL-PERFECT"
+                  className="rounded-xl border-slate-200 bg-slate-50 focus:bg-white h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-bold">Subtext</Label>
+                <Input
+                  value={form.loader_subtext || ""}
+                  onChange={(e) => setForm({ ...form, loader_subtext: e.target.value })}
+                  placeholder="System wird geladen..."
+                  className="rounded-xl border-slate-200 bg-slate-50 focus:bg-white h-12"
+                />
+              </div>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2 pt-6 border-t border-slate-100">
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-bold">Hintergrundfarbe</Label>
+                <Input type="color" className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={form.loader_bg_hex || "#0F172A"} onChange={(e) => setForm({ ...form, loader_bg_hex: e.target.value.toUpperCase() })} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-bold">Textfarbe (Animation)</Label>
+                <Input type="color" className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={form.loader_text_hex || "#FFFFFF"} onChange={(e) => setForm({ ...form, loader_text_hex: e.target.value.toUpperCase() })} />
+              </div>
+            </div>
+          </section>
         </div>
 
         <div className="space-y-8">
@@ -212,7 +253,6 @@ const AdminBranding = () => {
                     </div>
                   </div>
 
-                  {/* DER NEUE SCHALTER FÜR DEN PUNKT */}
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
                     <div className="flex items-center justify-between mb-4">
                       <Label className="text-slate-700 font-bold">Punkt am Ende anzeigen?</Label>
@@ -232,9 +272,10 @@ const AdminBranding = () => {
             </div>
           </section>
 
+          {/* HAUPT THEME LIVE-VORSCHAU */}
           <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
              <div className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
-              Live-Vorschau
+              Live-Vorschau (Main)
             </div>
             <div className="rounded-[1.5rem] p-8 text-white shadow-xl relative overflow-hidden" style={{ backgroundColor: form.footer_bg_hex || form.secondary_color_hex || "#0E1F53" }}>
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)] pointer-events-none" />
@@ -259,6 +300,37 @@ const AdminBranding = () => {
               </div>
             </div>
           </section>
+
+          {/* LOADER LIVE-VORSCHAU */}
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+             <div className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
+              Ladebildschirm Vorschau
+            </div>
+            <div 
+              className="rounded-[1.5rem] p-12 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]" 
+              style={{ backgroundColor: form.loader_bg_hex || "#0f172a", color: form.loader_text_hex || "#ffffff" }}
+            >
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-white/5 rounded-full blur-[60px] pointer-events-none" />
+              <div className="relative z-10 flex flex-col items-center gap-6">
+                <div className="relative flex items-center justify-center">
+                    <div className="absolute inset-0 bg-white/10 rounded-full blur-xl animate-pulse" />
+                    <Loader2 className="w-12 h-12 animate-spin relative z-10 opacity-70" />
+                    <div className="absolute inset-0 flex items-center justify-center z-20 font-bold text-xs tracking-tighter">
+                      87%
+                    </div>
+                </div>
+                <div className="flex flex-col items-center gap-2 text-center">
+                    <h2 className="text-lg font-display font-black tracking-widest uppercase">
+                      {form.loader_heading || "DIGITAL-PERFECT"}
+                    </h2>
+                    <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 animate-pulse">
+                      {form.loader_subtext || "System wird geladen..."}
+                    </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
         </div>
       </div>
 

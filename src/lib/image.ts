@@ -82,39 +82,14 @@ const resolveStorageLocation = (value: string): StorageLocation | null => {
 /**
  * Builds a URL for the Supabase Render-API:
  * https://<project>.supabase.co/storage/v1/render/image/public/<BUCKET>/<OBJECT_PATH>?width=600&quality=80
- *
- * Supported DB formats:
- * - bucket/path/to/image.jpg
- * - sites/<siteId>/products/image.webp (implicit branding bucket)
- * - /storage/v1/object/public/bucket/path/to/image.jpg
- * - https://.../storage/v1/object/public/bucket/path/to/image.jpg
- * - /storage/v1/render/image/public/bucket/path/to/image.jpg?...
- * - https://.../storage/v1/render/image/public/bucket/path/to/image.jpg?...
- * - legacy /render/image/public/... URLs are normalized too
  */
 export const buildRenderImageUrl = (
   storagePath: string | null | undefined,
   options: ImageRenderOptions = {},
 ): string => {
-  if (!storagePath) return "";
-
-  const trimmed = storagePath.trim();
-  if (!trimmed) return "";
-
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    try {
-      const url = new URL(trimmed);
-      const normalized = resolveStorageLocation(`${url.pathname}${url.search}`);
-      return normalized ? toRenderPath(normalized.bucket, normalized.objectPath, options) : trimmed;
-    } catch {
-      return trimmed;
-    }
-  }
-
-  const normalizedStoragePath = resolveStorageLocation(trimmed);
-  if (!normalizedStoragePath) return trimmed;
-
-  return toRenderPath(normalizedStoragePath.bucket, normalizedStoragePath.objectPath, options);
+  // ARCHITEKTUR-FIX: Wir bypassen die fehleranfällige Render-API global
+  // und leiten alles auf die stabile Raw-URL um!
+  return buildRawImageUrl(storagePath, options);
 };
 
 /**

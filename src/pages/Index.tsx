@@ -14,9 +14,28 @@ import ContactSection from "@/components/ContactSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import ForumTeaser from "@/components/forum/ForumTeaser";
+import { useSiteContext } from "@/context/SiteContext";
+import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 
 const Index = () => {
+  const { isLoading } = useSiteContext();
+  const { theme, isLoading: isThemeLoading } = useGlobalTheme();
+
+  // GATEKEEPER-GESETZ: Solange der Tenant (Site) ODER das Theme im Hintergrund aufgelöst wird,
+  // blockieren wir das Rendering der unfertigen Seite und zeigen exklusiv den Loader mit Kunden-Branding.
+  if (isLoading || isThemeLoading) {
+    return (
+      <LoadingScreen 
+        heading={theme?.loader_heading} 
+        subtext={theme?.loader_subtext}
+        bgHex={theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex}
+        textHex={theme?.loader_loader_text_hex ?? theme?.loader_text_hex}
+      />
+    );
+  }
+
   return (
     <>
       <SEO />
