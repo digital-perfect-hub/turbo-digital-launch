@@ -469,10 +469,13 @@ export const defaultSiteText: Record<string, string> = {
   home_why_choose_title: "Warum Kundinnen & Kunden DIGITAL-PERFECT wählen",
   home_why_choose_body:
     "Wir verschwenden keine Zeit mit endlosen Feedbackschleifen und abstrakten Konzepten. Wir liefern funktionierende digitale Infrastruktur, die Leads generiert und Marken nach vorn bringt.",
+  home_why_choose_cta_text: "Kostenlos anfragen",
+  home_why_choose_cta_link: "#kontakt",
   home_audience_kicker: "Zielgruppen",
   home_audience_title: "Für wen unsere Leistungen gemacht sind",
   home_audience_description:
     "Wir unterstützen Unternehmer:innen, Selbstständige und neue Gründer:innen, die online klar auftreten, professionell sichtbar werden und verlässlich Kunden gewinnen möchten.",
+  home_audience_item_badge: "Passender Fit",
   home_services_kicker: "Unsere Leistungen",
   home_services_title: "Webdesign, das für dich arbeitet. Rund um die Uhr, jeden Tag.",
   home_services_description:
@@ -481,6 +484,8 @@ export const defaultSiteText: Record<string, string> = {
   home_portfolio_title: "Web- und SEO-Projekte aus AT/DE, an denen wir aktuell arbeiten oder die bereits abgeschlossen sind.",
   home_process_kicker: "So funktioniert's",
   home_process_title: "In nur vier einfachen Schritten zu deiner neuen Website, Onlineshop oder SEO-Strategie.",
+  home_process_cta_text: "Jetzt Erstgespräch vereinbaren",
+  home_process_cta_link: "#kontakt",
   home_shop_kicker: "Margen-Booster & Upsell",
   home_shop_title: "Dein Schlüssel zu mehr Vertrauen und Anfragen",
   home_shop_description:
@@ -561,7 +566,6 @@ export const useSiteSettings = () => {
       if (value === null || value === undefined) return fallback;
       return String(value);
     }
-    if (isLoading) return defaultSiteText[key] || fallback;
     return defaultSiteText[key] || fallback;
   };
 

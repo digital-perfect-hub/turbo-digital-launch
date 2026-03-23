@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { BarChart3, Gauge, Shield, Users } from "lucide-react";
-import { defaultTrustPoints, type TrustPoint, useSiteSettings } from "@/hooks/useSiteSettings";
+import { defaultSiteText, defaultTrustPoints, type TrustPoint, useSiteSettings } from "@/hooks/useSiteSettings";
 
 const iconMap = {
   users: Users,
@@ -9,21 +9,34 @@ const iconMap = {
   shield: Shield,
 } satisfies Record<string, typeof Users>;
 
+const normalizeTrustPoints = (points: TrustPoint[]) =>
+  points
+    .filter((item) => item?.title?.trim() && item?.desc?.trim())
+    .map((item) => ({
+      ...item,
+      icon: item.icon && iconMap[item.icon] ? item.icon : "users",
+    }));
+
 const TrustSection = () => {
   const { getSetting, getJsonSetting } = useSiteSettings();
-  const trustPoints = getJsonSetting<TrustPoint[]>("home_trust_points", defaultTrustPoints).filter((item) => item?.title?.trim() && item?.desc?.trim());
-  const trustDescription = getSetting("home_trust_description", "").trim();
+
+  const trustPoints = normalizeTrustPoints(getJsonSetting<TrustPoint[]>("home_trust_points", defaultTrustPoints));
+  const kicker =
+    getSetting("home_trust_kicker", defaultSiteText.home_trust_kicker).trim() || defaultSiteText.home_trust_kicker;
+  const title =
+    getSetting("home_trust_title", defaultSiteText.home_trust_title).trim() || defaultSiteText.home_trust_title;
+  const description =
+    getSetting("home_trust_description", defaultSiteText.home_trust_description).trim() ||
+    defaultSiteText.home_trust_description;
 
   return (
-    <section className="relative z-20 bg-background pb-8 -mt-8 md:-mt-10" aria-label="Vertrauen">
+    <section className="relative z-20 -mt-8 bg-background pb-8 md:-mt-10" aria-label="Vertrauen">
       <div className="section-container">
         <div className="premium-card p-5 md:p-7 lg:p-8">
           <div className="mb-6 max-w-3xl">
-            <p className="section-label">{getSetting("home_trust_kicker", "Vertrauen & System")}</p>
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
-              {getSetting("home_trust_title", "Warum dieser Auftritt nicht nur schön, sondern belastbar ist")}
-            </h2>
-            {trustDescription ? <p className="mt-4 text-base leading-relaxed text-slate-600">{trustDescription}</p> : null}
+            <p className="section-label">{kicker}</p>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-foreground md:text-3xl">{title}</h2>
+            {description ? <p className="mt-4 text-base leading-relaxed text-muted-foreground">{description}</p> : null}
           </div>
 
           <div className="relative z-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -37,13 +50,13 @@ const TrustSection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.45, delay: index * 0.05 }}
-                  className="rounded-[1.4rem] border border-slate-200/85 bg-white/88 p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.16)]"
+                  className="rounded-[1.4rem] border border-border bg-card p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.16)]"
                 >
                   <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <Icon size={20} />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">{feature.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{feature.desc}</p>
+                  <h3 className="text-base font-bold text-foreground">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
                 </motion.article>
               );
             })}

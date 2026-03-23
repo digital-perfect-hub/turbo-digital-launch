@@ -105,7 +105,7 @@ const ServicesSection = () => {
           >
             <button
               onClick={() => document.querySelector("#kontakt")?.scrollIntoView({ behavior: "smooth" })}
-              className="btn-outline hidden md:inline-flex bg-background border-border text-foreground hover:bg-slate-50"
+              className="btn-outline hidden md:inline-flex"
             >
               Projekt anfragen
               <ArrowRight size={18} />
@@ -116,7 +116,7 @@ const ServicesSection = () => {
         <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {effectiveServices.map((service, index) => {
             const Icon = iconMap[service.icon_name || "Monitor"] || Monitor;
-            
+
             return (
               <motion.div
                 key={service.id}
@@ -124,9 +124,8 @@ const ServicesSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`group relative h-full rounded-[2.5rem] border border-border bg-card p-8 sm:p-10 shadow-sm transition-all duration-500 hover:shadow-xl overflow-hidden flex flex-col ${isLoading ? "animate-pulse bg-slate-100" : ""}`}
+                className={`group relative h-full rounded-[2.5rem] border border-border bg-card p-8 sm:p-10 shadow-sm transition-all duration-500 hover:shadow-xl overflow-hidden flex flex-col ${isLoading ? "animate-pulse bg-muted" : ""}`}
               >
-                {/* Dynamischer Background Glow beim Hovern */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500 blur-2xl pointer-events-none" />
 
                 <div className="relative z-10 flex-1 flex flex-col">
@@ -134,7 +133,7 @@ const ServicesSection = () => {
                     <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
                       <Icon size={28} strokeWidth={1.5} />
                     </div>
-                    <span className="text-4xl font-extrabold text-slate-100 group-hover:text-primary/10 transition-colors duration-500">
+                    <span className="surface-index-number text-4xl font-extrabold group-hover:text-primary/10 transition-colors duration-500">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                   </div>

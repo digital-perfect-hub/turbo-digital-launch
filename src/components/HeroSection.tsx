@@ -3,7 +3,7 @@ import { ArrowRight, BadgeCheck, BarChart3, Globe, ShieldCheck, Sparkles } from 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
-import { buildRenderImageUrl, buildRawImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import heroFallback from "@/assets/hero-bg.jpg";
@@ -61,7 +61,6 @@ const proofItems = [
 const resolveImage = (path?: string | null, fallback: string = heroFallback) => {
   const trimmed = String(path || "").trim();
   if (!trimmed) return fallback;
-  // Architektur-Fix: Kompromissloser Wechsel auf die Raw-URL für 100% Funktionalität ohne Render-API
   return buildRawImageUrl(trimmed);
 };
 
@@ -98,7 +97,6 @@ const HeroSection = () => {
   const visualKicker = safeText(hero?.visual_kicker, "Hero Visual");
   const visualTitle = safeText(hero?.visual_title, "Ein starkes Bild sagt mehr als 1000 Worte.");
   const visualBadge = safeText(hero?.visual_badge, "Premium Intro");
-  
   const layerKicker = safeText(hero?.layer_kicker, "Conversion Layer");
   const layerTitle = safeText(hero?.layer_title, "Premium Hero mit Bild, Signalwerten und CTA-Führung");
 
@@ -118,7 +116,7 @@ const HeroSection = () => {
   const heroImageSrc = resolveImage(hero?.image_path || hero?.image_url || hero?.image, heroFallback);
   const bgImageSrc = resolveImage(hero?.background_image_path, heroFallback);
   const bgMobileImageSrc = hero?.background_mobile_image_path ? resolveImage(hero?.background_mobile_image_path, bgImageSrc) : bgImageSrc;
-  const overlayAlpha = typeof hero?.overlay_opacity === 'number' ? Math.max(0, Math.min(100, hero.overlay_opacity)) / 100 : 0.58;
+  const overlayAlpha = typeof hero?.overlay_opacity === "number" ? Math.max(0, Math.min(100, hero.overlay_opacity)) / 100 : 0.58;
 
   return (
     <section id="hero" className="dark-section relative overflow-hidden pt-[158px] lg:pt-[178px]">
@@ -128,10 +126,10 @@ const HeroSection = () => {
           <img src={bgImageSrc} alt="Hero Background" className="h-full w-full object-cover" loading="eager" />
         </picture>
       </div>
-      
-      <div className="absolute inset-0 z-0" style={{ backgroundColor: `rgba(6,13,36,${overlayAlpha})` }} />
+
+      <div className="absolute inset-0 z-0" style={{ backgroundColor: "var(--hero-overlay-color)", opacity: overlayAlpha }} />
       <div className="absolute inset-0 z-0 noise-overlay opacity-35" />
-      <div className="absolute inset-x-0 bottom-0 z-0 h-40 bg-gradient-to-t from-[#eef3f9] to-transparent" />
+      <div className="hero-bottom-fade absolute inset-x-0 bottom-0 z-0 h-40" />
 
       <div className="section-container relative z-10 py-14 md:py-20 lg:py-24">
         <div className="grid items-center gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
@@ -141,9 +139,9 @@ const HeroSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.45 }}
-              className="section-label mb-6 border-white/10 bg-white/5 text-slate-200"
+              className="section-label hero-badge mb-6"
             >
-              <Sparkles size={14} className="text-gold" />
+              <Sparkles size={14} className="text-primary" />
               {heroBadge}
             </motion.div>
 
@@ -152,7 +150,7 @@ const HeroSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.55, delay: 0.05 }}
-              className="max-w-4xl text-balance text-4xl font-extrabold leading-[0.97] tracking-[-0.05em] text-white sm:text-5xl lg:text-[4.7rem]"
+              className="hero-headline max-w-4xl text-balance text-4xl font-extrabold leading-[0.97] tracking-[-0.05em] sm:text-5xl lg:text-[4.7rem]"
             >
               {effectiveHeadlineLines.map((line, idx) => (
                 <span key={`${line}-${idx}`} className={idx === effectiveHeadlineLines.length - 1 ? "block text-gradient-dark" : "block"}>
@@ -166,7 +164,7 @@ const HeroSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.55, delay: 0.12 }}
-              className="mt-7 max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl"
+              className="hero-subheadline mt-7 max-w-2xl text-lg leading-relaxed sm:text-xl"
             >
               {heroSubheadline}
             </motion.p>
@@ -178,11 +176,11 @@ const HeroSection = () => {
               transition={{ duration: 0.55, delay: 0.18 }}
               className="mt-10 flex flex-wrap items-center gap-4"
             >
-              <button onClick={() => scrollTo("#kontakt")} className="btn-primary !px-7 !py-4 !text-base" style={{ '--tw-hover-bg': 'var(--cta-hover)' } as any}>
+              <button onClick={() => scrollTo("#kontakt")} className="btn-primary !px-7 !py-4 !text-base" style={{ "--tw-hover-bg": "var(--cta-hover)" } as any}>
                 {heroCta}
                 <ArrowRight size={18} />
               </button>
-              <button onClick={() => scrollTo("#portfolio")} className="btn-outline !border-white/12 !bg-white/5 !text-white hover:!bg-white/10">
+              <button onClick={() => scrollTo("#portfolio")} className="btn-outline hero-secondary-button">
                 Projekte ansehen
               </button>
             </motion.div>
@@ -195,12 +193,9 @@ const HeroSection = () => {
               className="mt-10 grid gap-4 sm:grid-cols-3"
             >
               {effectiveStats.map((item, idx) => (
-                <div
-                  key={`${item.label}-${idx}`}
-                  className={`glass-card rounded-[1.55rem] border-white/10 bg-white/5 p-5 ${isLoading ? "premium-skeleton" : ""}`}
-                >
-                  <p className="text-xl font-extrabold tracking-[-0.03em] text-white md:text-2xl">{item.value}</p>
-                  <p className="mt-2 text-sm font-medium text-slate-300">{item.label}</p>
+                <div key={`${item.label}-${idx}`} className={`glass-card hero-stat-card rounded-[1.55rem] p-5 ${isLoading ? "premium-skeleton" : ""}`}>
+                  <p className="hero-stat-value text-xl font-extrabold tracking-[-0.03em] md:text-2xl">{item.value}</p>
+                  <p className="hero-stat-label mt-2 text-sm font-medium">{item.label}</p>
                 </div>
               ))}
             </motion.div>
@@ -214,49 +209,44 @@ const HeroSection = () => {
             className="relative"
           >
             <div className={`premium-dark-card overflow-hidden p-4 sm:p-5 lg:p-6 ${isLoading ? "premium-skeleton" : ""}`}>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.18),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,31,83,0.18),transparent_22%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--theme-primary-hex)_18%,transparent)_0%,transparent_22%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--hero-bg-color)_18%,transparent)_0%,transparent_22%)]" />
               <div className="relative z-10 space-y-4">
-                
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-slate-300">{visualKicker}</p>
-                    <p className="mt-2 text-sm text-slate-400">{visualTitle}</p>
+                    <p className="hero-panel-kicker text-[0.72rem] font-semibold uppercase tracking-[0.28em]">{visualKicker}</p>
+                    <p className="hero-panel-muted mt-2 text-sm">{visualTitle}</p>
                   </div>
-                  <span className="premium-pill border-white/10 bg-white/5 text-slate-100">
-                    <Globe size={13} className="text-gold" />
+                  <span className="premium-pill hero-badge-pill">
+                    <Globe size={13} className="text-primary" />
                     {visualBadge}
                   </span>
                 </div>
 
-                <div className="relative overflow-hidden rounded-[1.7rem] border border-white/10 bg-slate-900">
-                  {/* Das rohe Bild zieht er sich jetzt ohne 403 Blockade */}
+                <div className="hero-visual-frame relative overflow-hidden rounded-[1.7rem]">
                   <img src={heroImageSrc} alt={settings.company_name || "Digital-Perfect Hero"} className="h-[430px] w-full object-cover" loading="eager" />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),rgba(15,23,42,0.62))]" />
+                  <div className="hero-visual-overlay absolute inset-0" />
 
-                  {/* Layer Oben Links */}
-                  <div className="absolute left-4 top-4 rounded-2xl border border-white/15 bg-slate-950/60 px-4 py-3 backdrop-blur-xl sm:left-6 sm:top-6">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">{layerKicker}</p>
-                    <p className="mt-2 text-sm font-semibold text-white">{layerTitle}</p>
+                  <div className="hero-overlay-card absolute left-4 top-4 rounded-2xl px-4 py-3 sm:left-6 sm:top-6">
+                    <p className="hero-overlay-kicker text-[0.68rem] font-semibold uppercase tracking-[0.24em]">{layerKicker}</p>
+                    <p className="hero-overlay-title mt-2 text-sm font-semibold">{layerTitle}</p>
                   </div>
-                  
-                  {/* SCHALTER-LOGIK: Die zwei Boxen unten */}
+
                   {(hero?.show_bottom_box1 !== false || hero?.show_bottom_box2 !== false) && (
                     <div className="absolute bottom-4 left-4 right-4 grid gap-3 sm:bottom-6 sm:left-6 sm:right-6 sm:grid-cols-2">
                       {hero?.show_bottom_box1 !== false && (
-                        <div className="rounded-[1.4rem] border border-white/12 bg-slate-950/65 p-4 backdrop-blur-xl">
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">{safeText(hero?.bottom_box1_kicker, "Design-System")}</p>
-                          <p className="mt-2 text-sm leading-relaxed text-white/90">{safeText(hero?.bottom_box1_title, "Farben, Typografie und Radien greifen vollautomatisch.")}</p>
+                        <div className="hero-overlay-card rounded-[1.4rem] p-4">
+                          <p className="hero-overlay-kicker text-[0.68rem] font-semibold uppercase tracking-[0.24em]">{safeText(hero?.bottom_box1_kicker, "Design-System")}</p>
+                          <p className="hero-overlay-body mt-2 text-sm leading-relaxed">{safeText(hero?.bottom_box1_title, "Farben, Typografie und Radien greifen vollautomatisch.")}</p>
                         </div>
                       )}
                       {hero?.show_bottom_box2 !== false && (
-                        <div className="rounded-[1.4rem] border border-white/12 bg-slate-950/65 p-4 backdrop-blur-xl">
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-300">{safeText(hero?.bottom_box2_kicker, "Admin steuerbar")}</p>
-                          <p className="mt-2 text-sm leading-relaxed text-white/90">{safeText(hero?.bottom_box2_title, "Bildpfad, Texte und Kennzahlen bleiben zentral pflegbar.")}</p>
+                        <div className="hero-overlay-card rounded-[1.4rem] p-4">
+                          <p className="hero-overlay-kicker text-[0.68rem] font-semibold uppercase tracking-[0.24em]">{safeText(hero?.bottom_box2_kicker, "Admin steuerbar")}</p>
+                          <p className="hero-overlay-body mt-2 text-sm leading-relaxed">{safeText(hero?.bottom_box2_title, "Bildpfad, Texte und Kennzahlen bleiben zentral pflegbar.")}</p>
                         </div>
                       )}
                     </div>
                   )}
-
                 </div>
               </div>
             </div>
@@ -273,11 +263,11 @@ const HeroSection = () => {
           {proofItems.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.text} className="glass-card flex items-start gap-4 rounded-[1.6rem] border-white/10 bg-white/5 p-5">
-                <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gold/10 text-gold">
+              <div key={item.text} className="glass-card hero-proof-card flex items-start gap-4 rounded-[1.6rem] p-5">
+                <div className="hero-proof-icon inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
                   <Icon size={18} />
                 </div>
-                <p className="text-sm leading-relaxed text-slate-200">{item.text}</p>
+                <p className="hero-proof-text text-sm leading-relaxed">{item.text}</p>
               </div>
             );
           })}

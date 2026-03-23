@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { applyThemeToRoot } from "@/lib/theme-settings";
 
 export type GlobalThemeSettings = {
   id: string;
@@ -51,7 +52,6 @@ export type GlobalThemeSettings = {
   og_image_path: string | null;
   tracking_head_code: string | null;
   tracking_body_code: string | null;
-  // NEU: Tab Retention Feature
   enable_tab_retention: boolean | null;
   tab_retention_texts: any | null;
 };
@@ -106,36 +106,6 @@ const defaultTheme: GlobalThemeSettings = {
   tab_retention_texts: ["Komm doch zurück! 👋", "Wir vermissen dich 🥺"],
 };
 
-const normalizeHex = (value: string | null | undefined): string | null => {
-  if (!value) return null;
-  let normalized = value.trim();
-  if (!normalized.startsWith("#")) normalized = `#${normalized}`;
-  return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized.toUpperCase() : null;
-};
-
-const hexToHslParts = (hex: string | null | undefined, fallback: string): string => {
-  const normalizedHex = normalizeHex(hex);
-  if (!normalizedHex) return fallback;
-  const r = parseInt(normalizedHex.slice(1, 3), 16) / 255;
-  const g = parseInt(normalizedHex.slice(3, 5), 16) / 255;
-  const b = parseInt(normalizedHex.slice(5, 7), 16) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const delta = max - min;
-  let h = 0, s = 0;
-  const l = (max + min) / 2;
-  if (delta !== 0) {
-    s = delta / (1 - Math.abs(2 * l - 1));
-    switch (max) {
-      case r: h = ((g - b) / delta) % 6; break;
-      case g: h = (b - r) / delta + 2; break;
-      case b: h = (r - g) / delta + 4; break;
-    }
-    h = Math.round(h * 60);
-    if (h < 0) h += 360;
-  }
-  return `${h} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-};
-
 export const useGlobalTheme = () => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
@@ -155,31 +125,15 @@ export const useGlobalTheme = () => {
   useEffect(() => {
     const root = document.documentElement;
 
-    root.style.setProperty("--primary", hexToHslParts(settings.primary_color_hex, "9 100% 59%"));
-    root.style.setProperty("--secondary", hexToHslParts(settings.secondary_color_hex, "225 71% 19%"));
-    root.style.setProperty("--accent", hexToHslParts(settings.accent_color_hex, "225 71% 19%"));
-    root.style.setProperty("--background", hexToHslParts(settings.bg_main_hex, "210 38% 98%"));
-    root.style.setProperty("--card", hexToHslParts(settings.bg_card_hex, "0 0% 100%"));
-    root.style.setProperty("--foreground", hexToHslParts(settings.text_main_hex, "225 71% 19%"));
-    root.style.setProperty("--muted-foreground", hexToHslParts(settings.text_muted_hex, "220 12% 42%"));
-    root.style.setProperty("--border", hexToHslParts(settings.border_color_hex, "215 24% 88%"));
-    root.style.setProperty("--radius", settings.border_radius || "1rem");
-    
-    if (settings.cta_hover_hex) root.style.setProperty("--cta-hover", settings.cta_hover_hex);
-    if (settings.footer_bg_hex) root.style.setProperty("--footer-bg", settings.footer_bg_hex);
+    applyThemeToRoot(settings as any);
+
+    root.style.setProperty("--cta-hover", settings.cta_hover_hex || settings.primary_color_hex || "#E03A1E");
+    root.style.setProperty("--footer-bg", settings.footer_bg_hex || "var(--theme-secondary-hex)");
+
     if (settings.nav_text_color_hex) root.style.setProperty("--nav-text", settings.nav_text_color_hex);
     if (settings.nav_hover_color_hex) root.style.setProperty("--nav-hover", settings.nav_hover_color_hex);
     if (settings.nav_underline_color_hex) root.style.setProperty("--nav-underline", settings.nav_underline_color_hex);
 
-    if (settings.font_family === "jakarta") {
-      root.style.setProperty("--app-font-heading", '"Plus Jakarta Sans", Inter, system-ui, sans-serif');
-    } else if (settings.font_family === "serif") {
-      root.style.setProperty("--app-font-heading", 'Georgia, "Times New Roman", serif');
-    } else {
-      root.style.setProperty("--app-font-heading", '"Plus Jakarta Sans", Inter, system-ui, sans-serif');
-    }
-
-    // DIE SEO-TITEL LOGIK
     let baseTitle = "Digital-Perfect";
     if (settings.meta_title) {
       baseTitle = settings.meta_title;
@@ -193,53 +147,49 @@ export const useGlobalTheme = () => {
     if (settings.favicon_path) {
       const resolvedFavicon = buildRenderImageUrl(settings.favicon_path, { width: 128, quality: 100 });
 
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
       if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
+        link = document.createElement("link");
+        link.rel = "icon";
         document.head.appendChild(link);
       }
       link.href = resolvedFavicon;
     }
 
-    // DIE NEUE TAB-RETENTION LOGIK (KOMM-ZURÜCK FEATURE)
     if (settings.enable_tab_retention !== false) {
-      const retentionTexts = Array.isArray(settings.tab_retention_texts) && settings.tab_retention_texts.length > 0 
-        ? settings.tab_retention_texts 
+      const retentionTexts = Array.isArray(settings.tab_retention_texts) && settings.tab_retention_texts.length > 0
+        ? settings.tab_retention_texts
         : ["Komm doch zurück! 👋", "Wir vermissen dich 🥺"];
-        
-      let timeoutIds: NodeJS.Timeout[] = [];
+
+      let timeoutIds: number[] = [];
 
       const handleVisibilityChange = () => {
         if (document.hidden) {
-          timeoutIds.forEach(clearTimeout);
+          timeoutIds.forEach(window.clearTimeout);
           timeoutIds = [];
 
           if (retentionTexts.length > 0) {
             document.title = retentionTexts[0];
-            // Geplant den Text alle 3 Sekunden wechseln
             for (let i = 1; i < retentionTexts.length; i++) {
-              const timeoutId = setTimeout(() => {
+              const timeoutId = window.setTimeout(() => {
                 document.title = retentionTexts[i];
               }, i * 3000);
               timeoutIds.push(timeoutId);
             }
           }
         } else {
-          // Tab ist wieder aktiv -> Timer löschen & Original-Titel setzen
-          timeoutIds.forEach(clearTimeout);
+          timeoutIds.forEach(window.clearTimeout);
           timeoutIds = [];
-          document.title = baseTitle; 
+          document.title = baseTitle;
         }
       };
 
       document.addEventListener("visibilitychange", handleVisibilityChange);
       return () => {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
-        timeoutIds.forEach(clearTimeout);
+        timeoutIds.forEach(window.clearTimeout);
       };
     }
-
   }, [settings]);
 
   const resolvedLogoUrl = settings.logo_path

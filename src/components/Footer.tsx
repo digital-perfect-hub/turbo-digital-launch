@@ -53,7 +53,7 @@ const Footer = () => {
   const contactItems = footerContactItems.length ? footerContactItems : fallbackContactItems;
 
   return (
-    <footer className="text-white pt-24 pb-12 relative overflow-hidden" style={{ backgroundColor: "var(--footer-bg, #020617)" }}>
+    <footer className="footer-shell relative overflow-hidden pt-24 pb-12">
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_50%)] opacity-[0.05] blur-[100px] pointer-events-none" />
 
       <div className="section-container relative z-10">
@@ -64,30 +64,30 @@ const Footer = () => {
                 <img src={logoUrl} alt={brandName} className="h-10 w-auto object-contain brightness-0 invert" />
               ) : (
                 <span
-                  className={`text-3xl font-black tracking-tighter text-white ${fontClass}`}
-                  style={{ color: settings.text_logo_color_hex === "#000000" || settings.text_logo_color_hex === "#0F172A" ? "#FFFFFF" : settings.text_logo_color_hex || "#FFFFFF" }}
+                  className={`text-3xl font-black tracking-tighter ${fontClass}`}
+                  style={{ color: settings.text_logo_color_hex === "#000000" || settings.text_logo_color_hex === "#0F172A" ? "var(--hero-headline)" : settings.text_logo_color_hex || "var(--hero-headline)" }}
                 >
                   {brandName}
                   {settings.show_logo_dot !== false && (
-                    <span style={{ color: settings.logo_dot_color_hex || settings.primary_color_hex || "#FF4B2C" }}>.</span>
+                    <span style={{ color: settings.logo_dot_color_hex || settings.primary_color_hex || "var(--theme-primary-hex)" }}>.</span>
                   )}
                 </span>
               )}
             </div>
 
-            <p className="text-slate-400 leading-relaxed mb-8">
+            <p className="footer-muted mb-8 leading-relaxed">
               {settings.footer_description || "Premium Webdesign, SEO und digitale Vertriebsmaschinen für Agenturen und Brands."}
             </p>
 
             {settings.show_socials !== false && (
               <div className="flex items-center gap-4">
                 {settings.social_instagram_url && (
-                  <a href={settings.social_instagram_url} target="_blank" rel="noreferrer" className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all text-white hover:text-primary">
+                  <a href={settings.social_instagram_url} target="_blank" rel="noreferrer" className="footer-social h-12 w-12 rounded-2xl flex items-center justify-center transition-all">
                     <Instagram size={20} />
                   </a>
                 )}
                 {settings.social_linkedin_url && (
-                  <a href={settings.social_linkedin_url} target="_blank" rel="noreferrer" className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all text-white hover:text-primary">
+                  <a href={settings.social_linkedin_url} target="_blank" rel="noreferrer" className="footer-social h-12 w-12 rounded-2xl flex items-center justify-center transition-all">
                     <Linkedin size={20} />
                   </a>
                 )}
@@ -96,16 +96,16 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-bold mb-6 text-white">{footerNavTitle}</h4>
-            <ul className="space-y-4 text-slate-400">
+            <h4 className="mb-6 text-lg font-bold">{footerNavTitle}</h4>
+            <ul className="footer-muted space-y-4">
               {navLinks.map((link: any, idx: number) => (
                 <li key={idx}>
                   {link.url.startsWith("#") ? (
-                    <button onClick={() => document.querySelector(link.url)?.scrollIntoView({ behavior: "smooth" })} className="hover:text-primary transition-colors outline-none">
+                    <button onClick={() => document.querySelector(link.url)?.scrollIntoView({ behavior: "smooth" })} className="footer-link outline-none">
                       {link.label}
                     </button>
                   ) : (
-                    <a href={link.url} className="hover:text-primary transition-colors">
+                    <a href={link.url} className="footer-link">
                       {link.label}
                     </a>
                   )}
@@ -115,11 +115,11 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-bold mb-6 text-white">{footerLegalTitle}</h4>
-            <ul className="space-y-4 text-slate-400">
+            <h4 className="mb-6 text-lg font-bold">{footerLegalTitle}</h4>
+            <ul className="footer-muted space-y-4">
               {legalLinks.map((link: any, idx: number) => (
                 <li key={idx}>
-                  <Link to={link.url} className="hover:text-primary transition-colors">
+                  <Link to={link.url} className="footer-link">
                     {link.label}
                   </Link>
                 </li>
@@ -128,16 +128,16 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-bold mb-6 text-white">{footerContactTitle}</h4>
-            <ul className="space-y-4 text-slate-400">
+            <h4 className="mb-6 text-lg font-bold">{footerContactTitle}</h4>
+            <ul className="footer-muted space-y-4">
               {contactItems.map((item, index) => {
                 const Icon = footerIconMap[item.icon || "mail"] || Mail;
                 const content = (
                   <>
                     <Icon size={18} className="text-primary shrink-0 mt-0.5" />
                     <div>
-                      {item.label ? <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{item.label}</div> : null}
-                      <div className="text-slate-300">{item.value}</div>
+                      {item.label ? <div className="footer-subtle text-[11px] font-semibold uppercase tracking-[0.18em]">{item.label}</div> : null}
+                      <div>{item.value}</div>
                     </div>
                   </>
                 );
@@ -145,7 +145,7 @@ const Footer = () => {
                 return (
                   <li key={`${item.value}-${index}`} className="max-w-[240px]">
                     {item.url ? (
-                      <a href={item.url} className="flex items-start gap-3 hover:text-white transition-colors">
+                      <a href={item.url} className="footer-link flex items-start gap-3">
                         {content}
                       </a>
                     ) : (
@@ -158,10 +158,10 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-sm text-slate-500">{renderedCopyright}</p>
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors outline-none">
-            {backToTopText} <ArrowUp size={16} className="transition-transform group-hover:-translate-y-1 text-primary" />
+        <div className="footer-divider mt-20 flex flex-col items-center justify-between gap-6 border-t pt-8 md:flex-row">
+          <p className="footer-subtle text-sm">{renderedCopyright}</p>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="footer-link footer-muted group flex items-center gap-2 text-sm font-bold uppercase tracking-widest outline-none">
+            {backToTopText} <ArrowUp size={16} className="text-primary transition-transform group-hover:-translate-y-1" />
           </button>
         </div>
       </div>
