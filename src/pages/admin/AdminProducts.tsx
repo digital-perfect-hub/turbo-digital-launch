@@ -4,7 +4,10 @@ import { CheckCircle2, ExternalLink, Image as ImageIcon, Plus, RefreshCw, Trash2
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
+import { useSiteModules } from "@/hooks/useSiteModules";
+import { ModuleLockedState } from "@/components/admin/ModuleLockedState";
+import { useAuth } from "@/hooks/useAuth";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { buildSiteAssetPath } from "@/lib/storage";
@@ -167,11 +170,13 @@ const toFormState = (item?: Partial<ProductRecord> & { id?: string }, nextSortOr
 
 const AdminProducts = () => {
   const qc = useQueryClient();
+  const { isGlobalAdmin } = useAuth();
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [editing, setEditing] = useState<ProductFormState | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+  const { hasShop, isLoading: modulesLoading } = useSiteModules();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin-products", siteId],
@@ -189,7 +194,7 @@ const AdminProducts = () => {
 
   const previewImage = useMemo(() => {
     if (!editing?.image_url) return "";
-    return buildRenderImageUrl(editing.image_url, { width: 640, quality: 84 });
+    return buildRawImageUrl(editing.image_url);
   }, [editing?.image_url]);
 
   const previewFeatures = useMemo(() => parseFeaturesInput(editing?.featuresText || ""), [editing?.featuresText]);
@@ -342,13 +347,24 @@ toast.success("Produktbild erfolgreich hochgeladen.");
     });
   };
 
-  if (isLoading) return <div className="p-6 font-medium text-slate-500">Laden...</div>;
+  if (isLoading || modulesLoading) return <div className="p-6 font-medium text-slate-500">Laden...</div>;
+
+  if (!hasShop) {
+    return (
+      <ModuleLockedState
+        moduleName="Shop"
+        title="Shop-Modul ist aktuell gesperrt"
+        description="Produktverwaltung, Checkout-Setup und Upsells werden erst sichtbar, wenn das Shop-Entitlement für diese Site aktiviert ist."
+        canSelfActivate={isGlobalAdmin}
+      />
+    );
+  }
 
   return (
     <div className="max-w-6xl p-6">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Produkte</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Shop</h1>
           <p className="mt-1 text-sm text-slate-500">Lean-Shop mit Detailseiten, Edge-Checkout und live berechenbaren Upsells.</p>
         </div>
         {!editing && (
@@ -743,7 +759,7 @@ toast.success("Produktbild erfolgreich hochgeladen.");
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {products.map((product) => {
             const previewUrl = product.image_url
-              ? buildRenderImageUrl(product.image_url, { width: 640, quality: 84 })
+              ? buildRawImageUrl(product.image_url)
               : "";
             const featurePreview = normalizeFeatures(product.features).slice(0, 3);
             const upsellCount = normalizeUpsells(product.upsells).length;

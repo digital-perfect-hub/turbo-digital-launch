@@ -4,7 +4,7 @@ import { Plus, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { uploadBrandingAsset } from "@/lib/storage";
@@ -159,7 +159,7 @@ const AdminPortfolio = () => {
                 <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
                   <div className="h-16 w-24 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-1">
                     {editing.image_url ? (
-                      <img src={buildRenderImageUrl(editing.image_url, { width: 160 })} alt="Preview" className="max-h-full object-cover" />
+                      <img src={buildRawImageUrl(editing.image_url, { width: 160 })} alt="Preview" className="max-h-full object-cover" />
                     ) : <ImageIcon className="text-slate-300" />}
                   </div>
                   <div>
@@ -211,7 +211,7 @@ const AdminPortfolio = () => {
             <div key={item.id} className="group flex items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#FF4B2C]/30 hover:shadow-md">
               <div className="flex min-w-0 items-center gap-5">
                 {item.image_url ? (
-                  <img src={buildRenderImageUrl(item.image_url, { width: 160, quality: 78 })} alt="" className="h-16 w-24 rounded-xl object-cover shadow-sm" />
+                  <img src={buildRawImageUrl(item.image_url, { width: 160, quality: 78 })} alt="" className="h-16 w-24 rounded-xl object-cover shadow-sm" />
                 ) : (
                   <div className="h-16 w-24 rounded-xl bg-slate-100 flex items-center justify-center text-[0.65rem] uppercase font-bold tracking-wider text-slate-400">Kein Bild</div>
                 )}

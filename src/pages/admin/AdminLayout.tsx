@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 // Achte darauf, dass 'Settings' als Icon von lucide-react importiert ist (hast du schon).
-import { FileText, HelpCircle, ImageIcon, LayoutDashboard, LogOut, MessageSquare, Palette, Package, Settings, Type, Menu, PanelBottom, MessagesSquare, Users, Quote, ShieldCheck, Building2 } from "lucide-react";
+import { FileText, HelpCircle, ImageIcon, LayoutDashboard, LogOut, MessageSquare, Palette, Package, Settings, Type, Menu, PanelBottom, MessagesSquare, Users, Quote, ShieldCheck, Building2, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteContext } from "@/context/SiteContext";
+import { useSiteModules } from "@/hooks/useSiteModules";
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
@@ -14,8 +15,8 @@ const navItems = [
   { to: "/admin/hero", icon: Type, label: "Hero-Bereich" },
   { to: "/admin/services", icon: Settings, label: "Leistungen" },
   { to: "/admin/portfolio", icon: ImageIcon, label: "Portfolio" },
-  { to: "/admin/products", icon: Package, label: "Produkte" },
-  { to: "/admin/forum", icon: MessagesSquare, label: "Forum" },
+  { to: "/admin/products", icon: Package, label: "Shop", moduleKey: "hasShop" },
+  { to: "/admin/forum", icon: MessagesSquare, label: "Forum", moduleKey: "hasForum" },
   { to: "/admin/content", icon: FileText, label: "Content-Blöcke" },
   { to: "/admin/team", icon: Users, label: "Team" },
   { to: "/admin/testimonials", icon: Quote, label: "Testimonials" },
@@ -29,6 +30,7 @@ const navItems = [
 const AdminLayout = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const { activeSiteId, availableSites, setActiveSiteId } = useSiteContext();
+  const { hasForum, hasShop, isLoading: modulesLoading } = useSiteModules();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,12 +80,19 @@ const AdminLayout = () => {
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                  {item.label}
-                </>
-              )}
+              {({ isActive }) => {
+                const isLocked = !modulesLoading && item.moduleKey ? !({ hasForum, hasShop }[item.moduleKey]) : false;
+
+                return (
+                  <>
+                    <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                    <span className="flex items-center gap-2">
+                      {item.label}
+                      {isLocked ? <Lock size={13} className="text-current opacity-80" /> : null}
+                    </span>
+                  </>
+                );
+              }}
             </NavLink>
           ))}
         </nav>

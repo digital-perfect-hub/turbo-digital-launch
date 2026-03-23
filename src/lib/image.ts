@@ -3,10 +3,17 @@ export type ImageRenderOptions = {
   quality?: number;
 };
 
+type StorageLocation = {
+  bucket: string;
+  objectPath: string;
+};
+
 const SUPABASE_BASE_URL = (import.meta.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
 const STORAGE_PUBLIC_SEGMENT = "/storage/v1/object/public/";
 const STORAGE_RENDER_SEGMENT = "/storage/v1/render/image/public/";
 const LEGACY_RENDER_SEGMENT = "/render/image/public/";
+const BRANDING_BUCKET = "branding";
+const BRANDING_OBJECT_PREFIX = "sites";
 
 const encodeObjectPath = (objectPath: string) =>
   objectPath
@@ -15,17 +22,43 @@ const encodeObjectPath = (objectPath: string) =>
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
+const toStorageBase = () => (SUPABASE_BASE_URL ? `${SUPABASE_BASE_URL}/storage/v1` : "/storage/v1");
+
 const toRenderPath = (bucket: string, objectPath: string, options: ImageRenderOptions) => {
   const width = options.width ?? 600;
   const quality = options.quality ?? 80;
   const encodedBucket = encodeURIComponent(bucket);
   const encodedObjectPath = encodeObjectPath(objectPath);
-  const base = SUPABASE_BASE_URL ? `${SUPABASE_BASE_URL}/storage/v1` : "/storage/v1";
 
-  return `${base}/render/image/public/${encodedBucket}/${encodedObjectPath}?width=${width}&quality=${quality}`;
+  return `${toStorageBase()}/render/image/public/${encodedBucket}/${encodedObjectPath}?width=${width}&quality=${quality}`;
 };
 
-const normalizeKnownStoragePath = (value: string, options: ImageRenderOptions) => {
+const toRawPath = (bucket: string, objectPath: string) => {
+  const encodedBucket = encodeURIComponent(bucket);
+  const encodedObjectPath = encodeObjectPath(objectPath);
+  return `${toStorageBase()}/object/public/${encodedBucket}/${encodedObjectPath}`;
+};
+
+const inferStorageLocation = (segments: string[]): StorageLocation | null => {
+  if (!segments.length) return null;
+
+  if (segments[0] === BRANDING_OBJECT_PREFIX && segments.length >= 3) {
+    return {
+      bucket: BRANDING_BUCKET,
+      objectPath: segments.join("/"),
+    };
+  }
+
+  const [bucket, ...rest] = segments;
+  if (!bucket || !rest.length) return null;
+
+  return {
+    bucket,
+    objectPath: rest.join("/"),
+  };
+};
+
+const normalizeKnownStoragePath = (value: string): StorageLocation | null => {
   const pathWithoutQuery = value.split("?")[0];
 
   for (const segment of [STORAGE_PUBLIC_SEGMENT, STORAGE_RENDER_SEGMENT, LEGACY_RENDER_SEGMENT]) {
@@ -33,14 +66,17 @@ const normalizeKnownStoragePath = (value: string, options: ImageRenderOptions) =
 
     const [, rawPath = ""] = pathWithoutQuery.split(segment);
     const decodedRawPath = decodeURIComponent(rawPath);
-    const [bucket, ...rest] = decodedRawPath.split("/").filter(Boolean);
-
-    if (bucket && rest.length) {
-      return toRenderPath(bucket, rest.join("/"), options);
-    }
+    return inferStorageLocation(decodedRawPath.split("/").filter(Boolean));
   }
 
   return null;
+};
+
+const resolveStorageLocation = (value: string): StorageLocation | null => {
+  const normalizedKnownPath = normalizeKnownStoragePath(value);
+  if (normalizedKnownPath) return normalizedKnownPath;
+
+  return inferStorageLocation(value.split("?")[0].split("/").filter(Boolean));
 };
 
 /**
@@ -49,10 +85,11 @@ const normalizeKnownStoragePath = (value: string, options: ImageRenderOptions) =
  *
  * Supported DB formats:
  * - bucket/path/to/image.jpg
+ * - sites/<siteId>/products/image.webp (implicit branding bucket)
  * - /storage/v1/object/public/bucket/path/to/image.jpg
  * - https://.../storage/v1/object/public/bucket/path/to/image.jpg
- * - /storage/v1/render/image/public/bucket/path/to/image.jpg?... 
- * - https://.../storage/v1/render/image/public/bucket/path/to/image.jpg?... 
+ * - /storage/v1/render/image/public/bucket/path/to/image.jpg?...
+ * - https://.../storage/v1/render/image/public/bucket/path/to/image.jpg?...
  * - legacy /render/image/public/... URLs are normalized too
  */
 export const buildRenderImageUrl = (
@@ -67,24 +104,17 @@ export const buildRenderImageUrl = (
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     try {
       const url = new URL(trimmed);
-      const normalized = normalizeKnownStoragePath(url.pathname, options);
-      return normalized ?? trimmed;
+      const normalized = resolveStorageLocation(`${url.pathname}${url.search}`);
+      return normalized ? toRenderPath(normalized.bucket, normalized.objectPath, options) : trimmed;
     } catch {
       return trimmed;
     }
   }
 
-  const normalizedStoragePath = normalizeKnownStoragePath(trimmed, options);
-  if (normalizedStoragePath) return normalizedStoragePath;
+  const normalizedStoragePath = resolveStorageLocation(trimmed);
+  if (!normalizedStoragePath) return trimmed;
 
-  const [bucket, ...rest] = trimmed.split("/");
-  const objectPath = rest.join("/");
-
-  if (!bucket || !objectPath) {
-    return trimmed;
-  }
-
-  return toRenderPath(bucket, objectPath, options);
+  return toRenderPath(normalizedStoragePath.bucket, normalizedStoragePath.objectPath, options);
 };
 
 /**
@@ -93,6 +123,7 @@ export const buildRenderImageUrl = (
  */
 export const buildRawImageUrl = (
   storagePath: string | null | undefined,
+  _options?: ImageRenderOptions,
 ): string => {
   if (!storagePath) return "";
 
@@ -100,26 +131,17 @@ export const buildRawImageUrl = (
   if (!trimmed) return "";
 
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
+    try {
+      const url = new URL(trimmed);
+      const normalized = resolveStorageLocation(`${url.pathname}${url.search}`);
+      return normalized ? toRawPath(normalized.bucket, normalized.objectPath) : trimmed;
+    } catch {
+      return trimmed;
+    }
   }
 
-  // Falls der Pfad bereits ein voller Storage-Pfad ist
-  if (trimmed.includes(STORAGE_PUBLIC_SEGMENT)) {
-    const base = SUPABASE_BASE_URL ? SUPABASE_BASE_URL : "";
-    return `${base}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
-  }
+  const normalizedStoragePath = resolveStorageLocation(trimmed);
+  if (!normalizedStoragePath) return trimmed;
 
-  const segments = trimmed.split("/").filter(Boolean);
-  const bucket = segments[0];
-  const objectPath = segments.slice(1).join("/");
-
-  if (!bucket || !objectPath) {
-    return trimmed;
-  }
-
-  const encodedBucket = encodeURIComponent(bucket);
-  const encodedObjectPath = encodeObjectPath(objectPath);
-  const base = SUPABASE_BASE_URL ? `${SUPABASE_BASE_URL}/storage/v1` : "/storage/v1";
-
-  return `${base}/object/public/${encodedBucket}/${encodedObjectPath}`;
+  return toRawPath(normalizedStoragePath.bucket, normalizedStoragePath.objectPath);
 };

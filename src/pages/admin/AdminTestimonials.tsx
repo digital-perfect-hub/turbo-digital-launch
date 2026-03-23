@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Save, Star, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadBrandingAsset } from "@/lib/storage";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -243,7 +243,7 @@ const AdminTestimonials = () => {
 
                 {editing.image_url ? (
                   <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50 p-3">
-                    <img src={buildRenderImageUrl(editing.image_url, { width: 360, quality: 84 })} alt={editing.name || "Testimonial Preview"} className="h-40 w-40 rounded-full object-cover mx-auto" />
+                    <img src={buildRawImageUrl(editing.image_url, { width: 360, quality: 84 })} alt={editing.name || "Testimonial Preview"} className="h-40 w-40 rounded-full object-cover mx-auto" />
                   </div>
                 ) : null}
 
@@ -269,7 +269,7 @@ const AdminTestimonials = () => {
             <CardContent className="flex gap-4 p-5">
               <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-slate-100">
                 {item.image_url ? (
-                  <img src={buildRenderImageUrl(item.image_url, { width: 160, quality: 82 })} alt={item.name} className="h-full w-full object-cover" />
+                  <img src={buildRawImageUrl(item.image_url, { width: 160, quality: 82 })} alt={item.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">Kein Bild</div>
                 )}

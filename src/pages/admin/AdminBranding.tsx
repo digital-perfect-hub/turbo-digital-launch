@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { toast } from "sonner";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { uploadBrandingAsset } from "@/lib/storage";
@@ -78,7 +78,7 @@ const AdminBranding = () => {
     }
   };
 
-  const logoPreview = form.logo_path ? buildRenderImageUrl(form.logo_path, { width: 480, quality: 82 }) : "";
+  const logoPreview = form.logo_path ? buildRawImageUrl(form.logo_path, { width: 480, quality: 82 }) : "";
 
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { buildSiteAssetPath } from "@/lib/storage";
@@ -128,7 +128,7 @@ const AdminSettings = () => {
                 <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
                   <div className="h-16 w-16 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-2">
                     {form.favicon_path ? (
-                      <img src={buildRenderImageUrl(form.favicon_path, { width: 64 })} alt="Favicon" className="max-h-full object-contain" />
+                      <img src={buildRawImageUrl(form.favicon_path, { width: 64 })} alt="Favicon" className="max-h-full object-contain" />
                     ) : <ImageIcon className="text-slate-300" />}
                   </div>
                   <div>
@@ -146,7 +146,7 @@ const AdminSettings = () => {
                 <div className="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50">
                   <div className="h-16 w-32 shrink-0 rounded-xl border border-slate-200 bg-white flex items-center justify-center shadow-sm overflow-hidden p-2">
                     {form.logo_path ? (
-                      <img src={buildRenderImageUrl(form.logo_path, { width: 128 })} alt="Logo" className="max-h-full object-contain" />
+                      <img src={buildRawImageUrl(form.logo_path, { width: 128 })} alt="Logo" className="max-h-full object-contain" />
                     ) : <ImageIcon className="text-slate-300" />}
                   </div>
                   <div>

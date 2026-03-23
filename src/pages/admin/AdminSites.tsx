@@ -49,6 +49,59 @@ const AdminSites = () => {
     },
   });
 
+  const { data: siteModulesRows = [], isLoading: siteModulesLoading } = useQuery({
+    queryKey: ["site-modules-admin", isGlobalAdmin],
+    enabled: isGlobalAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_modules" as never)
+        .select("site_id, has_forum, has_shop, has_seo_pro, updated_at");
+
+      if (error) {
+        const code = typeof (error as any)?.code === "string" ? (error as any).code : "";
+        const message = typeof (error as any)?.message === "string" ? (error as any).message : "";
+
+        if (code === "42P01" || code === "PGRST205" || (/site_modules/i.test(message) && /(schema cache|does not exist|relation)/i.test(message))) {
+          return [];
+        }
+
+        throw error;
+      }
+
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const moduleRowsBySiteId = useMemo(() => {
+    return new Map(siteModulesRows.map((row: any) => [row.site_id, row]));
+  }, [siteModulesRows]);
+
+  const saveSiteModules = useMutation({
+    mutationFn: async ({ siteId, patch }: { siteId: string; patch: Record<string, boolean> }) => {
+      const current = moduleRowsBySiteId.get(siteId) || {};
+      const payload = {
+        site_id: siteId,
+        has_forum: Boolean(typeof patch.has_forum === "boolean" ? patch.has_forum : current.has_forum),
+        has_shop: Boolean(typeof patch.has_shop === "boolean" ? patch.has_shop : current.has_shop),
+        has_seo_pro: Boolean(typeof patch.has_seo_pro === "boolean" ? patch.has_seo_pro : current.has_seo_pro),
+      };
+
+      const { error } = await supabase
+        .from("site_modules" as never)
+        .upsert(payload, { onConflict: "site_id" });
+
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["site-modules-admin"] });
+      await qc.invalidateQueries({ queryKey: ["site-modules"] });
+      toast.success("Module aktualisiert.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Module konnten nicht gespeichert werden.");
+    },
+  });
+
   const siteOptions = useMemo(() => {
     return isGlobalAdmin && sites.length ? sites : availableSites;
   }, [availableSites, isGlobalAdmin, sites]);
@@ -251,7 +304,62 @@ const AdminSites = () => {
           })}
         </div>
 
-        {!isLoading && !(isGlobalAdmin ? sites : availableSites).length ? (
+        {isGlobalAdmin ? (
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center gap-3 text-lg font-bold text-slate-900">
+            <Building2 size={20} className="text-[#FF4B2C]" /> SaaS-Module & Entitlements
+          </div>
+
+          {siteModulesLoading ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-8 text-sm text-slate-500">Module werden geladen…</div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {sites.map((site: any) => {
+                const modules = moduleRowsBySiteId.get(site.id) || {
+                  has_forum: false,
+                  has_shop: false,
+                  has_seo_pro: false,
+                };
+
+                return (
+                  <article key={`module-${site.id}`} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900">{site.name}</h3>
+                        <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{site.slug}</p>
+                      </div>
+                      {site.id === activeSiteId ? <span className="rounded-full bg-[#0E1F53] px-3 py-1 text-xs font-bold text-white">Aktive Site</span> : null}
+                    </div>
+
+                    <div className="mt-5 space-y-4">
+                      {[
+                        { key: "has_shop", label: "Shop" },
+                        { key: "has_forum", label: "Forum" },
+                        { key: "has_seo_pro", label: "SEO Pro" },
+                      ].map((module) => (
+                        <label key={module.key} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">
+                          <span>{module.label}</span>
+                          <Switch
+                            checked={Boolean(modules[module.key as keyof typeof modules])}
+                            onCheckedChange={(checked) =>
+                              saveSiteModules.mutate({
+                                siteId: site.id,
+                                patch: { [module.key]: checked },
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {!isLoading && !(isGlobalAdmin ? sites : availableSites).length ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-slate-500">
             Noch keine Sites gefunden. Spiele zuerst die Prio-C-SQL ein.
           </div>

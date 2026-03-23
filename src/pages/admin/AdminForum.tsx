@@ -24,10 +24,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useSiteModules } from "@/hooks/useSiteModules";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { buildSiteAssetPath } from "@/lib/storage";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import RichTextEditor from "@/components/ui/rich-text-editor";
 import { Badge } from "@/components/ui/badge";
+import { ModuleLockedState } from "@/components/admin/ModuleLockedState";
 
 type ForumCategoryRow = Database["public"]["Tables"]["forum_categories"]["Row"];
 type ForumCategoryInsert = Database["public"]["Tables"]["forum_categories"]["Insert"];
@@ -202,14 +204,15 @@ const toThreadFormState = (
 
 const getSafeImageUrl = (value: string, width = 1200, quality = 84) => {
   if (!value.trim()) return "";
-  return buildRenderImageUrl(value, { width, quality });
+  return buildRawImageUrl(value);
 };
 
 const AdminForum = () => {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, isGlobalAdmin } = useAuth();
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
+  const { hasForum, isLoading: modulesLoading } = useSiteModules();
 
   const [activeTab, setActiveTab] = useState("threads");
   const [categoryForm, setCategoryForm] = useState<CategoryFormState | null>(null);
@@ -608,7 +611,7 @@ const AdminForum = () => {
 
     if (error) throw error;
 
-    return buildRenderImageUrl(`forum-assets/${filePath}`, { width: 1600, quality: 84 });
+    return buildRawImageUrl(`forum-assets/${filePath}`);
   };
 
   const handleFeaturedUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -653,6 +656,19 @@ const AdminForum = () => {
   }, [categories, moderationStats, threads]);
 
   const selectedThreadForReply = selectedReply?.thread || null;
+
+  if (modulesLoading) return <div className="p-6 font-medium text-slate-500">Laden...</div>;
+
+  if (!hasForum) {
+    return (
+      <ModuleLockedState
+        moduleName="Forum"
+        title="Forum-Modul ist aktuell gesperrt"
+        description="Community, Kategorien, Threads und Moderation werden erst geladen, wenn das Forum-Entitlement für diese Site aktiv ist."
+        canSelfActivate={isGlobalAdmin}
+      />
+    );
+  }
 
   return (
     <div className="p-6 md:p-10">

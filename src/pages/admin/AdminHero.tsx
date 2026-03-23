@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { buildRenderImageUrl, buildRawImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import heroFallback from "@/assets/hero-bg.jpg";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";

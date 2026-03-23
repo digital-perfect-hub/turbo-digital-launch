@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { uploadBrandingAsset } from "@/lib/storage";
-import { buildRenderImageUrl } from "@/lib/image";
+import { buildRawImageUrl } from "@/lib/image";
 import { legalPageDefaults, type LegalPageRecord, type LegalPageSlug } from "@/hooks/useLegalPages";
 import { toast } from "sonner";
 import { useSiteContext } from "@/context/SiteContext";
@@ -97,7 +97,7 @@ const AdminLegal = () => {
 
   const handleImageUpload = async (file: File) => {
     const filePath = await uploadBrandingAsset(file, "legal", siteId);
-    return buildRenderImageUrl(filePath, { width: 1400, quality: 86 });
+    return buildRawImageUrl(filePath, { width: 1400, quality: 86 });
   };
 
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
