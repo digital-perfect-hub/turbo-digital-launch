@@ -44,9 +44,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
+    <div className="surface-page-shell min-h-screen px-4">
+      <div className="mx-auto flex min-h-screen w-full max-w-sm items-center justify-center">
+        <div className="surface-card-shell w-full rounded-[2rem] border p-8 shadow-sm">
+          <div className="text-center mb-8">
           {logoUrl && <img src={logoUrl} alt={`${settings.company_name || "Logo"} Logo`} className="h-12 mx-auto mb-4" />}
           <h1 className="text-2xl font-bold">{isSignUp ? "Registrieren" : "Admin Login"}</h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -63,14 +64,15 @@ const Login = () => {
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}
-          {info && <p className="text-emerald-600 text-sm">{info}</p>}
+          {info && <p className="text-sm theme-link-accent">{info}</p>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Bitte warten..." : isSignUp ? "Registrieren" : "Anmelden"}
           </Button>
         </form>
-        <button onClick={() => { setIsSignUp(!isSignUp); setError(""); setInfo(""); }} className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center">
-          {isSignUp ? "Bereits registriert? Anmelden" : "Noch kein Account? Registrieren"}
-        </button>
+          <button onClick={() => { setIsSignUp(!isSignUp); setError(""); setInfo(""); }} className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center">
+            {isSignUp ? "Bereits registriert? Anmelden" : "Noch kein Account? Registrieren"}
+          </button>
+        </div>
       </div>
     </div>
   );

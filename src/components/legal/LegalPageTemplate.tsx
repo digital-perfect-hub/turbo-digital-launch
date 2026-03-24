@@ -22,12 +22,12 @@ const LegalPageTemplate = ({ slug }: LegalPageTemplateProps) => {
         </Link>
 
         {isLoading ? (
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-12 text-center text-slate-500 shadow-sm">Laden...</div>
+          <div className="surface-card-shell rounded-[2rem] border p-12 text-center text-muted-foreground shadow-sm">Laden...</div>
         ) : (
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 md:p-12 shadow-sm">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900">{page.title}</h1>
+          <div className="surface-card-shell rounded-[2rem] border p-8 shadow-sm md:p-12">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">{page.title}</h1>
             <div
-              className="prose prose-slate mt-8 max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:leading-8 prose-a:text-[#FF4B2C] prose-img:rounded-[24px]"
+              className="prose prose-slate prose-theme mt-8 max-w-none text-foreground prose-headings:font-black prose-headings:tracking-tight prose-p:leading-8 prose-img:rounded-[24px]"
               dangerouslySetInnerHTML={{ __html: sanitizedBody }}
             />
           </div>

@@ -218,6 +218,13 @@ type HslParts = {
   l: number;
 };
 
+type RgbaParts = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+
 const hexToHslParts = (hex: string | null | undefined, fallback: HslParts): HslParts => {
   const normalizedHex = normalizeHex(hex);
   if (!normalizedHex) return fallback;
@@ -258,6 +265,106 @@ const hexToHslParts = (hex: string | null | undefined, fallback: HslParts): HslP
     s: Math.round(s * 100),
     l: Math.round(l * 100),
   };
+};
+
+const hexToRgbParts = (hex: string | null | undefined, fallback: RgbaParts): RgbaParts => {
+  const normalizedHex = normalizeHex(hex);
+  if (!normalizedHex) return fallback;
+
+  return {
+    r: parseInt(normalizedHex.slice(1, 3), 16),
+    g: parseInt(normalizedHex.slice(3, 5), 16),
+    b: parseInt(normalizedHex.slice(5, 7), 16),
+    a: 1,
+  };
+};
+
+const parseCssColor = (value: string | null | undefined): RgbaParts | null => {
+  const normalizedHex = normalizeHex(value);
+  if (normalizedHex) {
+    return hexToRgbParts(normalizedHex, { r: 15, g: 23, b: 42, a: 1 });
+  }
+
+  const safeValue = value?.trim();
+  if (!safeValue) return null;
+
+  const rgbaMatch = safeValue.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(0|1|0?\.\d+))?\s*\)$/i);
+  if (!rgbaMatch) return null;
+
+  const [, r, g, b, alpha] = rgbaMatch;
+  return {
+    r: Math.max(0, Math.min(255, parseInt(r, 10))),
+    g: Math.max(0, Math.min(255, parseInt(g, 10))),
+    b: Math.max(0, Math.min(255, parseInt(b, 10))),
+    a: alpha === undefined ? 1 : Math.max(0, Math.min(1, parseFloat(alpha))),
+  };
+};
+
+const blendRgb = (foreground: RgbaParts, background: RgbaParts): RgbaParts => ({
+  r: Math.round(foreground.r * foreground.a + background.r * (1 - foreground.a)),
+  g: Math.round(foreground.g * foreground.a + background.g * (1 - foreground.a)),
+  b: Math.round(foreground.b * foreground.a + background.b * (1 - foreground.a)),
+  a: 1,
+});
+
+const resolveBackgroundRgb = (value: string | null | undefined, fallback: string): RgbaParts => {
+  const fallbackRgb = parseCssColor(fallback) || { r: 255, g: 255, b: 255, a: 1 };
+  const parsed = parseCssColor(value);
+  if (!parsed) return fallbackRgb;
+  if (parsed.a >= 0.999) return { ...parsed, a: 1 };
+  return blendRgb(parsed, fallbackRgb);
+};
+
+const getRelativeLuminance = ({ r, g, b }: RgbaParts) => {
+  const toLinear = (channel: number) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+
+  const red = toLinear(r);
+  const green = toLinear(g);
+  const blue = toLinear(b);
+
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+};
+
+const getContrastRatio = (foreground: RgbaParts, background: RgbaParts) => {
+  const lighter = Math.max(getRelativeLuminance(foreground), getRelativeLuminance(background));
+  const darker = Math.min(getRelativeLuminance(foreground), getRelativeLuminance(background));
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+const resolveReadableColor = ({
+  explicitColor,
+  backgroundColor,
+  backgroundFallback,
+  darkCandidate,
+  lightCandidate = "#FFFFFF",
+  minimumContrast = 4.5,
+}: {
+  explicitColor?: string | null;
+  backgroundColor?: string | null;
+  backgroundFallback: string;
+  darkCandidate: string;
+  lightCandidate?: string;
+  minimumContrast?: number;
+}) => {
+  const resolvedBackground = resolveBackgroundRgb(backgroundColor, backgroundFallback);
+  const explicitRgb = parseCssColor(explicitColor);
+
+  if (explicitRgb && getContrastRatio(explicitRgb, resolvedBackground) >= minimumContrast) {
+    const explicitHex = normalizeHex(explicitColor);
+    return explicitHex ?? explicitColor ?? darkCandidate;
+  }
+
+  const darkRgb = parseCssColor(darkCandidate) || { r: 15, g: 23, b: 42, a: 1 };
+  const lightRgb = parseCssColor(lightCandidate) || { r: 255, g: 255, b: 255, a: 1 };
+
+  const darkContrast = getContrastRatio(darkRgb, resolvedBackground);
+  const lightContrast = getContrastRatio(lightRgb, resolvedBackground);
+
+  if (lightContrast > darkContrast) return normalizeHex(lightCandidate) ?? lightCandidate;
+  return normalizeHex(darkCandidate) ?? darkCandidate;
 };
 
 const parseFallbackTuple = (tuple: string): HslParts => {
@@ -337,18 +444,27 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   const textMutedTuple = toTuple(textMutedParts);
   const borderTuple = toTuple(borderParts);
 
+  const textMainHex = normalizeHex(settings.text_main_hex) ?? FALLBACK_TEXT_MAIN_HEX;
+  const textMutedHex = normalizeHex(settings.text_muted_hex) ?? FALLBACK_TEXT_MUTED_HEX;
+  const primaryHex = normalizeHex(settings.primary_color_hex) ?? FALLBACK_PRIMARY_HEX;
+  const secondaryHex = normalizeHex(settings.secondary_color_hex) ?? FALLBACK_SECONDARY_HEX;
+  const accentHex = normalizeHex(settings.accent_color_hex) ?? FALLBACK_ACCENT_HEX;
+  const bgMainHex = normalizeHex(settings.bg_main_hex) ?? FALLBACK_BG_MAIN_HEX;
+  const bgCardHex = normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX;
+  const borderHex = normalizeHex(settings.border_color_hex) ?? FALLBACK_BORDER_HEX;
+
   const primaryForeground = getReadableForeground(primaryParts, textMainTuple);
   const secondaryForeground = getReadableForeground(secondaryParts, textMainTuple, "0 0% 100%");
   const accentForeground = getReadableForeground(accentParts, textMainTuple);
 
-  root.style.setProperty("--theme-primary-hex", normalizeHex(settings.primary_color_hex) ?? FALLBACK_PRIMARY_HEX);
-  root.style.setProperty("--theme-secondary-hex", normalizeHex(settings.secondary_color_hex) ?? FALLBACK_SECONDARY_HEX);
-  root.style.setProperty("--theme-accent-hex", normalizeHex(settings.accent_color_hex) ?? FALLBACK_ACCENT_HEX);
-  root.style.setProperty("--theme-bg-main-hex", normalizeHex(settings.bg_main_hex) ?? FALLBACK_BG_MAIN_HEX);
-  root.style.setProperty("--theme-bg-card-hex", normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX);
-  root.style.setProperty("--theme-text-main-hex", normalizeHex(settings.text_main_hex) ?? FALLBACK_TEXT_MAIN_HEX);
-  root.style.setProperty("--theme-text-muted-hex", normalizeHex(settings.text_muted_hex) ?? FALLBACK_TEXT_MUTED_HEX);
-  root.style.setProperty("--theme-border-hex", normalizeHex(settings.border_color_hex) ?? FALLBACK_BORDER_HEX);
+  root.style.setProperty("--theme-primary-hex", primaryHex);
+  root.style.setProperty("--theme-secondary-hex", secondaryHex);
+  root.style.setProperty("--theme-accent-hex", accentHex);
+  root.style.setProperty("--theme-bg-main-hex", bgMainHex);
+  root.style.setProperty("--theme-bg-card-hex", bgCardHex);
+  root.style.setProperty("--theme-text-main-hex", textMainHex);
+  root.style.setProperty("--theme-text-muted-hex", textMutedHex);
+  root.style.setProperty("--theme-border-hex", borderHex);
   root.style.setProperty("--theme-radius", settings.border_radius?.trim() || FALLBACK_RADIUS);
 
   root.style.setProperty("--primary", primaryTuple);
@@ -397,12 +513,12 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   const surface = settings.surface_theme!;
   const buttons = settings.button_theme!;
 
-  const surfacePageFallback = normalizeHex(settings.bg_main_hex) ?? FALLBACK_BG_MAIN_HEX;
-  const surfaceSectionFallback = normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX;
-  const surfaceCardFallback = normalizeHex(settings.bg_card_hex) ?? FALLBACK_BG_CARD_HEX;
-  const surfaceCardBorderFallback = normalizeHex(settings.border_color_hex) ?? FALLBACK_BORDER_HEX;
-  const surfaceCardTextFallback = normalizeHex(settings.text_main_hex) ?? FALLBACK_TEXT_MAIN_HEX;
-  const surfaceCardMutedFallback = normalizeHex(settings.text_muted_hex) ?? FALLBACK_TEXT_MUTED_HEX;
+  const surfacePageFallback = bgMainHex;
+  const surfaceSectionFallback = bgCardHex;
+  const surfaceCardFallback = bgCardHex;
+  const surfaceCardBorderFallback = borderHex;
+  const surfaceCardTextFallback = textMainHex;
+  const surfaceCardMutedFallback = textMutedHex;
 
   const surfacePageParts = hexToHslParts(normalizeHex(surface.page_background_color) ?? surfacePageFallback, bgMainParts);
   const surfaceSectionParts = hexToHslParts(normalizeHex(surface.section_background_color) ?? surfaceSectionFallback, bgCardParts);
@@ -415,68 +531,236 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   const surfaceCardTextAuto = tupleToCssColor(getReadableForeground(surfaceCardParts, textMainTuple));
   const surfaceCardMutedAuto = tupleToCssColor(getReadableForeground(surfaceCardParts, textMutedTuple, "215 20% 78%"));
 
-  const buttonPrimaryBg = normalizeHex(buttons.primary_background_color) ?? normalizeHex(settings.primary_color_hex) ?? defaultButtonTheme.primary_background_color!;
+  const safeSurfacePageForeground = resolveReadableColor({
+    explicitColor: surface.page_foreground_color,
+    backgroundColor: surface.page_background_color,
+    backgroundFallback: surfacePageFallback,
+    darkCandidate: surfaceCardTextFallback,
+  });
+  const safeSurfacePageMuted = resolveReadableColor({
+    explicitColor: surface.page_muted_color,
+    backgroundColor: surface.page_background_color,
+    backgroundFallback: surfacePageFallback,
+    darkCandidate: surfaceCardMutedFallback,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+  const safeSurfaceSectionForeground = resolveReadableColor({
+    explicitColor: surface.section_foreground_color,
+    backgroundColor: surface.section_background_color,
+    backgroundFallback: surfaceSectionFallback,
+    darkCandidate: surfaceCardTextFallback,
+  });
+  const safeSurfaceSectionMuted = resolveReadableColor({
+    explicitColor: surface.section_muted_color,
+    backgroundColor: surface.section_background_color,
+    backgroundFallback: surfaceSectionFallback,
+    darkCandidate: surfaceCardMutedFallback,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+  const safeSurfaceCardText = resolveReadableColor({
+    explicitColor: surface.card_text_color,
+    backgroundColor: surface.card_background_color,
+    backgroundFallback: surfaceCardFallback,
+    darkCandidate: surfaceCardTextFallback,
+  });
+  const safeSurfaceCardMuted = resolveReadableColor({
+    explicitColor: surface.card_muted_color,
+    backgroundColor: surface.card_background_color,
+    backgroundFallback: surfaceCardFallback,
+    darkCandidate: surfaceCardMutedFallback,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+
+  const buttonPrimaryBg = normalizeHex(buttons.primary_background_color) ?? primaryHex ?? defaultButtonTheme.primary_background_color!;
   const buttonPrimaryParts = hexToHslParts(buttonPrimaryBg, primaryParts);
-  const buttonPrimaryTextAuto = tupleToCssColor(getReadableForeground(buttonPrimaryParts, textMainTuple));
+  const buttonPrimaryTextAuto = resolveReadableColor({
+    explicitColor: buttons.primary_text_color,
+    backgroundColor: buttonPrimaryBg,
+    backgroundFallback: buttonPrimaryBg,
+    darkCandidate: textMainHex,
+  });
   const buttonPrimaryHoverAuto = tupleToCssColor(shiftLightness(buttonPrimaryParts, -8, -4));
 
   const buttonSecondaryBg = normalizeHex(buttons.secondary_background_color) ?? normalizeHex(surface.card_background_color) ?? surfaceCardFallback;
-  const buttonSecondaryParts = hexToHslParts(buttonSecondaryBg, surfaceCardParts);
-  const buttonSecondaryTextAuto = tupleToCssColor(getReadableForeground(buttonSecondaryParts, textMainTuple));
+  const buttonSecondaryTextAuto = resolveReadableColor({
+    explicitColor: buttons.secondary_text_color,
+    backgroundColor: buttons.secondary_background_color || surface.card_background_color,
+    backgroundFallback: buttonSecondaryBg,
+    darkCandidate: textMainHex,
+  });
 
+  const navBg = nav.background_color || defaultNavigationTheme.background_color!;
+  const navTopbarBg = nav.topbar_background_color || defaultNavigationTheme.topbar_background_color!;
+  const navBadgeBg = nav.logo_badge_background_color || defaultNavigationTheme.logo_badge_background_color!;
   const navCtaBg = normalizeHex(nav.cta_background_color) ?? defaultNavigationTheme.cta_background_color!;
-  const navCtaParts = hexToHslParts(navCtaBg, primaryParts);
-  const navCtaTextAuto = tupleToCssColor(getReadableForeground(navCtaParts, textMainTuple));
+  const navSafeText = resolveReadableColor({
+    explicitColor: nav.text_color,
+    backgroundColor: nav.background_color,
+    backgroundFallback: defaultNavigationTheme.background_color!,
+    darkCandidate: textMainHex,
+  });
+  const navSafeMuted = resolveReadableColor({
+    explicitColor: nav.muted_text_color,
+    backgroundColor: nav.background_color,
+    backgroundFallback: defaultNavigationTheme.background_color!,
+    darkCandidate: textMutedHex,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+  const navSafeHoverText = resolveReadableColor({
+    explicitColor: nav.hover_text_color,
+    backgroundColor: nav.hover_background_color || nav.background_color,
+    backgroundFallback: nav.background_color || defaultNavigationTheme.background_color!,
+    darkCandidate: textMainHex,
+  });
+  const navCtaTextAuto = resolveReadableColor({
+    explicitColor: nav.cta_text_color,
+    backgroundColor: navCtaBg,
+    backgroundFallback: navCtaBg,
+    darkCandidate: textMainHex,
+  });
+  const navSafeTopbarText = resolveReadableColor({
+    explicitColor: nav.topbar_text_color,
+    backgroundColor: nav.topbar_background_color,
+    backgroundFallback: defaultNavigationTheme.topbar_background_color!,
+    darkCandidate: textMutedHex,
+  });
+  const navSafeBadgeText = resolveReadableColor({
+    explicitColor: nav.logo_badge_text_color,
+    backgroundColor: nav.logo_badge_background_color,
+    backgroundFallback: navBadgeBg,
+    darkCandidate: textMainHex,
+  });
 
-  setCssVar(root, "--nav-bg", nav.background_color, defaultNavigationTheme.background_color!);
-  setCssVar(root, "--nav-text", nav.text_color, defaultNavigationTheme.text_color!);
-  setCssVar(root, "--nav-muted", nav.muted_text_color, defaultNavigationTheme.muted_text_color!);
+  const heroBg = hero.background_color || defaultHeroTheme.background_color!;
+  const heroPanelBg = hero.visual_panel_background_color || defaultHeroTheme.visual_panel_background_color!;
+  const heroBadgeBg = hero.badge_background_color || defaultHeroTheme.badge_background_color!;
+  const heroStatBg = hero.stat_card_background_color || defaultHeroTheme.stat_card_background_color!;
+  const heroProofBg = hero.proof_card_background_color || defaultHeroTheme.proof_card_background_color!;
+  const heroSecondaryBtnBg = hero.secondary_button_background_color || defaultHeroTheme.secondary_button_background_color!;
+  const heroSafeBadgeText = resolveReadableColor({
+    explicitColor: hero.badge_text_color,
+    backgroundColor: hero.badge_background_color,
+    backgroundFallback: heroBg,
+    darkCandidate: textMainHex,
+  });
+  const heroSafeHeadline = resolveReadableColor({
+    explicitColor: hero.headline_color,
+    backgroundColor: hero.background_color,
+    backgroundFallback: defaultHeroTheme.background_color!,
+    darkCandidate: textMainHex,
+  });
+  const heroSafeHighlight = resolveReadableColor({
+    explicitColor: hero.headline_highlight_color,
+    backgroundColor: hero.background_color,
+    backgroundFallback: defaultHeroTheme.background_color!,
+    darkCandidate: primaryHex,
+    lightCandidate: "#FFFFFF",
+    minimumContrast: 3.2,
+  });
+  const heroSafeSubheadline = resolveReadableColor({
+    explicitColor: hero.subheadline_color,
+    backgroundColor: hero.background_color,
+    backgroundFallback: defaultHeroTheme.background_color!,
+    darkCandidate: textMutedHex,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+  const heroSafeSecondaryBtnText = resolveReadableColor({
+    explicitColor: hero.secondary_button_text_color,
+    backgroundColor: hero.secondary_button_background_color,
+    backgroundFallback: heroBg,
+    darkCandidate: textMainHex,
+  });
+  const heroSafeStatValue = resolveReadableColor({
+    explicitColor: hero.stat_value_color,
+    backgroundColor: hero.stat_card_background_color,
+    backgroundFallback: heroBg,
+    darkCandidate: textMainHex,
+  });
+  const heroSafeStatLabel = resolveReadableColor({
+    explicitColor: hero.stat_label_color,
+    backgroundColor: hero.stat_card_background_color,
+    backgroundFallback: heroBg,
+    darkCandidate: textMutedHex,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+  const heroSafeProofText = resolveReadableColor({
+    explicitColor: hero.proof_text_color,
+    backgroundColor: hero.proof_card_background_color,
+    backgroundFallback: heroBg,
+    darkCandidate: textMutedHex,
+    lightCandidate: "#CBD5E1",
+    minimumContrast: 3.1,
+  });
+  const heroSafeProofIcon = resolveReadableColor({
+    explicitColor: hero.proof_icon_color,
+    backgroundColor: hero.proof_icon_background_color,
+    backgroundFallback: heroProofBg,
+    darkCandidate: primaryHex,
+  });
+  const heroSafePanelText = resolveReadableColor({
+    explicitColor: hero.visual_panel_text_color,
+    backgroundColor: hero.visual_panel_background_color,
+    backgroundFallback: heroBg,
+    darkCandidate: textMutedHex,
+    lightCandidate: "#E2E8F0",
+    minimumContrast: 3.1,
+  });
+
+  setCssVar(root, "--nav-bg", navBg, defaultNavigationTheme.background_color!);
+  setCssVar(root, "--nav-text", navSafeText, defaultNavigationTheme.text_color!);
+  setCssVar(root, "--nav-muted", navSafeMuted, defaultNavigationTheme.muted_text_color!);
   setCssVar(root, "--nav-border", nav.border_color, defaultNavigationTheme.border_color!);
   setCssVar(root, "--nav-hover-bg", nav.hover_background_color, defaultNavigationTheme.hover_background_color!);
-  setCssVar(root, "--nav-hover-text", nav.hover_text_color, defaultNavigationTheme.hover_text_color!);
-  setCssVar(root, "--nav-cta-bg", nav.cta_background_color, defaultNavigationTheme.cta_background_color!);
-  setCssVar(root, "--nav-cta-text", nav.cta_text_color, navCtaTextAuto);
-  setCssVar(root, "--nav-topbar-bg", nav.topbar_background_color, defaultNavigationTheme.topbar_background_color!);
-  setCssVar(root, "--nav-topbar-text", nav.topbar_text_color, defaultNavigationTheme.topbar_text_color!);
+  setCssVar(root, "--nav-hover-text", navSafeHoverText, defaultNavigationTheme.hover_text_color!);
+  setCssVar(root, "--nav-cta-bg", navCtaBg, defaultNavigationTheme.cta_background_color!);
+  setCssVar(root, "--nav-cta-text", navCtaTextAuto, navCtaTextAuto);
+  setCssVar(root, "--nav-topbar-bg", navTopbarBg, defaultNavigationTheme.topbar_background_color!);
+  setCssVar(root, "--nav-topbar-text", navSafeTopbarText, defaultNavigationTheme.topbar_text_color!);
   setCssVar(root, "--nav-topbar-accent", nav.topbar_accent_color, defaultNavigationTheme.topbar_accent_color!);
-  setCssVar(root, "--nav-logo-badge-bg", nav.logo_badge_background_color, defaultNavigationTheme.logo_badge_background_color!);
-  setCssVar(root, "--nav-logo-badge-text", nav.logo_badge_text_color, defaultNavigationTheme.logo_badge_text_color!);
+  setCssVar(root, "--nav-logo-badge-bg", navBadgeBg, defaultNavigationTheme.logo_badge_background_color!);
+  setCssVar(root, "--nav-logo-badge-text", navSafeBadgeText, defaultNavigationTheme.logo_badge_text_color!);
 
-  setCssVar(root, "--hero-bg-color", hero.background_color, defaultHeroTheme.background_color!);
+  setCssVar(root, "--hero-bg-color", heroBg, defaultHeroTheme.background_color!);
   setCssVar(root, "--hero-overlay-color", hero.overlay_color, defaultHeroTheme.overlay_color!);
-  setCssVar(root, "--hero-badge-bg", hero.badge_background_color, defaultHeroTheme.badge_background_color!);
-  setCssVar(root, "--hero-badge-text", hero.badge_text_color, defaultHeroTheme.badge_text_color!);
-  setCssVar(root, "--hero-headline", hero.headline_color, defaultHeroTheme.headline_color!);
-  setCssVar(root, "--hero-highlight", hero.headline_highlight_color, defaultHeroTheme.headline_highlight_color!);
-  setCssVar(root, "--hero-subheadline", hero.subheadline_color, defaultHeroTheme.subheadline_color!);
-  setCssVar(root, "--hero-secondary-btn-bg", hero.secondary_button_background_color, defaultHeroTheme.secondary_button_background_color!);
-  setCssVar(root, "--hero-secondary-btn-text", hero.secondary_button_text_color, defaultHeroTheme.secondary_button_text_color!);
+  setCssVar(root, "--hero-badge-bg", heroBadgeBg, defaultHeroTheme.badge_background_color!);
+  setCssVar(root, "--hero-badge-text", heroSafeBadgeText, defaultHeroTheme.badge_text_color!);
+  setCssVar(root, "--hero-headline", heroSafeHeadline, defaultHeroTheme.headline_color!);
+  setCssVar(root, "--hero-highlight", heroSafeHighlight, defaultHeroTheme.headline_highlight_color!);
+  setCssVar(root, "--hero-subheadline", heroSafeSubheadline, defaultHeroTheme.subheadline_color!);
+  setCssVar(root, "--hero-secondary-btn-bg", heroSecondaryBtnBg, defaultHeroTheme.secondary_button_background_color!);
+  setCssVar(root, "--hero-secondary-btn-text", heroSafeSecondaryBtnText, defaultHeroTheme.secondary_button_text_color!);
   setCssVar(root, "--hero-secondary-btn-border", hero.secondary_button_border_color, defaultHeroTheme.secondary_button_border_color!);
-  setCssVar(root, "--hero-stat-bg", hero.stat_card_background_color, defaultHeroTheme.stat_card_background_color!);
-  setCssVar(root, "--hero-stat-value", hero.stat_value_color, defaultHeroTheme.stat_value_color!);
-  setCssVar(root, "--hero-stat-label", hero.stat_label_color, defaultHeroTheme.stat_label_color!);
-  setCssVar(root, "--hero-proof-bg", hero.proof_card_background_color, defaultHeroTheme.proof_card_background_color!);
-  setCssVar(root, "--hero-proof-text", hero.proof_text_color, defaultHeroTheme.proof_text_color!);
+  setCssVar(root, "--hero-stat-bg", heroStatBg, defaultHeroTheme.stat_card_background_color!);
+  setCssVar(root, "--hero-stat-value", heroSafeStatValue, defaultHeroTheme.stat_value_color!);
+  setCssVar(root, "--hero-stat-label", heroSafeStatLabel, defaultHeroTheme.stat_label_color!);
+  setCssVar(root, "--hero-proof-bg", heroProofBg, defaultHeroTheme.proof_card_background_color!);
+  setCssVar(root, "--hero-proof-text", heroSafeProofText, defaultHeroTheme.proof_text_color!);
   setCssVar(root, "--hero-proof-icon-bg", hero.proof_icon_background_color, defaultHeroTheme.proof_icon_background_color!);
-  setCssVar(root, "--hero-proof-icon", hero.proof_icon_color, defaultHeroTheme.proof_icon_color!);
-  setCssVar(root, "--hero-panel-bg", hero.visual_panel_background_color, defaultHeroTheme.visual_panel_background_color!);
-  setCssVar(root, "--hero-panel-text", hero.visual_panel_text_color, defaultHeroTheme.visual_panel_text_color!);
+  setCssVar(root, "--hero-proof-icon", heroSafeProofIcon, defaultHeroTheme.proof_icon_color!);
+  setCssVar(root, "--hero-panel-bg", heroPanelBg, defaultHeroTheme.visual_panel_background_color!);
+  setCssVar(root, "--hero-panel-text", heroSafePanelText, defaultHeroTheme.visual_panel_text_color!);
 
   setCssVar(root, "--surface-page", surface.page_background_color, surfacePageFallback);
-  setCssVar(root, "--surface-page-foreground", surface.page_foreground_color, surfacePageForegroundAuto);
-  setCssVar(root, "--surface-page-muted", surface.page_muted_color, surfacePageMutedAuto);
+  setCssVar(root, "--surface-page-foreground", safeSurfacePageForeground, surfacePageForegroundAuto);
+  setCssVar(root, "--surface-page-muted", safeSurfacePageMuted, surfacePageMutedAuto);
   setCssVar(root, "--surface-section", surface.section_background_color, surfaceSectionFallback);
-  setCssVar(root, "--surface-section-foreground", surface.section_foreground_color, surfaceSectionForegroundAuto);
-  setCssVar(root, "--surface-section-muted", surface.section_muted_color, surfaceSectionMutedAuto);
+  setCssVar(root, "--surface-section-foreground", safeSurfaceSectionForeground, surfaceSectionForegroundAuto);
+  setCssVar(root, "--surface-section-muted", safeSurfaceSectionMuted, surfaceSectionMutedAuto);
   setCssVar(root, "--surface-card", surface.card_background_color, surfaceCardFallback);
   setCssVar(root, "--surface-card-border", surface.card_border_color, surfaceCardBorderFallback);
-  setCssVar(root, "--surface-card-text", surface.card_text_color, surfaceCardTextAuto);
-  setCssVar(root, "--surface-card-muted", surface.card_muted_color, surfaceCardMutedAuto);
+  setCssVar(root, "--surface-card-text", safeSurfaceCardText, surfaceCardTextAuto);
+  setCssVar(root, "--surface-card-muted", safeSurfaceCardMuted, surfaceCardMutedAuto);
 
-  setCssVar(root, "--button-primary-bg", buttons.primary_background_color || settings.primary_color_hex, buttonPrimaryBg);
-  setCssVar(root, "--button-primary-text", buttons.primary_text_color, buttonPrimaryTextAuto);
+  setCssVar(root, "--button-primary-bg", buttonPrimaryBg, buttonPrimaryBg);
+  setCssVar(root, "--button-primary-text", buttonPrimaryTextAuto, buttonPrimaryTextAuto);
   root.style.setProperty("--button-primary-hover", normalizeHex(settings.cta_hover_hex) ?? buttonPrimaryHoverAuto);
   setCssVar(root, "--button-secondary-bg", buttons.secondary_background_color, defaultButtonTheme.secondary_background_color!);
-  setCssVar(root, "--button-secondary-text", buttons.secondary_text_color, buttonSecondaryTextAuto);
+  setCssVar(root, "--button-secondary-text", buttonSecondaryTextAuto, buttonSecondaryTextAuto);
   setCssVar(root, "--button-secondary-border", buttons.secondary_border_color, surfaceCardBorderFallback);
 };

@@ -113,17 +113,17 @@ const PortfolioSection = () => {
               >
                 <div className="relative z-10">
                   {hasImage ? (
-                    <div className="relative h-[250px] overflow-hidden border-b bg-slate-100" style={{ borderColor: "var(--surface-card-border)" }}>
+                    <div className="relative h-[250px] overflow-hidden border-b" style={{ borderColor: "var(--surface-card-border)", background: "color-mix(in srgb, var(--surface-section) 78%, transparent)" }}>
                       <img src={imageSrc} alt={item.title || "Projekt"} className="h-full w-full object-cover" loading="lazy" />
                       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_10%,rgba(15,23,42,0.45)_100%)]" />
                     </div>
                   ) : (
-                    <div className="grid gap-3 border-b bg-[radial-gradient(circle_at_top_left,rgba(255,75,44,0.14),transparent_26%),linear-gradient(180deg,#ffffff,#f8fafc)] p-5 sm:grid-cols-3" style={{ borderColor: "var(--surface-card-border)" }}>
+                    <div className="grid gap-3 border-b p-5 sm:grid-cols-3" style={{ borderColor: "var(--surface-card-border)", background: "radial-gradient(circle at top left, color-mix(in srgb, var(--button-primary-bg) 18%, transparent) 0%, transparent 26%), linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 94%, white 6%), color-mix(in srgb, var(--surface-section) 90%, transparent))" }}>
                       {placeholderTiles.map((tile) => {
                         const Icon = tile.icon;
                         return (
                           <div key={tile.title} className="rounded-[1.3rem] border p-4 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.22)]" style={{ borderColor: "var(--surface-card-border)", background: "var(--surface-card)" }}>
-                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary text-white">
+                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl" style={{ background: "var(--theme-secondary-hex)", color: "hsl(var(--secondary-foreground))" }}>
                               <Icon size={18} />
                             </div>
                             <p className="text-sm font-bold text-[var(--surface-card-text)]">{tile.title}</p>
@@ -142,8 +142,8 @@ const PortfolioSection = () => {
                           href={item.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-slate-700 transition-all duration-300 hover:text-slate-900"
-                          style={{ borderColor: "var(--surface-card-border)" }}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 hover:text-primary"
+                          style={{ borderColor: "var(--surface-card-border)", background: "color-mix(in srgb, var(--surface-card) 90%, white)", color: "var(--surface-card-text)" }}
                           aria-label={`Projekt ${item.title || "öffnen"}`}
                         >
                           <ArrowUpRight size={16} />

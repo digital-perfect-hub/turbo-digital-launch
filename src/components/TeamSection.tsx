@@ -130,7 +130,7 @@ const TeamSection = () => {
                     <div className="flex items-center gap-4">
                       <Avatar className="h-16 w-16 border-2" style={{ borderColor: "var(--surface-card-border)" }}>
                         {member.image_url ? <AvatarImage src={buildRenderImageUrl(member.image_url, { width: 220, quality: 82 })} alt={member.name} /> : null}
-                        <AvatarFallback className="bg-secondary text-white">{member.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback style={{ background: "var(--theme-secondary-hex)", color: "hsl(var(--secondary-foreground))" }}>{member.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="text-lg font-bold text-[var(--surface-card-text)]">{member.name}</div>
@@ -143,8 +143,8 @@ const TeamSection = () => {
                         href={member.link}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white transition-colors hover:text-primary"
-                        style={{ borderColor: "var(--surface-card-border)", color: "var(--surface-card-text)" }}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors hover:text-primary"
+                        style={{ borderColor: "var(--surface-card-border)", color: "var(--surface-card-text)", background: "color-mix(in srgb, var(--surface-card) 90%, white)" }}
                         aria-label={`${member.name} Profil öffnen`}
                       >
                         <Linkedin size={16} />
@@ -161,7 +161,7 @@ const TeamSection = () => {
                   <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: "var(--surface-card-border)" }}>
                     <span className="premium-pill">Sichtbar im Team</span>
                     {member.link ? (
-                      <a href={member.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                      <a href={member.link} target="_blank" rel="noreferrer" className="theme-link-accent inline-flex items-center gap-2 text-sm font-semibold">
                         Profil
                         <ArrowUpRight size={14} />
                       </a>

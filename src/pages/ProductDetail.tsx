@@ -273,7 +273,7 @@ const ProductDetail = () => {
           <section className="py-20 sm:py-24">
             <div className="section-container">
               <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+                <div className="surface-card-shell rounded-[2rem] border p-8 shadow-sm">
                   <div className="animate-pulse space-y-5">
                     <div className="h-4 w-28 rounded-full bg-slate-200" />
                     <div className="h-12 w-2/3 rounded-2xl bg-slate-200" />
@@ -282,7 +282,7 @@ const ProductDetail = () => {
                     <div className="h-64 rounded-[2rem] bg-slate-200" />
                   </div>
                 </div>
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+                <div className="surface-card-shell rounded-[2rem] border p-8 shadow-sm">
                   <div className="animate-pulse space-y-4">
                     <div className="h-5 w-24 rounded-full bg-slate-200" />
                     <div className="h-10 w-36 rounded-2xl bg-slate-200" />
@@ -297,7 +297,7 @@ const ProductDetail = () => {
         ) : error || !product ? (
           <section className="py-20 sm:py-24">
             <div className="section-container">
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm">
+              <div className="surface-card-shell rounded-[2rem] border p-10 text-center shadow-sm">
                 <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--button-primary-bg) 12%, transparent)", color: "var(--button-primary-bg)" }}>
                   <Layers3 size={28} />
                 </div>
@@ -326,7 +326,7 @@ const ProductDetail = () => {
 
               <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_380px] xl:items-start">
                 <div className="space-y-8">
-                  <section className="overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-sm">
+                  <section className="surface-card-shell overflow-hidden rounded-[2.2rem] border shadow-sm">
                     <div className="grid gap-8 p-8 md:p-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                       <div>
                         <div className="surface-accent-pill px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]">
@@ -386,7 +386,7 @@ const ProductDetail = () => {
                   </section>
 
                   {product.demo_url && (
-                    <section className="rounded-[2.2rem] border border-slate-200 bg-white p-8 shadow-sm md:p-10">
+                    <section className="surface-card-shell rounded-[2.2rem] border p-8 shadow-sm md:p-10">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                           <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]" style={{ background: "color-mix(in srgb, var(--theme-secondary-hex) 8%, transparent)", color: "var(--theme-secondary-hex)" }}>
@@ -400,16 +400,16 @@ const ProductDetail = () => {
                         </div>
                       </div>
 
-                      <div className="mt-8 overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 shadow-[0_30px_80px_-36px_rgba(15,23,42,0.6)]">
-                        <div className="flex items-center gap-2 border-b border-white/10 px-5 py-4">
+                      <div className="mt-8 overflow-hidden rounded-[2rem] border border-border shadow-[0_30px_80px_-36px_rgba(15,23,42,0.6)]" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--theme-secondary-hex) 94%, black 6%), color-mix(in srgb, var(--theme-secondary-hex) 80%, var(--button-primary-bg) 20%))" }}>
+                        <div className="flex items-center gap-2 border-b px-5 py-4" style={{ borderColor: "color-mix(in srgb, hsl(var(--secondary-foreground)) 10%, transparent)" }}>
                           <span className="h-3 w-3 rounded-full bg-[#FF5F57]" />
                           <span className="h-3 w-3 rounded-full bg-[#FEBC2E]" />
                           <span className="h-3 w-3 rounded-full bg-[#28C840]" />
-                          <div className="ml-4 rounded-full bg-white/10 px-4 py-1 text-xs text-white/70">
+                          <div className="ml-4 rounded-full px-4 py-1 text-xs" style={{ background: "color-mix(in srgb, hsl(var(--secondary-foreground)) 10%, transparent)", color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 72%, transparent)" }}>
                             {product.demo_url}
                           </div>
                         </div>
-                        <div className="aspect-[16/10] w-full bg-white">
+                        <div className="aspect-[16/10] w-full bg-[var(--surface-card)]">
                           <iframe
                             src={product.demo_url}
                             title={`${product.title} Live Demo`}
@@ -422,7 +422,7 @@ const ProductDetail = () => {
                     </section>
                   )}
 
-                  <section className="rounded-[2.2rem] border border-slate-200 bg-white p-8 shadow-sm md:p-10">
+                  <section className="surface-card-shell rounded-[2.2rem] border p-8 shadow-sm md:p-10">
                     <div className="surface-accent-pill px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]">
                       <Sparkles size={14} />
                       Deep-Dive
@@ -462,31 +462,31 @@ const ProductDetail = () => {
                     </div>
                   </section>
 
-                  <section className="rounded-[2.2rem] border border-slate-200 bg-gradient-to-br from-[#0E1F53] to-[#142B6F] p-8 text-white shadow-sm md:p-10">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/85">
+                  <section className="rounded-[2.2rem] border border-border p-8 shadow-sm md:p-10" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--theme-secondary-hex) 94%, black 6%) 0%, color-mix(in srgb, var(--theme-secondary-hex) 78%, var(--button-primary-bg) 22%) 100%)", color: "hsl(var(--secondary-foreground))" }}>
+                    <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]" style={{ background: "color-mix(in srgb, hsl(var(--secondary-foreground)) 10%, transparent)", color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 85%, transparent)" }}>
                       <ShieldCheck size={14} />
                       Upsell-Preview
                     </div>
                     <h2 className="mt-5 text-3xl font-black tracking-tight">Erweitere dein System</h2>
-                    <p className="mt-3 max-w-3xl text-base leading-relaxed text-white/75">
+                    <p className="mt-3 max-w-3xl text-base leading-relaxed" style={{ color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 75%, transparent)" }}>
                       Im Checkout können optionale Erweiterungen direkt mitgewählt werden — perfekt für Pre-Framing bei High-Ticket-Angeboten.
                     </p>
 
                     <div className="mt-8 grid gap-4 md:grid-cols-3">
-                      <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
+                      <div className="rounded-[1.6rem] border p-5" style={{ borderColor: "color-mix(in srgb, hsl(var(--secondary-foreground)) 12%, transparent)", background: "color-mix(in srgb, hsl(var(--secondary-foreground)) 5%, transparent)" }}>
                         <div className="text-sm font-bold">Community Forum</div>
                         <div className="mt-2 text-2xl font-black">+99€</div>
-                        <p className="mt-3 text-sm leading-relaxed text-white/70">Mehr Bindung, schnellere Aktivierung und höhere Kundenloyalität.</p>
+                        <p className="mt-3 text-sm leading-relaxed" style={{ color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 70%, transparent)" }}>Mehr Bindung, schnellere Aktivierung und höhere Kundenloyalität.</p>
                       </div>
-                      <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
+                      <div className="rounded-[1.6rem] border p-5" style={{ borderColor: "color-mix(in srgb, hsl(var(--secondary-foreground)) 12%, transparent)", background: "color-mix(in srgb, hsl(var(--secondary-foreground)) 5%, transparent)" }}>
                         <div className="text-sm font-bold">Priority Support</div>
                         <div className="mt-2 text-2xl font-black">+149€</div>
-                        <p className="mt-3 text-sm leading-relaxed text-white/70">Schnellere Reaktionszeit für Kunden, die keine Reibung tolerieren.</p>
+                        <p className="mt-3 text-sm leading-relaxed" style={{ color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 70%, transparent)" }}>Schnellere Reaktionszeit für Kunden, die keine Reibung tolerieren.</p>
                       </div>
-                      <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
+                      <div className="rounded-[1.6rem] border p-5" style={{ borderColor: "color-mix(in srgb, hsl(var(--secondary-foreground)) 12%, transparent)", background: "color-mix(in srgb, hsl(var(--secondary-foreground)) 5%, transparent)" }}>
                         <div className="text-sm font-bold">Launch-Paket</div>
                         <div className="mt-2 text-2xl font-black">+249€</div>
-                        <p className="mt-3 text-sm leading-relaxed text-white/70">Setup-Hilfe, Assets und Conversion-Feinschliff für einen starken Start.</p>
+                        <p className="mt-3 text-sm leading-relaxed" style={{ color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 70%, transparent)" }}>Setup-Hilfe, Assets und Conversion-Feinschliff für einen starken Start.</p>
                       </div>
                     </div>
                   </section>
@@ -494,10 +494,10 @@ const ProductDetail = () => {
 
                 <aside className="xl:sticky xl:top-32">
                   <div className="overflow-hidden rounded-[2.2rem] border border-border bg-card shadow-[0_28px_70px_-38px_rgba(15,23,42,0.35)]">
-                    <div className="border-b border-border px-7 py-6 text-white" style={{ background: "var(--theme-secondary-hex)" }}>
-                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Edge-Checkout</div>
+                    <div className="border-b border-border px-7 py-6" style={{ background: "var(--theme-secondary-hex)", color: "hsl(var(--secondary-foreground))" }}>
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 70%, transparent)" }}>Edge-Checkout</div>
                       <div className="mt-2 text-3xl font-black tracking-tight">{product.price}</div>
-                      <p className="mt-2 text-sm leading-relaxed text-white/75">Wähle optionale Erweiterungen direkt hier. Der Checkout wird sicher über Stripe gestartet.</p>
+                      <p className="mt-2 text-sm leading-relaxed" style={{ color: "color-mix(in srgb, hsl(var(--secondary-foreground)) 75%, transparent)" }}>Wähle optionale Erweiterungen direkt hier. Der Checkout wird sicher über Stripe gestartet.</p>
                     </div>
 
                     <div className="space-y-7 px-7 py-7">

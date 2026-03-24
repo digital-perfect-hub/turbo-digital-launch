@@ -361,6 +361,90 @@
     color: var(--button-primary-bg);
   }
 
+  .theme-link-accent {
+    color: var(--button-primary-bg);
+    transition: color 0.25s ease;
+  }
+
+  .theme-link-accent:hover {
+    color: var(--nav-hover-text, var(--theme-secondary-hex));
+  }
+
+  .surface-accent-badge {
+    border-color: color-mix(in srgb, var(--button-primary-bg) 24%, transparent);
+    background: color-mix(in srgb, var(--button-primary-bg) 8%, transparent);
+    color: var(--button-primary-bg);
+  }
+
+  .surface-quiet-badge {
+    border-color: color-mix(in srgb, var(--surface-card-border) 82%, transparent);
+    background: color-mix(in srgb, var(--surface-card-text) 8%, transparent);
+    color: var(--surface-card-text);
+  }
+
+  .surface-author-badge {
+    background: color-mix(in srgb, var(--theme-secondary-hex) 10%, transparent);
+    color: var(--surface-card-text);
+  }
+
+  .surface-meta-pill {
+    background: color-mix(in srgb, var(--surface-card-text) 8%, transparent);
+    color: var(--surface-card-muted);
+  }
+
+  .surface-meta-pill svg,
+  .theme-accent-icon {
+    color: var(--button-primary-bg);
+  }
+
+  .surface-soft-panel {
+    border-color: var(--surface-card-border);
+    background: color-mix(in srgb, var(--surface-section) 86%, transparent);
+  }
+
+  .surface-secondary-avatar {
+    background: var(--theme-secondary-hex);
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .surface-primary-avatar {
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+  }
+
+  .support-dark-card {
+    border-color: color-mix(in srgb, var(--theme-secondary-hex) 20%, transparent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--theme-secondary-hex) 94%, black 6%) 0%, color-mix(in srgb, var(--theme-secondary-hex) 84%, var(--theme-primary-hex)) 100%);
+    color: hsl(var(--secondary-foreground));
+    box-shadow: 0 38px 90px -52px color-mix(in srgb, var(--theme-secondary-hex) 64%, transparent);
+  }
+
+  .support-dark-muted {
+    color: color-mix(in srgb, hsl(var(--secondary-foreground)) 74%, transparent);
+  }
+
+  .prose-theme {
+    color: inherit;
+  }
+
+  .prose-theme :where(h1, h2, h3, h4, h5, h6) {
+    color: inherit;
+  }
+
+  .prose-theme :where(p, li, strong, b) {
+    color: inherit;
+  }
+
+  .prose-theme :where(a) {
+    color: var(--button-primary-bg);
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+
+  .prose-theme :where(a:hover) {
+    color: var(--nav-hover-text, var(--theme-secondary-hex));
+  }
+
   .nav-cta-button {
     background: var(--nav-cta-bg);
     color: var(--nav-cta-text);

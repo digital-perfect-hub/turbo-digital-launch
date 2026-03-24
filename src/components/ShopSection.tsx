@@ -98,7 +98,7 @@ const ShopSection = () => {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center" style={{ background: "var(--surface-section)" }}>
-                      <ImageIcon size={44} className="text-slate-300" strokeWidth={1.5} />
+                      <ImageIcon size={44} className="text-muted-foreground/50" strokeWidth={1.5} />
                     </div>
                   )}
 

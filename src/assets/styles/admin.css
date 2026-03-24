@@ -210,3 +210,35 @@ body.admin-ui-portal-scope {
 .admin-ui-scope .admin-rich-editor .ql-snow a {
   color: hsl(var(--primary));
 }
+
+.admin-ui-scope .admin-rich-editor .ql-editor,
+.admin-ui-scope .admin-rich-editor .ql-editor p,
+.admin-ui-scope .admin-rich-editor .ql-editor div,
+.admin-ui-scope .admin-rich-editor .ql-editor span,
+.admin-ui-scope .admin-rich-editor .ql-editor strong,
+.admin-ui-scope .admin-rich-editor .ql-editor em,
+.admin-ui-scope .admin-rich-editor .ql-editor b,
+.admin-ui-scope .admin-rich-editor .ql-editor i,
+.admin-ui-scope .admin-rich-editor .ql-editor u,
+.admin-ui-scope .admin-rich-editor .ql-editor h1,
+.admin-ui-scope .admin-rich-editor .ql-editor h2,
+.admin-ui-scope .admin-rich-editor .ql-editor h3,
+.admin-ui-scope .admin-rich-editor .ql-editor h4,
+.admin-ui-scope .admin-rich-editor .ql-editor h5,
+.admin-ui-scope .admin-rich-editor .ql-editor h6,
+.admin-ui-scope .admin-rich-editor .ql-editor [style*="color"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.admin-ui-scope .admin-rich-editor .ql-editor a {
+  color: hsl(var(--primary)) !important;
+}
+
+.admin-ui-scope textarea,
+.admin-ui-scope input[type="text"],
+.admin-ui-scope input[type="email"],
+.admin-ui-scope input[type="url"],
+.admin-ui-scope input[type="search"] {
+  color: hsl(var(--foreground));
+}
+

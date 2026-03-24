@@ -144,7 +144,7 @@ const TestimonialsSection = () => {
                         <div className="flex items-center gap-4">
                           <Avatar className="h-14 w-14 border-2" style={{ borderColor: "var(--surface-card-border)" }}>
                             {item.image_url ? <AvatarImage src={buildRenderImageUrl(item.image_url, { width: 180, quality: 82 })} alt={item.name} /> : null}
-                            <AvatarFallback className="bg-secondary text-white">{item.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback style={{ background: "var(--theme-secondary-hex)", color: "hsl(var(--secondary-foreground))" }}>{item.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="font-bold text-[var(--surface-card-text)]">{item.name}</div>
@@ -177,7 +177,7 @@ const TestimonialsSection = () => {
                   key={item.id}
                   type="button"
                   onClick={() => api?.scrollTo(index)}
-                  className={`h-2.5 rounded-full transition-all ${current === index ? "w-10 bg-primary" : "w-2.5 bg-slate-300"}`}
+                  className={`h-2.5 rounded-full transition-all ${current === index ? "w-10 bg-primary" : "w-2.5"}`} style={current === index ? undefined : { background: "color-mix(in srgb, var(--surface-card-border) 78%, var(--surface-card-text) 22%)" }}
                   aria-label={`Zu Testimonial ${index + 1} wechseln`}
                 />
               ))}

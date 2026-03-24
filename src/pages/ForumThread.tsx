@@ -196,9 +196,9 @@ const ForumThreadPage = () => {
         <main className="pb-20 pt-32">
           <section className="section-container">
             <div className="mb-8">
-              <Button asChild variant="ghost" className="rounded-full px-0 text-slate-600 hover:bg-transparent hover:text-[#0E1F53]">
+              <Button asChild variant="ghost" className="rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-primary">
                 <Link to={thread?.category?.slug ? `/forum/kategorie/${thread.category.slug}` : "/forum"} className="inline-flex items-center gap-2">
-                  <ArrowLeft className="h-4 w-4 text-[#FF4B2C]" />
+                  <ArrowLeft className="theme-accent-icon h-4 w-4" />
                   Zurück zum Forum
                 </Link>
               </Button>
@@ -243,7 +243,7 @@ const ForumThreadPage = () => {
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
               <div className="space-y-8">
                 {threadLoading ? (
-                  <Card className="overflow-hidden rounded-[32px] border-slate-200/80 bg-white shadow-sm">
+                  <Card className="surface-card-shell overflow-hidden rounded-[32px] border shadow-sm">
                     <Skeleton className="aspect-[16/8] w-full" />
                     <CardContent className="space-y-4 p-8">
                       <Skeleton className="h-6 w-32" />
@@ -255,67 +255,67 @@ const ForumThreadPage = () => {
                 ) : thread ? (
                   <>
                     <FadeIn>
-                      <article className="overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_32px_90px_-54px_rgba(14,31,83,0.32)]">
+                      <article className="surface-card-shell overflow-hidden rounded-[34px] border shadow-[0_32px_90px_-54px_rgba(14,31,83,0.32)]">
                         {heroImageUrl ? (
-                          <div className="relative aspect-[16/7] overflow-hidden bg-slate-100">
+                          <div className="relative aspect-[16/7] overflow-hidden" style={{ background: 'color-mix(in srgb, var(--surface-section) 78%, transparent)' }}>
                             <img
                               src={heroImageUrl}
                               alt={thread.featured_image_alt || thread.title}
                               className="h-full w-full object-cover"
                               loading="lazy"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-slate-950/10 to-transparent" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--theme-secondary-hex) 12%, transparent) 45%, color-mix(in srgb, var(--theme-secondary-hex) 42%, transparent) 100%)' }} />
                           </div>
                         ) : null}
 
                         <div className="p-6 md:p-10">
                           <div className="mb-6 flex flex-wrap items-center gap-3">
                             {thread.category ? (
-                              <Badge variant="outline" className="rounded-full border-[#FF4B2C]/20 bg-[#FF4B2C]/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-[#FF4B2C]">
+                              <Badge variant="outline" className="surface-accent-badge rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.22em]">
                                 {thread.category.name}
                               </Badge>
                             ) : null}
                             {thread.is_locked ? (
-                              <Badge className="rounded-full border-none bg-slate-950 px-3 py-1 text-white">
+                              <Badge className="surface-quiet-badge rounded-full border-none px-3 py-1">
                                 <Lock className="mr-1 h-3.5 w-3.5" />
                                 Geschlossen
                               </Badge>
                             ) : null}
                           </div>
 
-                          <h1 className="max-w-4xl text-3xl font-black tracking-tight text-slate-950 md:text-5xl">
+                          <h1 className="max-w-4xl text-3xl font-black tracking-tight text-foreground md:text-5xl">
                             {thread.title}
                           </h1>
 
-                          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">
-                              <Clock3 className="h-4 w-4 text-[#FF4B2C]" />
+                          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                            <span className="surface-meta-pill inline-flex items-center gap-2 rounded-full px-3 py-2">
+                              <Clock3 className="theme-accent-icon h-4 w-4" />
                               {formatDate(thread.created_at)}
                             </span>
-                            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">
-                              <Eye className="h-4 w-4 text-[#FF4B2C]" />
+                            <span className="surface-meta-pill inline-flex items-center gap-2 rounded-full px-3 py-2">
+                              <Eye className="theme-accent-icon h-4 w-4" />
                               {thread.views || 0} Ansichten
                             </span>
-                            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">
-                              <MessageSquare className="h-4 w-4 text-[#FF4B2C]" />
+                            <span className="surface-meta-pill inline-flex items-center gap-2 rounded-full px-3 py-2">
+                              <MessageSquare className="theme-accent-icon h-4 w-4" />
                               {replies.length} Antworten
                             </span>
                           </div>
 
-                          <div className="mt-8 flex items-center gap-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
-                            <Avatar className="h-12 w-12 border border-slate-200 bg-white">
-                              <AvatarFallback className="bg-[#0E1F53] font-semibold text-white">
+                          <div className="surface-soft-panel mt-8 flex items-center gap-4 rounded-[24px] border p-4">
+                            <Avatar className="h-12 w-12 border border-border bg-[var(--surface-card)]">
+                              <AvatarFallback className="surface-secondary-avatar font-semibold">
                                 {formatAuthorInitials(thread.author_name)}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-sm font-semibold text-slate-950">{thread.author_name || "Digital-Perfect"}</p>
-                              <p className="text-sm text-slate-500">Redaktioneller Community-Beitrag</p>
+                              <p className="text-sm font-semibold text-foreground">{thread.author_name || "Digital-Perfect"}</p>
+                              <p className="text-sm text-muted-foreground">Redaktioneller Community-Beitrag</p>
                             </div>
                           </div>
 
                           <div
-                            className="forum-html prose prose-slate mt-10 max-w-none prose-headings:font-black prose-a:text-[#FF4B2C] prose-a:no-underline hover:prose-a:text-[#0E1F53] prose-img:rounded-[24px] prose-img:shadow-md"
+                            className="forum-html prose prose-slate prose-theme mt-10 max-w-none text-foreground prose-headings:font-black prose-img:rounded-[24px] prose-img:shadow-md"
                             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
                           />
                         </div>
@@ -323,15 +323,15 @@ const ForumThreadPage = () => {
                     </FadeIn>
 
                     <FadeIn delay={0.04}>
-                      <section className="rounded-[32px] border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
+                      <section className="surface-card-shell rounded-[32px] border p-6 shadow-sm md:p-8">
                         <div className="flex items-center justify-between gap-4">
                           <div>
-                            <h2 className="text-2xl font-black tracking-tight text-slate-950">Diskussion & Antworten</h2>
-                            <p className="mt-2 text-sm leading-7 text-slate-600">
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">Diskussion & Antworten</h2>
+                            <p className="mt-2 text-sm leading-7 text-muted-foreground">
                               Teile deine Einschätzung oder ergänze konkrete Praxiserfahrungen für andere Leser.
                             </p>
                           </div>
-                          <Badge variant="outline" className="rounded-full border-slate-200 px-3 py-1 text-slate-600">
+                          <Badge variant="outline" className="rounded-full border-border px-3 py-1 text-muted-foreground">
                             {replies.length} Antworten
                           </Badge>
                         </div>
@@ -339,7 +339,7 @@ const ForumThreadPage = () => {
                         <div className="mt-8 space-y-4">
                           {repliesLoading ? (
                             Array.from({ length: 3 }).map((_, index) => (
-                              <Card key={index} className="rounded-[24px] border-slate-200/80 bg-slate-50/60 shadow-none">
+                              <Card key={index} className="surface-soft-panel rounded-[24px] border shadow-none">
                                 <CardContent className="space-y-4 p-6">
                                   <Skeleton className="h-10 w-40" />
                                   <Skeleton className="h-5 w-full" />
@@ -349,18 +349,18 @@ const ForumThreadPage = () => {
                             ))
                           ) : replies.length ? (
                             replies.map((reply) => (
-                              <Card key={reply.id} className="rounded-[24px] border-slate-200/80 bg-slate-50/60 shadow-none">
+                              <Card key={reply.id} className="surface-soft-panel rounded-[24px] border shadow-none">
                                 <CardContent className="p-6">
                                   <div className="flex flex-wrap items-start justify-between gap-4">
                                     <div className="flex items-center gap-4">
-                                      <Avatar className="h-11 w-11 border border-slate-200 bg-white">
-                                        <AvatarFallback className="bg-[#FF4B2C] font-semibold text-white">
+                                      <Avatar className="h-11 w-11 border border-border bg-[var(--surface-card)]">
+                                        <AvatarFallback className="surface-primary-avatar font-semibold">
                                           {formatAuthorInitials(reply.author_name)}
                                         </AvatarFallback>
                                       </Avatar>
                                       <div>
-                                        <p className="text-sm font-semibold text-slate-950">{reply.author_name || "Mitglied"}</p>
-                                        <p className="text-sm text-slate-500">{formatDate(reply.created_at)}</p>
+                                        <p className="text-sm font-semibold text-foreground">{reply.author_name || "Mitglied"}</p>
+                                        <p className="text-sm text-muted-foreground">{formatDate(reply.created_at)}</p>
                                       </div>
                                     </div>
 
@@ -377,15 +377,15 @@ const ForumThreadPage = () => {
                                     </Button>
                                   </div>
 
-                                  <div className="mt-5 whitespace-pre-wrap text-base leading-8 text-slate-700">{reply.content}</div>
+                                  <div className="mt-5 whitespace-pre-wrap text-base leading-8 text-muted-foreground">{reply.content}</div>
                                 </CardContent>
                               </Card>
                             ))
                           ) : (
-                            <Card className="rounded-[24px] border-dashed border-slate-200 bg-slate-50/60 shadow-none">
+                            <Card className="surface-soft-panel rounded-[24px] border border-dashed shadow-none">
                               <CardContent className="px-6 py-12 text-center">
-                                <h3 className="text-lg font-semibold text-slate-950">Noch keine Antworten vorhanden</h3>
-                                <p className="mt-3 text-sm leading-7 text-slate-600">
+                                <h3 className="text-lg font-semibold text-foreground">Noch keine Antworten vorhanden</h3>
+                                <p className="mt-3 text-sm leading-7 text-muted-foreground">
                                   Sei der Erste, der eine konkrete Einschätzung oder Ergänzung zu diesem Thema teilt.
                                 </p>
                               </CardContent>
@@ -393,12 +393,12 @@ const ForumThreadPage = () => {
                           )}
                         </div>
 
-                        <div className="mt-8 rounded-[28px] border border-slate-200 bg-slate-50/80 p-5 md:p-6">
+                        <div className="surface-soft-panel mt-8 rounded-[28px] border p-5 md:p-6">
                           {user ? (
                             <form className="space-y-4" onSubmit={handleSubmit}>
                               <div>
-                                <h3 className="text-xl font-black tracking-tight text-slate-950">Antwort schreiben</h3>
-                                <p className="mt-2 text-sm leading-7 text-slate-600">
+                                <h3 className="text-xl font-black tracking-tight text-foreground">Antwort schreiben</h3>
+                                <p className="mt-2 text-sm leading-7 text-muted-foreground">
                                   Halte deine Antwort konkret, hilfreich und lesbar. Mehrwert schlägt Fülltext.
                                 </p>
                               </div>
@@ -406,10 +406,10 @@ const ForumThreadPage = () => {
                                 value={replyValue}
                                 onChange={(event) => setReplyValue(event.target.value)}
                                 placeholder="Teile deine Einschätzung, Erfahrung oder Ergänzung..."
-                                className="min-h-[180px] rounded-[24px] border-slate-200 bg-white px-5 py-4 text-base shadow-none focus-visible:ring-[#FF4B2C]/20"
+                                className="min-h-[180px] rounded-[24px] border-border bg-[var(--surface-card)] px-5 py-4 text-base shadow-none focus-visible:ring-primary/20"
                               />
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                   Qualität vor Masse · klare, sachliche Antworten
                                 </p>
                                 <Button
@@ -424,8 +424,8 @@ const ForumThreadPage = () => {
                           ) : (
                             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                               <div>
-                                <h3 className="text-xl font-black tracking-tight text-slate-950">Du willst antworten?</h3>
-                                <p className="mt-2 text-sm leading-7 text-slate-600">
+                                <h3 className="text-xl font-black tracking-tight text-foreground">Du willst antworten?</h3>
+                                <p className="mt-2 text-sm leading-7 text-muted-foreground">
                                   Melde dich an, um dich an der Diskussion zu beteiligen und Likes zu setzen.
                                 </p>
                               </div>
@@ -439,20 +439,20 @@ const ForumThreadPage = () => {
                     </FadeIn>
                   </>
                 ) : (
-                  <Card className="overflow-hidden rounded-[28px] border-slate-200/80 bg-white shadow-sm">
+                  <Card className="surface-card-shell overflow-hidden rounded-[28px] border shadow-sm">
                     <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[22px] bg-[#FF4B2C]/8">
-                        <MessageSquare className="h-8 w-8 text-[#FF4B2C]" />
+                      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[22px] surface-accent-badge">
+                        <MessageSquare className="theme-accent-icon h-8 w-8" />
                       </div>
-                      <h2 className="text-2xl font-black tracking-tight text-slate-950">Beitrag nicht gefunden</h2>
-                      <p className="mt-3 max-w-xl text-base leading-8 text-slate-600">
+                      <h2 className="text-2xl font-black tracking-tight text-foreground">Beitrag nicht gefunden</h2>
+                      <p className="mt-3 max-w-xl text-base leading-8 text-muted-foreground">
                         Dieser Forenbeitrag ist nicht aktiv, wurde verschoben oder existiert nicht mehr.
                       </p>
                       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                         <Button asChild className="btn-primary rounded-full px-6">
                           <Link to="/forum">Zur Forum-Übersicht</Link>
                         </Button>
-                        <Button asChild variant="outline" className="rounded-full border-slate-200 px-6">
+                        <Button asChild variant="outline" className="rounded-full border-border px-6">
                           <Link to="/">Zur Startseite</Link>
                         </Button>
                       </div>

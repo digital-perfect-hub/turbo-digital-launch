@@ -46,8 +46,8 @@ const ToolbarButton = ({ active = false, onClick, disabled = false, title, child
     onClick={onClick}
     title={title}
     className={cn(
-      "h-9 rounded-xl border-slate-200 bg-white px-3 text-slate-600 hover:border-[#FF4B2C]/30 hover:bg-[#FF4B2C]/5 hover:text-[#FF4B2C]",
-      active && "border-[#FF4B2C]/30 bg-[#FF4B2C]/10 text-[#FF4B2C]",
+      "h-9 rounded-xl border border-border bg-background px-3 text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
+      active && "border-primary/30 bg-primary/10 text-primary",
     )}
   >
     {children}
@@ -81,7 +81,7 @@ export const RichTextEditor = ({
         openOnClick: false,
         autolink: true,
         HTMLAttributes: {
-          class: "font-semibold text-[#FF4B2C] underline underline-offset-4",
+          class: "theme-link-accent font-semibold underline underline-offset-4",
           rel: "noopener noreferrer",
           target: "_blank",
         },
@@ -90,7 +90,7 @@ export const RichTextEditor = ({
         inline: false,
         allowBase64: false,
         HTMLAttributes: {
-          class: "my-6 w-full rounded-[24px] border border-slate-200 shadow-sm",
+          class: "my-6 w-full rounded-[24px] border border-border shadow-sm",
           loading: "lazy",
           decoding: "async",
         },
@@ -100,7 +100,7 @@ export const RichTextEditor = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-slate max-w-none min-h-[320px] px-5 py-4 text-slate-800 focus:outline-none prose-headings:font-black prose-headings:tracking-tight prose-p:leading-8 prose-a:text-[#FF4B2C] prose-img:rounded-[24px]",
+          "prose-theme max-w-none min-h-[320px] px-5 py-4 text-foreground focus:outline-none [&_h1]:font-black [&_h2]:font-black [&_h3]:font-black [&_h1]:tracking-tight [&_h2]:tracking-tight [&_h3]:tracking-tight [&_p]:leading-8 [&_img]:rounded-[24px]",
         "data-placeholder": placeholder,
       },
     },
@@ -170,8 +170,8 @@ export const RichTextEditor = ({
   };
 
   return (
-    <div className={cn("overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm", className)}>
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+    <div className={cn("surface-card-shell overflow-hidden rounded-[28px] border shadow-sm", className)}>
+      <div className="flex flex-wrap gap-2 border-b px-4 py-3" style={{ borderColor: "var(--surface-card-border)", background: "color-mix(in srgb, var(--surface-section) 92%, transparent)" }}>
         <ToolbarButton title="Rückgängig" onClick={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().chain().focus().undo().run()}>
           <Undo2 className="h-4 w-4" />
         </ToolbarButton>
@@ -179,7 +179,7 @@ export const RichTextEditor = ({
           <Redo2 className="h-4 w-4" />
         </ToolbarButton>
 
-        <div className="mx-1 h-9 w-px bg-slate-200" />
+        <div className="mx-1 h-9 w-px" style={{ background: "var(--surface-card-border)" }} />
 
         <ToolbarButton title="Fett" active={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()}>
           <Bold className="h-4 w-4" />
@@ -218,8 +218,8 @@ export const RichTextEditor = ({
         />
       </div>
 
-      <EditorContent editor={editor} className="min-h-[320px] bg-white" />
-      <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 text-xs text-slate-500">
+      <EditorContent editor={editor} className="min-h-[320px] bg-background text-foreground" />
+      <div className="border-t px-5 py-3 text-xs text-muted-foreground" style={{ borderColor: "var(--surface-card-border)", background: "color-mix(in srgb, var(--surface-section) 92%, transparent)" }}>
         Erlaubte Uploads: JPG, PNG, WEBP bis 2 MB. Bilder werden über Supabase Storage gespeichert und per Render-API ausgeliefert.
       </div>
     </div>
