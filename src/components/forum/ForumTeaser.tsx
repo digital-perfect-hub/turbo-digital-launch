@@ -8,6 +8,7 @@ import { useForumFeaturedThreads } from "@/hooks/useForum";
 import { getForumRenderImageUrl } from "@/lib/forumHtml";
 import { defaultForumTeaserContent, useSiteSettings } from "@/hooks/useSiteSettings";
 import { stripHtmlToText } from "@/lib/content";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const formatDate = (value?: string | null) =>
   value
@@ -26,11 +27,12 @@ const getSnippet = (value?: string | null, fallback?: string | null, emptyText =
 
 const ForumTeaser = () => {
   const { data: threads = [], isLoading } = useForumFeaturedThreads(3);
-  const { getJsonSetting } = useSiteSettings();
+  const { getJsonSetting, settings } = useSiteSettings();
+  const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "forum");
   const content = getJsonSetting("forum_teaser_content", defaultForumTeaserContent);
 
   return (
-    <section className="surface-page-shell relative overflow-hidden py-20">
+    <section className="homepage-style-scope surface-page-shell relative overflow-hidden py-20" style={sectionStyleVars}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--button-primary-bg)_12%,transparent)_0%,transparent_30%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--theme-secondary-hex)_10%,transparent)_0%,transparent_38%)]" />
       <div className="section-container relative">
         <div className="surface-card-shell overflow-hidden rounded-[40px] border shadow-[0_40px_120px_-70px_rgba(14,31,83,0.36)]">
@@ -41,8 +43,8 @@ const ForumTeaser = () => {
                   <Sparkles className="mr-2 h-3.5 w-3.5" />
                   {content.badge}
                 </Badge>
-                <h2 className="mt-5 text-3xl font-black tracking-tight text-foreground md:text-4xl">{content.title}</h2>
-                <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">{content.description}</p>
+                <h2 className="homepage-section-title mt-5 text-3xl font-black tracking-tight md:text-4xl">{content.title}</h2>
+                <p className="homepage-section-muted mt-4 max-w-2xl text-base leading-8 md:text-lg">{content.description}</p>
               </div>
 
               <Button asChild className="btn-primary rounded-full px-7">

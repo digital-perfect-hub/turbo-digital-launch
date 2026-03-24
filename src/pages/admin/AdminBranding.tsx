@@ -61,6 +61,25 @@ const THEME_PRESET_KEYS: (keyof ThemePresetColors)[] = [
 
 const THEME_PRESETS: ThemePreset[] = [
   {
+    id: "high-contrast-tech",
+    title: "High-Contrast Tech",
+    subtitle: "Kreativ / IT",
+    description: "Dunkel, kontraststark, markant und conversion-stabil im Brand-Look.",
+    colors: {
+      primary_color_hex: "#FF6B2C",
+      secondary_color_hex: "#0E1F53",
+      accent_color_hex: "#FF6B2C",
+      bg_main_hex: "#0B1020",
+      bg_card_hex: "#11172A",
+      text_main_hex: "#F8FAFC",
+      text_muted_hex: "#A5B4C7",
+      border_color_hex: "#23314F",
+      cta_hover_hex: "#FF4D00",
+      footer_bg_hex: "#070B16",
+    },
+    swatches: ["#FF6B2C", "#0E1F53", "#0B1020", "#11172A", "#F8FAFC", "#23314F"],
+  },
+  {
     id: "blueprint",
     title: "Blueprint",
     subtitle: "Tech / B2B",
@@ -135,25 +154,6 @@ const THEME_PRESETS: ThemePreset[] = [
       footer_bg_hex: "#6C4638",
     },
     swatches: ["#C96F4A", "#E9D8C3", "#D98A67", "#FCF8F3", "#4A2F24", "#EADCCF"],
-  },
-  {
-    id: "high-contrast-tech",
-    title: "High-Contrast Tech",
-    subtitle: "Kreativ / IT",
-    description: "Futuristisch, kreativ und aufmerksamkeitsstark.",
-    colors: {
-      primary_color_hex: "#6D28D9",
-      secondary_color_hex: "#22D3EE",
-      accent_color_hex: "#8B5CF6",
-      bg_main_hex: "#0B1020",
-      bg_card_hex: "#11172A",
-      text_main_hex: "#F8FAFC",
-      text_muted_hex: "#A5B4C7",
-      border_color_hex: "#23314F",
-      cta_hover_hex: "#5B21B6",
-      footer_bg_hex: "#070B16",
-    },
-    swatches: ["#6D28D9", "#22D3EE", "#8B5CF6", "#0B1020", "#11172A", "#F8FAFC"],
   },
 ];
 

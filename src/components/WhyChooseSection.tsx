@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { defaultSiteText, defaultWhyChoosePoints, type WhyChoosePoint, useSiteSettings } from "@/hooks/useSiteSettings";
 import { sanitizeRichHtml } from "@/lib/content";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const navigateToTarget = (target: string) => {
   const normalized = (target || "").trim();
@@ -14,7 +15,8 @@ const navigateToTarget = (target: string) => {
 };
 
 const WhyChooseSection = () => {
-  const { getSetting, getJsonSetting } = useSiteSettings();
+  const { getSetting, getJsonSetting, settings } = useSiteSettings();
+  const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "why-choose");
 
   const points = getJsonSetting<WhyChoosePoint[]>("home_why_choose_points", defaultWhyChoosePoints).filter(
     (item) => item?.title?.trim() && item?.description?.trim(),
@@ -37,7 +39,7 @@ const WhyChooseSection = () => {
     defaultSiteText.home_why_choose_cta_link;
 
   return (
-    <section className="surface-section-shell relative overflow-hidden bg-surface py-24 sm:py-32" aria-label="Warum wir?">
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden bg-surface py-24 sm:py-32" aria-label="Warum wir?" style={sectionStyleVars}>
       <div className="pointer-events-none absolute -right-[10%] -top-[20%] h-[1000px] w-[1000px] bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_50%)] opacity-[0.03] blur-[120px]" />
 
       <div className="section-container relative z-10">

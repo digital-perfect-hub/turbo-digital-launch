@@ -91,35 +91,35 @@ export type GlobalThemeSettings = {
   updated_at?: string | null;
 };
 
-export const FALLBACK_PRIMARY_HEX = "#FF4B2C";
+export const FALLBACK_PRIMARY_HEX = "#FF6B2C";
 export const FALLBACK_SECONDARY_HEX = "#0E1F53";
-export const FALLBACK_ACCENT_HEX = "#0E1F53";
-export const FALLBACK_BG_MAIN_HEX = "#FFFFFF";
-export const FALLBACK_BG_CARD_HEX = "#F8FAFC";
-export const FALLBACK_TEXT_MAIN_HEX = "#0F172A";
-export const FALLBACK_TEXT_MUTED_HEX = "#64748B";
-export const FALLBACK_BORDER_HEX = "#E2E8F0";
+export const FALLBACK_ACCENT_HEX = "#FF6B2C";
+export const FALLBACK_BG_MAIN_HEX = "#0B1020";
+export const FALLBACK_BG_CARD_HEX = "#11172A";
+export const FALLBACK_TEXT_MAIN_HEX = "#F8FAFC";
+export const FALLBACK_TEXT_MUTED_HEX = "#A5B4C7";
+export const FALLBACK_BORDER_HEX = "#23314F";
 export const FALLBACK_RADIUS = "0.5rem";
-const FALLBACK_PRIMARY_TUPLE = "9 100% 59%";
+const FALLBACK_PRIMARY_TUPLE = "18 100% 59%";
 const FALLBACK_SECONDARY_TUPLE = "225 71% 19%";
-const FALLBACK_ACCENT_TUPLE = "225 71% 19%";
-const FALLBACK_BG_MAIN_TUPLE = "0 0% 100%";
-const FALLBACK_BG_CARD_TUPLE = "210 40% 98%";
-const FALLBACK_TEXT_MAIN_TUPLE = "222 47% 11%";
-const FALLBACK_TEXT_MUTED_TUPLE = "215 16% 47%";
-const FALLBACK_BORDER_TUPLE = "214 32% 91%";
+const FALLBACK_ACCENT_TUPLE = "18 100% 59%";
+const FALLBACK_BG_MAIN_TUPLE = "226 49% 8%";
+const FALLBACK_BG_CARD_TUPLE = "226 42% 12%";
+const FALLBACK_TEXT_MAIN_TUPLE = "210 40% 98%";
+const FALLBACK_TEXT_MUTED_TUPLE = "214 23% 71%";
+const FALLBACK_BORDER_TUPLE = "221 39% 22%";
 
 export const defaultNavigationTheme: NavigationTheme = {
-  background_color: "rgba(255,255,255,0.92)",
-  text_color: "#0E1F53",
-  muted_text_color: "#475569",
-  border_color: "rgba(255,255,255,0.65)",
-  hover_background_color: "rgba(14,31,83,0.08)",
-  hover_text_color: "#0E1F53",
+  background_color: "rgba(4, 15, 47, 0.85)",
+  text_color: "#FFFFFF",
+  muted_text_color: "rgba(255, 255, 255, 0.72)",
+  border_color: "rgba(255, 255, 255, 0.14)",
+  hover_background_color: "rgba(255, 75, 44, 0.08)",
+  hover_text_color: "#FF4B2C",
   cta_background_color: "#FF4B2C",
   cta_text_color: "#FFFFFF",
-  topbar_background_color: "rgba(255,255,255,0.84)",
-  topbar_text_color: "#334155",
+  topbar_background_color: "rgba(4, 15, 47, 0.77)",
+  topbar_text_color: "#FFFFFF",
   topbar_accent_color: "#FF4B2C",
   logo_badge_background_color: "#07112F",
   logo_badge_text_color: "#FFFFFF",
@@ -131,7 +131,7 @@ export const defaultHeroTheme: HeroTheme = {
   badge_background_color: "rgba(255,255,255,0.08)",
   badge_text_color: "#E2E8F0",
   headline_color: "#FFFFFF",
-  headline_highlight_color: "#FFB566",
+  headline_highlight_color: "#FF6B2C",
   subheadline_color: "#CBD5E1",
   secondary_button_background_color: "rgba(255,255,255,0.08)",
   secondary_button_text_color: "#FFFFFF",
@@ -141,8 +141,8 @@ export const defaultHeroTheme: HeroTheme = {
   stat_label_color: "#CBD5E1",
   proof_card_background_color: "rgba(255,255,255,0.07)",
   proof_text_color: "#E2E8F0",
-  proof_icon_background_color: "rgba(255,75,44,0.12)",
-  proof_icon_color: "#FFB566",
+  proof_icon_background_color: "rgba(255,107,44,0.12)",
+  proof_icon_color: "#FF6B2C",
   visual_panel_background_color: "rgba(7,17,47,0.72)",
   visual_panel_text_color: "#E2E8F0",
 };
@@ -151,20 +151,20 @@ export const defaultSurfaceTheme: SurfaceTheme = {
   page_background_color: FALLBACK_BG_MAIN_HEX,
   page_foreground_color: FALLBACK_TEXT_MAIN_HEX,
   page_muted_color: FALLBACK_TEXT_MUTED_HEX,
-  section_background_color: "#F6F8FC",
+  section_background_color: "#11172A",
   section_foreground_color: FALLBACK_TEXT_MAIN_HEX,
   section_muted_color: FALLBACK_TEXT_MUTED_HEX,
-  card_background_color: "rgba(255,255,255,0.86)",
-  card_border_color: "rgba(148,163,184,0.22)",
+  card_background_color: "rgba(17,23,42,0.86)",
+  card_border_color: "rgba(35,49,79,0.92)",
   card_text_color: FALLBACK_TEXT_MAIN_HEX,
   card_muted_color: FALLBACK_TEXT_MUTED_HEX,
 };
 
 export const defaultButtonTheme: ButtonTheme = {
-  primary_background_color: "#FF4B2C",
+  primary_background_color: "#FF6B2C",
   primary_text_color: "#FFFFFF",
   secondary_background_color: "rgba(255,255,255,0.84)",
-  secondary_text_color: FALLBACK_TEXT_MAIN_HEX,
+  secondary_text_color: "#0F172A",
   secondary_border_color: "rgba(148,163,184,0.26)",
 };
 

@@ -1,11 +1,12 @@
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Save, Trash2 } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,26 @@ import {
 } from "@/hooks/useSiteSettings";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { upsertSiteSetting } from "@/lib/site-settings";
+import SectionPreviewPanel from "@/components/admin/homepage/SectionPreviewPanel";
+import SectionStyleEditor from "@/components/admin/homepage/SectionStyleEditor";
+import {
+  HOMEPAGE_SECTION_IDS,
+  HOMEPAGE_SECTION_LABELS,
+  createDefaultHomepageSectionStyle,
+  createDefaultHomepageSectionStyles,
+  parseHomepageSectionStyles,
+  resolveHomepageSectionStyleVars,
+  serializeHomepageSectionStyles,
+  type HomepageSectionId,
+  type HomepageSectionStyle,
+  type HomepageSectionStyles,
+} from "@/lib/homepage-section-styles";
+import {
+  DEFAULT_HOMEPAGE_SECTION_ORDER,
+  moveHomepageSection,
+  normalizeHomepageSectionOrder,
+  serializeHomepageSectionOrder,
+} from "@/lib/homepage-section-order";
 
 type TextForm = Record<string, string>;
 
@@ -125,6 +146,15 @@ const textFieldGroups: Array<{
     ],
   },
   {
+    id: "portfolio",
+    title: "Portfolio Header",
+    description: "Header-Texte für die Portfolio-Sektion.",
+    fields: [
+      { key: "home_portfolio_kicker", label: "Kicker" },
+      { key: "home_portfolio_title", label: "Titel" },
+    ],
+  },
+  {
     id: "shop",
     title: "Shop Header",
     description: "Kicker, Titel und Beschreibung des Shop-Blocks.",
@@ -162,6 +192,12 @@ const textFieldGroups: Array<{
       { key: "home_faq_kicker", label: "Kicker" },
       { key: "home_faq_title", label: "Titel" },
     ],
+  },
+  {
+    id: "forum",
+    title: "Forum Teaser",
+    description: "Forum-Teaser kann jetzt ebenfalls in der Reihenfolge verschoben und farblich überschrieben werden.",
+    fields: [],
   },
 ];
 
@@ -308,6 +344,9 @@ const AdminHomepage = () => {
   const [audienceItems, setAudienceItems] = useState<AudienceItem[]>(defaultAudienceItems);
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>(defaultProcessSteps);
   const [contactContent, setContactContent] = useState<ContactSectionContent>(defaultContactSectionContent);
+  const [sectionStyles, setSectionStyles] = useState<HomepageSectionStyles>(createDefaultHomepageSectionStyles());
+  const [sectionOrder, setSectionOrder] = useState<HomepageSectionId[]>(DEFAULT_HOMEPAGE_SECTION_ORDER);
+  const [activeSection, setActiveSection] = useState<string>(textFieldGroups[0]?.id || "intro");
 
   useEffect(() => {
     if (isLoading) return;
@@ -332,18 +371,22 @@ const AdminHomepage = () => {
         resolveJsonSetting(settings, "contact_section_content", defaultContactSectionContent),
       ),
     );
+    setSectionStyles(parseHomepageSectionStyles(settings.home_section_styles));
+    setSectionOrder(normalizeHomepageSectionOrder(settings.home_section_order));
   }, [isLoading, settings]);
 
   const mutation = useMutation({
     mutationFn: async () => {
       const payload: Array<[string, string]> = [
-        ...Object.entries(textForm),
+        ...((Object.entries(textForm) as Array<[string, string]>)),
         ["home_intro_quick_wins", JSON.stringify(introQuickWins)],
         ["home_trust_points", JSON.stringify(trustPoints)],
         ["home_why_choose_points", JSON.stringify(whyChoosePoints)],
         ["home_audience_items", JSON.stringify(audienceItems)],
         ["home_process_steps", JSON.stringify(processSteps)],
         ["contact_section_content", JSON.stringify(contactContent)],
+        ["home_section_styles", serializeHomepageSectionStyles(sectionStyles)],
+        ["home_section_order", serializeHomepageSectionOrder(sectionOrder)],
       ];
 
       await Promise.all(payload.map(([key, value]) => upsertSiteSetting(siteId, key, value)));
@@ -445,17 +488,871 @@ const AdminHomepage = () => {
     setter((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
   };
 
+  const updateSectionStyle = (sectionId: HomepageSectionId, nextStyle: HomepageSectionStyle) => {
+    setSectionStyles((prev) => ({
+      ...prev,
+      [sectionId]: nextStyle,
+    }));
+  };
+
+  const moveSection = (sectionId: HomepageSectionId, direction: "up" | "down") => {
+    setSectionOrder((prev) => moveHomepageSection(prev, sectionId, direction));
+  };
+
+  const activeSectionId = (HOMEPAGE_SECTION_IDS.includes(activeSection as HomepageSectionId)
+    ? activeSection
+    : textFieldGroups[0]?.id || "intro") as HomepageSectionId;
+
+  const activeGroup =
+    textFieldGroups.find((group) => group.id === activeSectionId) ??
+    textFieldGroups[0] ?? {
+      id: "intro",
+      title: "Intro",
+      description: "",
+      fields: [],
+    };
+
+  const activeSectionStyle = sectionStyles[activeSectionId] ?? createDefaultHomepageSectionStyle();
+  const groupMap = textFieldGroups.reduce<Record<string, (typeof textFieldGroups)[number]>>((acc, group) => {
+    acc[group.id] = group;
+    return acc;
+  }, {});
+  const orderedSectionGroups = sectionOrder
+    .map((sectionId) => groupMap[sectionId])
+    .filter(Boolean) as typeof textFieldGroups;
+
+  const stripHtmlForPreview = (value: string) =>
+    value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+  const getPreviewPayload = (sectionId: HomepageSectionId) => {
+    if (sectionId === "contact") {
+      return {
+        badge: textForm.home_contact_kicker || "Kontakt",
+        title: textForm.home_contact_title || "Lass uns sprechen.",
+        description:
+          textForm.home_contact_description || contactContent.panel_description || defaultContactSectionContent.panel_description,
+        ctaText: contactContent.submit_text || defaultContactSectionContent.submit_text,
+      };
+    }
+
+    if (sectionId === "intro") {
+      return {
+        badge: textForm.home_intro_badge || "Premium Setup",
+        title: textForm.home_intro_title || "Mehr Vertrauen und Anfragen.",
+        description: stripHtmlForPreview(textForm.home_intro_body || ""),
+        ctaText: textForm.home_intro_cta_text || "Jetzt starten",
+      };
+    }
+
+    if (sectionId === "why-choose") {
+      return {
+        badge: textForm.home_why_choose_kicker || "Warum wir",
+        title: textForm.home_why_choose_title || "Sauberer Aufbau statt Theme-Chaos.",
+        description: stripHtmlForPreview(textForm.home_why_choose_body || ""),
+        ctaText: textForm.home_why_choose_cta_text || "Projekt besprechen",
+      };
+    }
+
+    if (sectionId === "process") {
+      return {
+        badge: textForm.home_process_kicker || "Ablauf",
+        title: textForm.home_process_title || "Vom ersten Signal bis zur Umsetzung.",
+        description: processSteps[0]?.description || "Hier wird live simuliert, wie deine Farblogik im Ablaufbereich wirkt.",
+        ctaText: textForm.home_process_cta_text || "Ablauf starten",
+      };
+    }
+
+    const fallbackMap: Record<string, { badge: string; title: string; description: string; ctaText: string }> = {
+      trust: {
+        badge: textForm.home_trust_kicker || "Vertrauen",
+        title: textForm.home_trust_title || "Sichtbar professionell.",
+        description: textForm.home_trust_description || "Subcopy und Vertrauensargumente werden hier simuliert.",
+        ctaText: "Mehr sehen",
+      },
+      audience: {
+        badge: textForm.home_audience_kicker || "Zielgruppe",
+        title: textForm.home_audience_title || "Für die richtigen Kunden gebaut.",
+        description: textForm.home_audience_description || "Karten und Bullets der Audience-Sektion werden hier sichtbar.",
+        ctaText: "Mehr erfahren",
+      },
+      services: {
+        badge: textForm.home_services_kicker || "Leistungen",
+        title: textForm.home_services_title || "Premium Services mit System.",
+        description: textForm.home_services_description || "Service-Karten und ihre Farben werden live angedeutet.",
+        ctaText: "Services ansehen",
+      },
+      portfolio: {
+        badge: textForm.home_portfolio_kicker || "Ergebnisse",
+        title: textForm.home_portfolio_title || "Cases, die verkaufen.",
+        description: "Portfolio-Karten, Overlay und Textkontraste werden live getestet.",
+        ctaText: "Cases ansehen",
+      },
+      shop: {
+        badge: textForm.home_shop_kicker || "Produkte",
+        title: textForm.home_shop_title || "Angebote & Pakete sauber präsentieren.",
+        description: textForm.home_shop_description || "Produktkarten, Preise und CTA-Kontraste werden live dargestellt.",
+        ctaText: "Zum Angebot",
+      },
+      team: {
+        badge: textForm.home_team_kicker || "Team",
+        title: textForm.home_team_title || "Menschen hinter Strategie und Umsetzung.",
+        description: textForm.home_team_description || "Avatare, Meta-Texte und Card-Kontraste werden simuliert.",
+        ctaText: "Team ansehen",
+      },
+      testimonials: {
+        badge: textForm.home_testimonials_kicker || "Testimonials",
+        title: textForm.home_testimonials_title || "Echte Stimmen, sauber inszeniert.",
+        description: textForm.home_testimonials_description || "Bewertungskarten und Social Proof im Live-Look.",
+        ctaText: "Mehr Stimmen",
+      },
+      faq: {
+        badge: textForm.home_faq_kicker || "FAQ",
+        title: textForm.home_faq_title || "Fragen direkt sauber beantworten.",
+        description: "Akkordeons, Borders und Flächentöne werden im Live-Modus dargestellt.",
+        ctaText: "FAQ öffnen",
+      },
+      forum: {
+        badge: "Forum",
+        title: "Community, Fragen und Support sichtbar teasern.",
+        description: "Teaser-Karte, Thread-Liste und CTA können in der Reihenfolge mitgezogen werden.",
+        ctaText: "Forum öffnen",
+      },
+    };
+
+    return fallbackMap[sectionId] || {
+      badge: activeGroup.title,
+      title: activeGroup.title,
+      description: activeGroup.description,
+      ctaText: "Mehr sehen",
+    };
+  };
+
+  const renderTextFields = () => {
+    if (!activeGroup.fields.length) {
+      return (
+        <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center text-sm text-slate-500">
+          Für diese Sektion gibt es aktuell keinen separaten Text-Builder. Reihenfolge und Design-Override funktionieren trotzdem ganz normal.
+        </div>
+      );
+    }
+
+    return (
+    <div className="grid gap-6 md:grid-cols-2">
+      {activeGroup.fields.map((field) => (
+        <div key={field.key} className={field.multiline ? "space-y-2 md:col-span-2" : "space-y-2"}>
+          <Label htmlFor={field.key}>{field.label}</Label>
+
+          {field.rich ? (
+            <div className="admin-rich-editor">
+              <ReactQuill
+                theme="snow"
+                modules={quillModules}
+                value={textForm[field.key] || ""}
+                onChange={(value) => updateTextField(field.key, value)}
+              />
+            </div>
+          ) : field.multiline ? (
+            <Textarea
+              id={field.key}
+              rows={field.rows || 5}
+              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+              value={textForm[field.key] || ""}
+              onChange={(event) => updateTextField(field.key, event.target.value)}
+            />
+          ) : (
+            <Input
+              id={field.key}
+              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+              value={textForm[field.key] || ""}
+              onChange={(event) => updateTextField(field.key, event.target.value)}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+    );
+  };
+
+  const renderStructureTab = () => {
+    if (activeSectionId === "intro") {
+      return (
+        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+          <SectionHeader pill="JSON Builder" title="Quick-Wins" description="Die rechten Karten der Intro-Sektion." />
+          <div className="space-y-4">
+            {introQuickWins.map((item, index) => (
+              <div key={`quick-win-${index}`} className="rounded-2xl border border-slate-200 p-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-slate-700">Quick-Win #{index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeListItem(setIntroQuickWins, index)}
+                    disabled={introQuickWins.length === 1}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Entfernen
+                  </Button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label>Icon</Label>
+                    <select
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
+                      value={item.icon || "layers"}
+                      onChange={(event) => updateQuickWin(index, "icon", event.target.value)}
+                    >
+                      <option value="layers">layers</option>
+                      <option value="search">search</option>
+                      <option value="zap">zap</option>
+                      <option value="shield">shield</option>
+                      <option value="sparkles">sparkles</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Titel</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.title}
+                      onChange={(event) => updateQuickWin(index, "title", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-3">
+                    <Label>Text</Label>
+                    <Textarea
+                      rows={3}
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.text}
+                      onChange={(event) => updateQuickWin(index, "text", event.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            onClick={() => addListItem(setIntroQuickWins, createEmptyQuickWin)}
+          >
+            <Plus size={15} className="mr-2" />
+            Quick-Win hinzufügen
+          </Button>
+        </div>
+      );
+    }
+
+    if (activeSectionId === "trust") {
+      return (
+        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+          <SectionHeader pill="JSON Builder" title="Trust-Punkte" description="Die vier Vertrauens-Karten direkt unter dem Intro." />
+          <div className="space-y-4">
+            {trustPoints.map((item, index) => (
+              <div key={`trust-point-${index}`} className="rounded-2xl border border-slate-200 p-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-slate-700">Trust-Punkt #{index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeListItem(setTrustPoints, index)}
+                    disabled={trustPoints.length === 1}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Entfernen
+                  </Button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label>Icon</Label>
+                    <select
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
+                      value={item.icon || "users"}
+                      onChange={(event) => updateTrustPoint(index, "icon", event.target.value)}
+                    >
+                      <option value="users">users</option>
+                      <option value="gauge">gauge</option>
+                      <option value="chart">chart</option>
+                      <option value="shield">shield</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Titel</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.title}
+                      onChange={(event) => updateTrustPoint(index, "title", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-3">
+                    <Label>Beschreibung</Label>
+                    <Textarea
+                      rows={3}
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.desc}
+                      onChange={(event) => updateTrustPoint(index, "desc", event.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            onClick={() => addListItem(setTrustPoints, createEmptyTrustPoint)}
+          >
+            <Plus size={15} className="mr-2" />
+            Trust-Punkt hinzufügen
+          </Button>
+        </div>
+      );
+    }
+
+    if (activeSectionId === "why-choose") {
+      return (
+        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+          <SectionHeader pill="JSON Builder" title="Why-Choose Punkte" description="Die Benefit-Karten der Why-Choose-Sektion." />
+          <div className="space-y-4">
+            {whyChoosePoints.map((item, index) => (
+              <div key={`why-choose-${index}`} className="rounded-2xl border border-slate-200 p-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-slate-700">Punkt #{index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeListItem(setWhyChoosePoints, index)}
+                    disabled={whyChoosePoints.length === 1}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Entfernen
+                  </Button>
+                </div>
+
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label>Titel</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.title}
+                      onChange={(event) => updateWhyChoosePoint(index, "title", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Beschreibung</Label>
+                    <Textarea
+                      rows={4}
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.description}
+                      onChange={(event) => updateWhyChoosePoint(index, "description", event.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            onClick={() => addListItem(setWhyChoosePoints, createEmptyWhyChoosePoint)}
+          >
+            <Plus size={15} className="mr-2" />
+            Punkt hinzufügen
+          </Button>
+        </div>
+      );
+    }
+
+    if (activeSectionId === "audience") {
+      return (
+        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+          <SectionHeader pill="JSON Builder" title="Audience-Karten" description="Emoji, Titel, Beschreibung und Bullets für die Zielgruppen-Sektion." />
+          <div className="space-y-4">
+            {audienceItems.map((item, index) => (
+              <div key={`audience-${index}`} className="rounded-2xl border border-slate-200 p-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-slate-700">Audience-Karte #{index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeListItem(setAudienceItems, index)}
+                    disabled={audienceItems.length === 1}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Entfernen
+                  </Button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Emoji</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.emoji}
+                      onChange={(event) => updateAudienceItem(index, "emoji", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Titel</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.title}
+                      onChange={(event) => updateAudienceItem(index, "title", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Beschreibung</Label>
+                    <Textarea
+                      rows={3}
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.description}
+                      onChange={(event) => updateAudienceItem(index, "description", event.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <span className="text-sm font-semibold text-slate-700">Bullets</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl border-[#FF4B2C]/20 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+                      onClick={() => addAudienceBullet(index)}
+                    >
+                      <Plus size={14} className="mr-2" />
+                      Bullet
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {item.bullets.map((bullet, bulletIndex) => (
+                      <div key={`audience-bullet-${index}-${bulletIndex}`} className="flex gap-3">
+                        <Input
+                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                          value={bullet}
+                          onChange={(event) => updateAudienceBullet(index, bulletIndex, event.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => removeAudienceBullet(index, bulletIndex)}
+                          disabled={item.bullets.length === 1}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            onClick={() => addListItem(setAudienceItems, createEmptyAudienceItem)}
+          >
+            <Plus size={15} className="mr-2" />
+            Audience-Karte hinzufügen
+          </Button>
+        </div>
+      );
+    }
+
+    if (activeSectionId === "process") {
+      return (
+        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+          <SectionHeader pill="JSON Builder" title="Process-Steps" description="Ablaufkarten mit Step, Zeit, Titel und Beschreibung." />
+          <div className="space-y-4">
+            {processSteps.map((item, index) => (
+              <div key={`process-step-${index}`} className="rounded-2xl border border-slate-200 p-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-slate-700">Step #{index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeListItem(setProcessSteps, index)}
+                    disabled={processSteps.length === 1}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Entfernen
+                  </Button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Step Nummer</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.step}
+                      onChange={(event) => updateProcessStep(index, "step", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Zeit</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.time || ""}
+                      onChange={(event) => updateProcessStep(index, "time", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Titel</Label>
+                    <Input
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.title}
+                      onChange={(event) => updateProcessStep(index, "title", event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Beschreibung</Label>
+                    <Textarea
+                      rows={4}
+                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      value={item.description}
+                      onChange={(event) => updateProcessStep(index, "description", event.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            onClick={() => addListItem(setProcessSteps, () => createEmptyProcessStep(processSteps.length + 1))}
+          >
+            <Plus size={15} className="mr-2" />
+            Step hinzufügen
+          </Button>
+        </div>
+      );
+    }
+
+    if (activeSectionId === "contact") {
+      return (
+        <Accordion type="multiple" defaultValue={["panel", "signals", "labels"]} className="space-y-4">
+          <AccordionItem value="panel" className="rounded-[1.5rem] border border-slate-200 bg-white px-5">
+            <AccordionTrigger className="py-5 text-left hover:no-underline">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">Dark Panel</h3>
+                <p className="mt-1 text-sm text-slate-500">Linke Kontakt-Spalte mit Beschreibung und Trust-Signalen.</p>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-5">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Panel Beschreibung</Label>
+                  <Textarea
+                    rows={5}
+                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                    value={contactContent.panel_description}
+                    onChange={(event) => setContactContent((prev) => ({ ...prev, panel_description: event.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  {contactContent.trust_signals.map((signal, index) => (
+                    <div key={`contact-signal-${index}`} className="rounded-2xl border border-slate-200 p-4">
+                      <div className="mb-4 flex items-center justify-between gap-4">
+                        <span className="text-sm font-semibold text-slate-700">Signal #{index + 1}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() =>
+                            setContactContent((prev) => ({
+                              ...prev,
+                              trust_signals: prev.trust_signals.filter((_, signalIndex) => signalIndex !== index),
+                            }))
+                          }
+                          disabled={contactContent.trust_signals.length === 1}
+                        >
+                          <Trash2 size={14} className="mr-2" />
+                          Entfernen
+                        </Button>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <div className="space-y-2">
+                          <Label>Icon</Label>
+                          <select
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
+                            value={signal.icon}
+                            onChange={(event) => updateContactTrustSignal(index, "icon", event.target.value)}
+                          >
+                            <option value="clock">clock</option>
+                            <option value="phone">phone</option>
+                            <option value="mail">mail</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>Titel</Label>
+                          <Input
+                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                            value={signal.title}
+                            onChange={(event) => updateContactTrustSignal(index, "title", event.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2 md:col-span-3">
+                          <Label>Text</Label>
+                          <Textarea
+                            rows={3}
+                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                            value={signal.text}
+                            onChange={(event) => updateContactTrustSignal(index, "text", event.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+                    onClick={() =>
+                      setContactContent((prev) => ({
+                        ...prev,
+                        trust_signals: [...prev.trust_signals, createEmptyTrustSignal()],
+                      }))
+                    }
+                  >
+                    <Plus size={15} className="mr-2" />
+                    Trust-Signal hinzufügen
+                  </Button>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="labels" className="rounded-[1.5rem] border border-slate-200 bg-white px-5">
+            <AccordionTrigger className="py-5 text-left hover:no-underline">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">Labels & Placeholders</h3>
+                <p className="mt-1 text-sm text-slate-500">Alle Formular-Texte zentral pflegen.</p>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-5">
+              <div className="grid gap-6 xl:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <h4 className="mb-4 font-bold text-slate-900">Form Labels</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {Object.entries(contactContent.labels).map(([key, value]) => (
+                      <div key={key} className="space-y-2">
+                        <Label>{key}</Label>
+                        <Input
+                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                          value={value}
+                          onChange={(event) =>
+                            updateContactLabel(key as keyof ContactSectionContent["labels"], event.target.value)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <h4 className="mb-4 font-bold text-slate-900">Placeholders</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {Object.entries(contactContent.placeholders).map(([key, value]) => (
+                      <div key={key} className="space-y-2">
+                        <Label>{key}</Label>
+                        <Input
+                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                          value={value}
+                          onChange={(event) =>
+                            updateContactPlaceholder(key as keyof ContactSectionContent["placeholders"], event.target.value)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="options" className="rounded-[1.5rem] border border-slate-200 bg-white px-5">
+            <AccordionTrigger className="py-5 text-left hover:no-underline">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">Auswahlfelder & Status-Texte</h3>
+                <p className="mt-1 text-sm text-slate-500">Service-/Budget-Optionen sowie Submit, Success und Error-Meldungen.</p>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-5">
+              <div className="space-y-6">
+                <div className="grid gap-6 xl:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 p-4">
+                    <h4 className="mb-4 font-bold text-slate-900">Service Optionen</h4>
+                    <Textarea
+                      rows={8}
+                      className="rounded-xl border-slate-200 bg-slate-50 font-mono text-sm focus:border-[#FF4B2C]"
+                      value={contactContent.service_options.join("\n")}
+                      onChange={(event) =>
+                        setContactContent((prev) => ({
+                          ...prev,
+                          service_options: event.target.value
+                            .split("\n")
+                            .map((item) => item.trim())
+                            .filter(Boolean),
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 p-4">
+                    <h4 className="mb-4 font-bold text-slate-900">Budget Optionen</h4>
+                    <Textarea
+                      rows={8}
+                      className="rounded-xl border-slate-200 bg-slate-50 font-mono text-sm focus:border-[#FF4B2C]"
+                      value={contactContent.budget_options.join("\n")}
+                      onChange={(event) =>
+                        setContactContent((prev) => ({
+                          ...prev,
+                          budget_options: event.target.value
+                            .split("\n")
+                            .map((item) => item.trim())
+                            .filter(Boolean),
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <h4 className="mb-4 font-bold text-slate-900">Submit / Success / Toasts</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Submit Text</Label>
+                      <Input
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.submit_text}
+                        onChange={(event) => setContactContent((prev) => ({ ...prev, submit_text: event.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Submitting Text</Label>
+                      <Input
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.submitting_text}
+                        onChange={(event) =>
+                          setContactContent((prev) => ({ ...prev, submitting_text: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Success Titel</Label>
+                      <Input
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.success_title}
+                        onChange={(event) => setContactContent((prev) => ({ ...prev, success_title: event.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Success Text</Label>
+                      <Textarea
+                        rows={3}
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.success_text}
+                        onChange={(event) => setContactContent((prev) => ({ ...prev, success_text: event.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Success Toast Titel</Label>
+                      <Input
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.success_toast_title}
+                        onChange={(event) =>
+                          setContactContent((prev) => ({ ...prev, success_toast_title: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Success Toast Beschreibung</Label>
+                      <Textarea
+                        rows={3}
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.success_toast_description}
+                        onChange={(event) =>
+                          setContactContent((prev) => ({ ...prev, success_toast_description: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Error Toast Titel</Label>
+                      <Input
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.error_toast_title}
+                        onChange={(event) =>
+                          setContactContent((prev) => ({ ...prev, error_toast_title: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Error Toast Beschreibung</Label>
+                      <Textarea
+                        rows={3}
+                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        value={contactContent.error_toast_description}
+                        onChange={(event) =>
+                          setContactContent((prev) => ({ ...prev, error_toast_description: event.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      );
+    }
+
+    return (
+      <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center text-sm text-slate-500">
+        Für diese Sektion gibt es aktuell nur Textfelder und Design-Overrides. Kein zusätzlicher Builder nötig.
+      </div>
+    );
+  };
+
   if (isLoading) {
     return <div className="p-6 font-medium text-slate-500">Laden...</div>;
   }
 
   return (
-    <div className="max-w-7xl p-6 md:p-10">
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="max-w-[1800px] p-6 md:p-10">
+      <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Homepage Inhalte</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Accordion-Kommandozentrale für Intro, Trust, Why Choose, Audience, Process, Contact und die restlichen Homepage-Header.
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
+            Premium-Steuerzentrale mit klarer Bereichsnavigation links, Editor in der Mitte und Live-Preview rechts. So bleibt das System auch für Kunden sauber bedienbar.
           </p>
         </div>
 
@@ -469,731 +1366,99 @@ const AdminHomepage = () => {
         </Button>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-        <Accordion type="multiple" defaultValue={["intro", "trust", "why-choose"]} className="space-y-4">
-          {textFieldGroups.map((group) => (
-            <AccordionItem
-              key={group.id}
-              value={group.id}
-              className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-50/70 px-0"
-            >
-              <AccordionTrigger className="px-6 py-5 text-left hover:no-underline">
-                <div className="flex flex-col items-start">
-                  <span className="text-base font-bold text-slate-900">{group.title}</span>
-                  <span className="mt-1 text-sm font-normal text-slate-500">{group.description}</span>
-                </div>
-              </AccordionTrigger>
-
-              <AccordionContent className="border-t border-slate-200 bg-white px-6 pb-6 pt-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  {group.fields.map((field) => (
-                    <div key={field.key} className={field.multiline ? "space-y-2 md:col-span-2" : "space-y-2"}>
-                      <Label htmlFor={field.key}>{field.label}</Label>
-
-                      {field.rich ? (
-                        <div className="admin-rich-editor">
-                          <ReactQuill
-                            theme="snow"
-                            modules={quillModules}
-                            value={textForm[field.key] || ""}
-                            onChange={(value) => updateTextField(field.key, value)}
-                          />
+      <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)_420px]">
+        <aside className="space-y-4">
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
+            <div className="mt-4 space-y-2">
+              {orderedSectionGroups.map((group, index) => {
+                const active = group.id === activeSectionId;
+                const isFirst = index === 0;
+                const isLast = index === orderedSectionGroups.length - 1;
+                return (
+                  <div
+                    key={group.id}
+                    className={`w-full rounded-[1.25rem] border px-4 py-4 text-left transition-all ${
+                      active
+                        ? "border-[#FF4B2C] bg-[#FF4B2C]/5 shadow-sm"
+                        : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <button type="button" onClick={() => setActiveSection(group.id)} className="min-w-0 flex-1 text-left">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className={`text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
+                          <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
+                            {group.fields.length} Felder
+                          </span>
                         </div>
-                      ) : field.multiline ? (
-                        <Textarea
-                          id={field.key}
-                          rows={field.rows || 5}
-                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                          value={textForm[field.key] || ""}
-                          onChange={(event) => updateTextField(field.key, event.target.value)}
-                        />
-                      ) : (
-                        <Input
-                          id={field.key}
-                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                          value={textForm[field.key] || ""}
-                          onChange={(event) => updateTextField(field.key, event.target.value)}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{group.description}</p>
+                      </button>
 
-                {group.id === "intro" ? (
-                  <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-                    <SectionHeader
-                      pill="JSON Builder"
-                      title="Quick-Wins"
-                      description="Die rechten Karten der Intro-Sektion."
-                    />
-
-                    <div className="space-y-4">
-                      {introQuickWins.map((item, index) => (
-                        <div key={`quick-win-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                          <div className="mb-4 flex items-center justify-between gap-4">
-                            <span className="text-sm font-semibold text-slate-700">Quick-Win #{index + 1}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              onClick={() => removeListItem(setIntroQuickWins, index)}
-                              disabled={introQuickWins.length === 1}
-                            >
-                              <Trash2 size={14} className="mr-2" />
-                              Entfernen
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-3">
-                            <div className="space-y-2">
-                              <Label>Icon</Label>
-                              <select
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
-                                value={item.icon || "layers"}
-                                onChange={(event) => updateQuickWin(index, "icon", event.target.value)}
-                              >
-                                <option value="layers">layers</option>
-                                <option value="search">search</option>
-                                <option value="zap">zap</option>
-                                <option value="shield">shield</option>
-                                <option value="sparkles">sparkles</option>
-                              </select>
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>Titel</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.title}
-                                onChange={(event) => updateQuickWin(index, "title", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2 md:col-span-3">
-                              <Label>Text</Label>
-                              <Textarea
-                                rows={3}
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.text}
-                                onChange={(event) => updateQuickWin(index, "text", event.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                      onClick={() => addListItem(setIntroQuickWins, createEmptyQuickWin)}
-                    >
-                      <Plus size={15} className="mr-2" />
-                      Quick-Win hinzufügen
-                    </Button>
-                  </div>
-                ) : null}
-
-                {group.id === "trust" ? (
-                  <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-                    <SectionHeader
-                      pill="JSON Builder"
-                      title="Trust-Punkte"
-                      description="Die vier Vertrauens-Karten direkt unter dem Intro."
-                    />
-
-                    <div className="space-y-4">
-                      {trustPoints.map((item, index) => (
-                        <div key={`trust-point-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                          <div className="mb-4 flex items-center justify-between gap-4">
-                            <span className="text-sm font-semibold text-slate-700">Trust-Punkt #{index + 1}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              onClick={() => removeListItem(setTrustPoints, index)}
-                              disabled={trustPoints.length === 1}
-                            >
-                              <Trash2 size={14} className="mr-2" />
-                              Entfernen
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-3">
-                            <div className="space-y-2">
-                              <Label>Icon</Label>
-                              <select
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
-                                value={item.icon || "users"}
-                                onChange={(event) => updateTrustPoint(index, "icon", event.target.value)}
-                              >
-                                <option value="users">users</option>
-                                <option value="gauge">gauge</option>
-                                <option value="chart">chart</option>
-                                <option value="shield">shield</option>
-                              </select>
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>Titel</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.title}
-                                onChange={(event) => updateTrustPoint(index, "title", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2 md:col-span-3">
-                              <Label>Beschreibung</Label>
-                              <Textarea
-                                rows={3}
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.desc}
-                                onChange={(event) => updateTrustPoint(index, "desc", event.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                      onClick={() => addListItem(setTrustPoints, createEmptyTrustPoint)}
-                    >
-                      <Plus size={15} className="mr-2" />
-                      Trust-Punkt hinzufügen
-                    </Button>
-                  </div>
-                ) : null}
-
-                {group.id === "why-choose" ? (
-                  <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-                    <SectionHeader
-                      pill="JSON Builder"
-                      title="Why-Choose Punkte"
-                      description="Die Benefit-Karten der Why-Choose-Sektion."
-                    />
-
-                    <div className="space-y-4">
-                      {whyChoosePoints.map((item, index) => (
-                        <div key={`why-choose-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                          <div className="mb-4 flex items-center justify-between gap-4">
-                            <span className="text-sm font-semibold text-slate-700">Punkt #{index + 1}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              onClick={() => removeListItem(setWhyChoosePoints, index)}
-                              disabled={whyChoosePoints.length === 1}
-                            >
-                              <Trash2 size={14} className="mr-2" />
-                              Entfernen
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4">
-                            <div className="space-y-2">
-                              <Label>Titel</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.title}
-                                onChange={(event) => updateWhyChoosePoint(index, "title", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Beschreibung</Label>
-                              <Textarea
-                                rows={4}
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.description}
-                                onChange={(event) => updateWhyChoosePoint(index, "description", event.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                      onClick={() => addListItem(setWhyChoosePoints, createEmptyWhyChoosePoint)}
-                    >
-                      <Plus size={15} className="mr-2" />
-                      Punkt hinzufügen
-                    </Button>
-                  </div>
-                ) : null}
-
-                {group.id === "audience" ? (
-                  <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-                    <SectionHeader
-                      pill="JSON Builder"
-                      title="Audience-Karten"
-                      description="Emoji, Titel, Beschreibung und Bullets für die Zielgruppen-Sektion."
-                    />
-
-                    <div className="space-y-4">
-                      {audienceItems.map((item, index) => (
-                        <div key={`audience-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                          <div className="mb-4 flex items-center justify-between gap-4">
-                            <span className="text-sm font-semibold text-slate-700">Audience-Karte #{index + 1}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              onClick={() => removeListItem(setAudienceItems, index)}
-                              disabled={audienceItems.length === 1}
-                            >
-                              <Trash2 size={14} className="mr-2" />
-                              Entfernen
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                              <Label>Emoji</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.emoji}
-                                onChange={(event) => updateAudienceItem(index, "emoji", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Titel</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.title}
-                                onChange={(event) => updateAudienceItem(index, "title", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>Beschreibung</Label>
-                              <Textarea
-                                rows={3}
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.description}
-                                onChange={(event) => updateAudienceItem(index, "description", event.target.value)}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-4">
-                            <div className="mb-3 flex items-center justify-between gap-4">
-                              <span className="text-sm font-semibold text-slate-700">Bullets</span>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="rounded-xl border-[#FF4B2C]/20 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                                onClick={() => addAudienceBullet(index)}
-                              >
-                                <Plus size={14} className="mr-2" />
-                                Bullet
-                              </Button>
-                            </div>
-
-                            <div className="space-y-3">
-                              {item.bullets.map((bullet, bulletIndex) => (
-                                <div key={`audience-bullet-${index}-${bulletIndex}`} className="flex gap-3">
-                                  <Input
-                                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                    value={bullet}
-                                    onChange={(event) => updateAudienceBullet(index, bulletIndex, event.target.value)}
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-11 w-11 shrink-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                    onClick={() => removeAudienceBullet(index, bulletIndex)}
-                                    disabled={item.bullets.length === 1}
-                                  >
-                                    <Trash2 size={15} />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                      onClick={() => addListItem(setAudienceItems, createEmptyAudienceItem)}
-                    >
-                      <Plus size={15} className="mr-2" />
-                      Audience-Karte hinzufügen
-                    </Button>
-                  </div>
-                ) : null}
-
-                {group.id === "process" ? (
-                  <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-                    <SectionHeader
-                      pill="JSON Builder"
-                      title="Process Steps"
-                      description="Schritt-Nummer, Zeit, Titel und Beschreibung für den Ablauf."
-                    />
-
-                    <div className="space-y-4">
-                      {processSteps.map((item, index) => (
-                        <div key={`process-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                          <div className="mb-4 flex items-center justify-between gap-4">
-                            <span className="text-sm font-semibold text-slate-700">Step #{index + 1}</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              onClick={() => removeListItem(setProcessSteps, index)}
-                              disabled={processSteps.length === 1}
-                            >
-                              <Trash2 size={14} className="mr-2" />
-                              Entfernen
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                              <Label>Step Nummer</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.step}
-                                onChange={(event) => updateProcessStep(index, "step", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Zeit Label</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.time || ""}
-                                onChange={(event) => updateProcessStep(index, "time", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>Titel</Label>
-                              <Input
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.title}
-                                onChange={(event) => updateProcessStep(index, "title", event.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>Beschreibung</Label>
-                              <Textarea
-                                rows={4}
-                                className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                value={item.description}
-                                onChange={(event) => updateProcessStep(index, "description", event.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                      onClick={() => addListItem(setProcessSteps, () => createEmptyProcessStep(processSteps.length + 1))}
-                    >
-                      <Plus size={15} className="mr-2" />
-                      Step hinzufügen
-                    </Button>
-                  </div>
-                ) : null}
-
-                {group.id === "contact" ? (
-                  <div className="mt-8 space-y-8 rounded-[1.5rem] border border-slate-200 p-5">
-                    <SectionHeader
-                      pill="JSON Builder"
-                      title="Contact Panel & Formular"
-                      description="Dark-Panel links, Trust-Signale, Labels, Placeholders, Select-Optionen und Success-Texte."
-                    />
-
-                    <div className="rounded-2xl border border-slate-200 p-4">
-                      <div className="space-y-2">
-                        <Label>Panel Beschreibung</Label>
-                        <Textarea
-                          rows={4}
-                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                          value={contactContent.panel_description}
-                          onChange={(event) =>
-                            setContactContent((prev) => ({ ...prev, panel_description: event.target.value }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 p-4">
-                      <div className="mb-4 flex items-center justify-between gap-4">
-                        <div>
-                          <h4 className="font-bold text-slate-900">Trust-Signale</h4>
-                          <p className="text-sm text-slate-500">Maximal drei Boxen auf der linken Seite.</p>
-                        </div>
-                        <Button
+                      <div className="ml-2 flex shrink-0 flex-col gap-2">
+                        <button
                           type="button"
-                          variant="outline"
-                          className="rounded-xl border-[#FF4B2C]/20 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
-                          onClick={() =>
-                            setContactContent((prev) => ({
-                              ...prev,
-                              trust_signals: [...prev.trust_signals, createEmptyTrustSignal()].slice(0, 3),
-                            }))
-                          }
-                          disabled={contactContent.trust_signals.length >= 3}
+                          aria-label={`${group.title} nach oben verschieben`}
+                          onClick={() => moveSection(group.id as HomepageSectionId, "up")}
+                          disabled={isFirst}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
                         >
-                          <Plus size={15} className="mr-2" />
-                          Signal
-                        </Button>
-                      </div>
-
-                      <div className="space-y-4">
-                        {contactContent.trust_signals.map((signal, index) => (
-                          <div key={`contact-signal-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                            <div className="mb-4 flex items-center justify-between gap-4">
-                              <span className="text-sm font-semibold text-slate-700">Signal #{index + 1}</span>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                onClick={() =>
-                                  setContactContent((prev) => ({
-                                    ...prev,
-                                    trust_signals: prev.trust_signals.filter((_, signalIndex) => signalIndex !== index),
-                                  }))
-                                }
-                                disabled={contactContent.trust_signals.length === 1}
-                              >
-                                <Trash2 size={14} className="mr-2" />
-                                Entfernen
-                              </Button>
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-3">
-                              <div className="space-y-2">
-                                <Label>Icon</Label>
-                                <select
-                                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
-                                  value={signal.icon}
-                                  onChange={(event) => updateContactTrustSignal(index, "icon", event.target.value)}
-                                >
-                                  <option value="clock">clock</option>
-                                  <option value="phone">phone</option>
-                                  <option value="mail">mail</option>
-                                </select>
-                              </div>
-                              <div className="space-y-2 md:col-span-2">
-                                <Label>Titel</Label>
-                                <Input
-                                  className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                  value={signal.title}
-                                  onChange={(event) => updateContactTrustSignal(index, "title", event.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2 md:col-span-3">
-                                <Label>Text</Label>
-                                <Textarea
-                                  rows={3}
-                                  className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                                  value={signal.text}
-                                  onChange={(event) => updateContactTrustSignal(index, "text", event.target.value)}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 p-4">
-                      <h4 className="mb-4 font-bold text-slate-900">Form Labels</h4>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {Object.entries(contactContent.labels).map(([key, value]) => (
-                          <div key={key} className="space-y-2">
-                            <Label>{key}</Label>
-                            <Input
-                              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                              value={value}
-                              onChange={(event) =>
-                                updateContactLabel(key as keyof ContactSectionContent["labels"], event.target.value)
-                              }
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 p-4">
-                      <h4 className="mb-4 font-bold text-slate-900">Placeholders</h4>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {Object.entries(contactContent.placeholders).map(([key, value]) => (
-                          <div key={key} className="space-y-2">
-                            <Label>{key}</Label>
-                            <Input
-                              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                              value={value}
-                              onChange={(event) =>
-                                updateContactPlaceholder(
-                                  key as keyof ContactSectionContent["placeholders"],
-                                  event.target.value,
-                                )
-                              }
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-6 xl:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-200 p-4">
-                        <h4 className="mb-4 font-bold text-slate-900">Service Optionen</h4>
-                        <Textarea
-                          rows={8}
-                          className="rounded-xl border-slate-200 bg-slate-50 font-mono text-sm focus:border-[#FF4B2C]"
-                          value={contactContent.service_options.join("\n")}
-                          onChange={(event) =>
-                            setContactContent((prev) => ({
-                              ...prev,
-                              service_options: event.target.value
-                                .split("\n")
-                                .map((item) => item.trim())
-                                .filter(Boolean),
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-200 p-4">
-                        <h4 className="mb-4 font-bold text-slate-900">Budget Optionen</h4>
-                        <Textarea
-                          rows={8}
-                          className="rounded-xl border-slate-200 bg-slate-50 font-mono text-sm focus:border-[#FF4B2C]"
-                          value={contactContent.budget_options.join("\n")}
-                          onChange={(event) =>
-                            setContactContent((prev) => ({
-                              ...prev,
-                              budget_options: event.target.value
-                                .split("\n")
-                                .map((item) => item.trim())
-                                .filter(Boolean),
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 p-4">
-                      <h4 className="mb-4 font-bold text-slate-900">Submit / Success / Toasts</h4>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label>Submit Text</Label>
-                          <Input
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.submit_text}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({ ...prev, submit_text: event.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Submitting Text</Label>
-                          <Input
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.submitting_text}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({ ...prev, submitting_text: event.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Success Titel</Label>
-                          <Input
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.success_title}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({ ...prev, success_title: event.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Success Text</Label>
-                          <Textarea
-                            rows={3}
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.success_text}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({ ...prev, success_text: event.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Success Toast Titel</Label>
-                          <Input
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.success_toast_title}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({ ...prev, success_toast_title: event.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Success Toast Beschreibung</Label>
-                          <Textarea
-                            rows={3}
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.success_toast_description}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({
-                                ...prev,
-                                success_toast_description: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Error Toast Titel</Label>
-                          <Input
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.error_toast_title}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({ ...prev, error_toast_title: event.target.value }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Error Toast Beschreibung</Label>
-                          <Textarea
-                            rows={3}
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                            value={contactContent.error_toast_description}
-                            onChange={(event) =>
-                              setContactContent((prev) => ({
-                                ...prev,
-                                error_toast_description: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`${group.title} nach unten verschieben`}
+                          onClick={() => moveSection(group.id as HomepageSectionId, "down")}
+                          disabled={isLast}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
                       </div>
                     </div>
                   </div>
-                ) : null}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+
+        <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+          <div className="mb-6 rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5">
+            <div className="inline-flex rounded-full border border-[#FF4B2C]/15 bg-[#FF4B2C]/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF4B2C]">
+              {HOMEPAGE_SECTION_LABELS[activeSectionId]}
+            </div>
+            <h2 className="mt-3 text-2xl font-extrabold text-slate-900">{activeGroup.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">{activeGroup.description}</p>
+          </div>
+
+          <Tabs defaultValue="content" className="space-y-5">
+            <TabsList className="h-auto flex-wrap justify-start gap-2 rounded-[1.25rem] bg-slate-100 p-2">
+              <TabsTrigger value="content" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Inhalte</TabsTrigger>
+              <TabsTrigger value="structure" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Struktur</TabsTrigger>
+              <TabsTrigger value="design" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Design</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="content" className="mt-0">
+              <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">{renderTextFields()}</div>
+            </TabsContent>
+
+            <TabsContent value="structure" className="mt-0">
+              {renderStructureTab()}
+            </TabsContent>
+
+            <TabsContent value="design" className="mt-0">
+              <SectionStyleEditor value={activeSectionStyle} onChange={(nextStyle) => updateSectionStyle(activeSectionId, nextStyle)} />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <SectionPreviewPanel
+          sectionId={activeSectionId}
+          sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}
+          preview={getPreviewPayload(activeSectionId)}
+          styleVars={resolveHomepageSectionStyleVars(sectionStyles, activeSectionId)}
+        />
       </div>
     </div>
   );

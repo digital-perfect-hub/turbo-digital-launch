@@ -3,6 +3,7 @@ import { ArrowRight, Layers3, SearchCheck, ShieldCheck, Sparkles, Zap } from "lu
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { defaultIntroQuickWins, defaultSiteText, type IntroQuickWin, useSiteSettings } from "@/hooks/useSiteSettings";
 import { sanitizeRichHtml } from "@/lib/content";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const introIconMap = {
   layers: Layers3,
@@ -31,8 +32,9 @@ const normalizeQuickWins = (wins: IntroQuickWin[]) =>
     }));
 
 const IntroSection = () => {
-  const { getSetting, getJsonSetting } = useSiteSettings();
+  const { getSetting, getJsonSetting, settings: siteSettings } = useSiteSettings();
   const { settings } = useGlobalTheme();
+  const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(siteSettings, "intro");
 
   const introBadge =
     getSetting("home_intro_badge", settings.company_name || defaultSiteText.home_intro_badge).trim() ||
@@ -53,7 +55,7 @@ const IntroSection = () => {
   );
 
   return (
-    <section className="surface-page-shell relative overflow-hidden bg-background py-24 sm:py-32" aria-label="Intro">
+    <section className="homepage-style-scope surface-page-shell relative overflow-hidden bg-background py-24 sm:py-32" aria-label="Intro" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid items-center gap-8 xl:grid-cols-[1fr_1fr] xl:gap-16">
           <motion.div

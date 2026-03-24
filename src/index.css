@@ -291,6 +291,16 @@
     color: var(--surface-page-foreground);
   }
 
+  .surface-page-shell h1,
+  .surface-page-shell h2,
+  .surface-page-shell h3,
+  .surface-page-shell h4,
+  .surface-page-shell h5,
+  .surface-page-shell h6,
+  .surface-page-shell .section-title {
+    color: var(--surface-title, var(--surface-page-foreground));
+  }
+
   .surface-section-shell h1,
   .surface-section-shell h2,
   .surface-section-shell h3,
@@ -337,12 +347,158 @@
   .surface-card-shell h4,
   .surface-card-shell h5,
   .surface-card-shell h6,
-  .surface-card-shell .text-foreground {
+  .surface-card-shell .homepage-card-title {
+    color: var(--surface-card-title, var(--surface-card-text)) !important;
+  }
+
+  .surface-card-shell .text-foreground,
+  .surface-card-shell label {
     color: var(--surface-card-text) !important;
   }
 
   .surface-card-shell .text-muted-foreground {
     color: var(--surface-card-muted) !important;
+  }
+
+
+  .homepage-style-scope {
+    background: var(--homepage-section-bg, inherit);
+    color: var(--homepage-section-text, inherit);
+  }
+
+  .homepage-style-scope .section-label {
+    background: var(--homepage-badge-bg, color-mix(in srgb, var(--surface-card) 88%, white));
+    color: var(--homepage-badge-text, var(--surface-card-text));
+    border-color: var(--surface-card-border);
+  }
+
+  .homepage-style-scope .section-title,
+  .homepage-style-scope .homepage-section-title {
+    color: var(--homepage-section-title, var(--surface-title, var(--surface-page-foreground))) !important;
+  }
+
+  .homepage-style-scope .homepage-section-copy {
+    color: var(--homepage-section-text, var(--surface-page-foreground)) !important;
+  }
+
+  .homepage-style-scope .homepage-section-muted,
+  .homepage-style-scope .section-copy-muted {
+    color: var(--homepage-section-muted, var(--surface-page-muted)) !important;
+  }
+
+  .homepage-style-scope .premium-card,
+  .homepage-style-scope .premium-grid-card,
+  .homepage-style-scope .surface-card-shell,
+  .homepage-style-scope .bg-card,
+  .homepage-style-scope .glass-card {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-card-border) !important;
+    color: var(--homepage-card-text, var(--surface-card-text)) !important;
+  }
+
+  .homepage-style-scope .premium-card h1,
+  .homepage-style-scope .premium-card h2,
+  .homepage-style-scope .premium-card h3,
+  .homepage-style-scope .premium-card h4,
+  .homepage-style-scope .premium-card h5,
+  .homepage-style-scope .premium-card h6,
+  .homepage-style-scope .premium-grid-card h1,
+  .homepage-style-scope .premium-grid-card h2,
+  .homepage-style-scope .premium-grid-card h3,
+  .homepage-style-scope .premium-grid-card h4,
+  .homepage-style-scope .premium-grid-card h5,
+  .homepage-style-scope .premium-grid-card h6,
+  .homepage-style-scope .surface-card-shell h1,
+  .homepage-style-scope .surface-card-shell h2,
+  .homepage-style-scope .surface-card-shell h3,
+  .homepage-style-scope .surface-card-shell h4,
+  .homepage-style-scope .surface-card-shell h5,
+  .homepage-style-scope .surface-card-shell h6,
+  .homepage-style-scope .bg-card h1,
+  .homepage-style-scope .bg-card h2,
+  .homepage-style-scope .bg-card h3,
+  .homepage-style-scope .bg-card h4,
+  .homepage-style-scope .bg-card h5,
+  .homepage-style-scope .bg-card h6,
+  .homepage-style-scope .glass-card h1,
+  .homepage-style-scope .glass-card h2,
+  .homepage-style-scope .glass-card h3,
+  .homepage-style-scope .glass-card h4,
+  .homepage-style-scope .glass-card h5,
+  .homepage-style-scope .glass-card h6,
+  .homepage-style-scope .homepage-card-title,
+  .homepage-style-scope .glass-card .hero-stat-value {
+    color: var(--homepage-card-title, var(--surface-card-title, var(--surface-card-text))) !important;
+  }
+
+  .homepage-style-scope .premium-card .text-foreground,
+  .homepage-style-scope .premium-grid-card .text-foreground,
+  .homepage-style-scope .surface-card-shell .text-foreground,
+  .homepage-style-scope .bg-card .text-foreground,
+  .homepage-style-scope .glass-card .text-foreground,
+  .homepage-style-scope .premium-card label,
+  .homepage-style-scope .premium-grid-card label,
+  .homepage-style-scope .surface-card-shell label,
+  .homepage-style-scope .bg-card label,
+  .homepage-style-scope .glass-card label,
+  .homepage-style-scope .homepage-card-text {
+    color: var(--homepage-card-text, var(--surface-card-text)) !important;
+  }
+
+  .homepage-style-scope .premium-card .text-muted-foreground,
+  .homepage-style-scope .premium-grid-card .text-muted-foreground,
+  .homepage-style-scope .surface-card-shell .text-muted-foreground,
+  .homepage-style-scope .bg-card .text-muted-foreground,
+  .homepage-style-scope .glass-card .text-muted-foreground,
+  .homepage-style-scope .premium-card p,
+  .homepage-style-scope .premium-grid-card p,
+  .homepage-style-scope .surface-card-shell p,
+  .homepage-style-scope .bg-card p,
+  .homepage-style-scope .glass-card p,
+  .homepage-style-scope .premium-card li,
+  .homepage-style-scope .premium-grid-card li,
+  .homepage-style-scope .surface-card-shell li,
+  .homepage-style-scope .bg-card li,
+  .homepage-style-scope .glass-card li,
+  .homepage-style-scope .homepage-card-muted,
+  .homepage-style-scope .glass-card .hero-stat-label {
+    color: var(--homepage-card-muted, var(--surface-card-muted)) !important;
+  }
+
+  .homepage-style-scope .dark-panel-shell,
+  .homepage-style-scope .premium-dark-card {
+    background: var(--hero-panel-bg) !important;
+    color: var(--hero-panel-text) !important;
+  }
+
+  .homepage-style-scope .dark-panel-title {
+    color: var(--homepage-panel-title, var(--hero-headline)) !important;
+  }
+
+  .homepage-style-scope .dark-panel-body {
+    color: var(--homepage-panel-text, var(--hero-subheadline)) !important;
+  }
+
+  .homepage-style-scope .dark-panel-kicker {
+    background: var(--hero-badge-bg) !important;
+    color: var(--hero-badge-text) !important;
+    border-color: color-mix(in srgb, var(--hero-badge-text) 18%, transparent) !important;
+  }
+
+  .homepage-style-scope .btn-primary {
+    background: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    box-shadow: 0 24px 55px -24px color-mix(in srgb, var(--button-primary-bg) 64%, transparent);
+  }
+
+  .homepage-style-scope .border-border {
+    border-color: var(--surface-card-border) !important;
+  }
+
+  .homepage-style-scope .text-primary,
+  .homepage-style-scope .theme-accent-icon,
+  .homepage-style-scope .theme-link-accent {
+    color: var(--theme-primary-hex) !important;
   }
 
   .surface-accent-pill {
@@ -482,9 +638,9 @@
   .dark-section {
     background:
       radial-gradient(circle at top left, color-mix(in srgb, var(--theme-primary-hex) 16%, transparent) 0%, transparent 25%),
-      radial-gradient(circle at 84% 14%, color-mix(in srgb, var(--hero-bg-color) 82%, black 18%) 0%, transparent 35%),
-      linear-gradient(180deg, color-mix(in srgb, var(--hero-bg-color) 86%, black 14%) 0%, var(--hero-bg-color) 100%);
-    color: var(--hero-headline);
+      radial-gradient(circle at 84% 14%, color-mix(in srgb, var(--homepage-dark-base, var(--hero-bg-color)) 82%, black 18%) 0%, transparent 35%),
+      linear-gradient(180deg, color-mix(in srgb, var(--homepage-dark-base, var(--hero-bg-color)) 86%, black 14%) 0%, var(--homepage-dark-base, var(--hero-bg-color)) 100%);
+    color: var(--homepage-panel-title, var(--hero-headline));
   }
 
   .dark-section h1,
@@ -494,7 +650,7 @@
   .dark-section h5,
   .dark-section h6,
   .dark-section .section-title {
-    color: var(--hero-headline);
+    color: var(--homepage-panel-title, var(--hero-headline));
   }
 
   .dark-section .section-label {

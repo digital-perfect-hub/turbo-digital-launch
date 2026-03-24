@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { BarChart3, Gauge, Shield, Users } from "lucide-react";
 import { defaultSiteText, defaultTrustPoints, type TrustPoint, useSiteSettings } from "@/hooks/useSiteSettings";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const iconMap = {
   users: Users,
@@ -18,7 +19,8 @@ const normalizeTrustPoints = (points: TrustPoint[]) =>
     }));
 
 const TrustSection = () => {
-  const { getSetting, getJsonSetting } = useSiteSettings();
+  const { getSetting, getJsonSetting, settings } = useSiteSettings();
+  const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "trust");
 
   const trustPoints = normalizeTrustPoints(getJsonSetting<TrustPoint[]>("home_trust_points", defaultTrustPoints));
   const kicker =
@@ -30,13 +32,13 @@ const TrustSection = () => {
     defaultSiteText.home_trust_description;
 
   return (
-    <section className="surface-page-shell relative z-20 -mt-8 bg-background pb-8 md:-mt-10" aria-label="Vertrauen">
+    <section className="homepage-style-scope surface-page-shell relative z-20 -mt-8 bg-background pb-8 md:-mt-10" aria-label="Vertrauen" style={sectionStyleVars}>
       <div className="section-container">
         <div className="premium-card p-5 md:p-7 lg:p-8">
           <div className="mb-6 max-w-3xl">
             <p className="section-label">{kicker}</p>
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-foreground md:text-3xl">{title}</h2>
-            {description ? <p className="mt-4 text-base leading-relaxed text-muted-foreground">{description}</p> : null}
+            <h2 className="homepage-section-title mt-4 text-2xl font-black tracking-tight md:text-3xl">{title}</h2>
+            {description ? <p className="homepage-section-muted mt-4 text-base leading-relaxed">{description}</p> : null}
           </div>
 
           <div className="relative z-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type TestimonialRow = {
   id: string;
@@ -64,7 +65,8 @@ const fallbackRows: UiTestimonial[] = defaultTestimonials.map((item, index) => (
 const TESTIMONIALS_SELECT = "*";
 
 const TestimonialsSection = () => {
-  const { getSetting } = useSiteSettings();
+  const { getSetting, settings } = useSiteSettings();
+  const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "testimonials");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [api, setApi] = useState<CarouselApi>();
@@ -108,7 +110,7 @@ const TestimonialsSection = () => {
   }, [api, effectiveTestimonials.length]);
 
   return (
-    <section className="surface-page-shell bg-background py-24 sm:py-32" id="testimonials">
+    <section className="homepage-style-scope surface-page-shell bg-background py-24 sm:py-32" id="testimonials" style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

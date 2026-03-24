@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type ServiceItem = {
   id: string;
@@ -60,7 +61,8 @@ const safeText = (value: string | null | undefined, fallback: string) => {
 };
 
 const ServicesSection = () => {
-  const { getSetting } = useSiteSettings();
+  const { getSetting, settings } = useSiteSettings();
+  const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "services");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -82,7 +84,7 @@ const ServicesSection = () => {
   const effectiveServices = services?.length ? services : fallbackServices;
 
   return (
-    <section id="leistungen" className="surface-section-shell bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="Unsere Leistungen">
+    <section id="leistungen" className="homepage-style-scope surface-section-shell bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="Unsere Leistungen" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 md:mb-24">
           <motion.div
