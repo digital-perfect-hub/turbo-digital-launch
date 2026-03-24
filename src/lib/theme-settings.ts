@@ -42,7 +42,11 @@ export type HeroTheme = {
 
 export type SurfaceTheme = {
   page_background_color: string | null;
+  page_foreground_color?: string | null;
+  page_muted_color?: string | null;
   section_background_color: string | null;
+  section_foreground_color?: string | null;
+  section_muted_color?: string | null;
   card_background_color: string | null;
   card_border_color: string | null;
   card_text_color: string | null;
@@ -81,6 +85,7 @@ export type GlobalThemeSettings = {
   text_muted_hex: string | null;
   border_color_hex: string | null;
   border_radius: string | null;
+  cta_hover_hex?: string | null;
   inserted_at?: string | null;
   updated_at?: string | null;
 };
@@ -143,7 +148,11 @@ export const defaultHeroTheme: HeroTheme = {
 
 export const defaultSurfaceTheme: SurfaceTheme = {
   page_background_color: FALLBACK_BG_MAIN_HEX,
+  page_foreground_color: FALLBACK_TEXT_MAIN_HEX,
+  page_muted_color: FALLBACK_TEXT_MUTED_HEX,
   section_background_color: "#F6F8FC",
+  section_foreground_color: FALLBACK_TEXT_MAIN_HEX,
+  section_muted_color: FALLBACK_TEXT_MUTED_HEX,
   card_background_color: "rgba(255,255,255,0.86)",
   card_border_color: "rgba(148,163,184,0.22)",
   card_text_color: FALLBACK_TEXT_MAIN_HEX,
@@ -261,6 +270,7 @@ const parseFallbackTuple = (tuple: string): HslParts => {
 };
 
 const toTuple = ({ h, s, l }: HslParts): string => `${h} ${s}% ${l}%`;
+const tupleToCssColor = (tuple: string) => `hsl(${tuple})`;
 
 const shiftLightness = (parts: HslParts, amount: number, saturationShift = 0): string =>
   toTuple({
@@ -394,6 +404,30 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   const surfaceCardTextFallback = normalizeHex(settings.text_main_hex) ?? FALLBACK_TEXT_MAIN_HEX;
   const surfaceCardMutedFallback = normalizeHex(settings.text_muted_hex) ?? FALLBACK_TEXT_MUTED_HEX;
 
+  const surfacePageParts = hexToHslParts(normalizeHex(surface.page_background_color) ?? surfacePageFallback, bgMainParts);
+  const surfaceSectionParts = hexToHslParts(normalizeHex(surface.section_background_color) ?? surfaceSectionFallback, bgCardParts);
+  const surfaceCardParts = hexToHslParts(normalizeHex(surface.card_background_color) ?? surfaceCardFallback, bgCardParts);
+
+  const surfacePageForegroundAuto = tupleToCssColor(getReadableForeground(surfacePageParts, textMainTuple));
+  const surfacePageMutedAuto = tupleToCssColor(getReadableForeground(surfacePageParts, textMutedTuple, "215 20% 78%"));
+  const surfaceSectionForegroundAuto = tupleToCssColor(getReadableForeground(surfaceSectionParts, textMainTuple));
+  const surfaceSectionMutedAuto = tupleToCssColor(getReadableForeground(surfaceSectionParts, textMutedTuple, "215 20% 78%"));
+  const surfaceCardTextAuto = tupleToCssColor(getReadableForeground(surfaceCardParts, textMainTuple));
+  const surfaceCardMutedAuto = tupleToCssColor(getReadableForeground(surfaceCardParts, textMutedTuple, "215 20% 78%"));
+
+  const buttonPrimaryBg = normalizeHex(buttons.primary_background_color) ?? normalizeHex(settings.primary_color_hex) ?? defaultButtonTheme.primary_background_color!;
+  const buttonPrimaryParts = hexToHslParts(buttonPrimaryBg, primaryParts);
+  const buttonPrimaryTextAuto = tupleToCssColor(getReadableForeground(buttonPrimaryParts, textMainTuple));
+  const buttonPrimaryHoverAuto = tupleToCssColor(shiftLightness(buttonPrimaryParts, -8, -4));
+
+  const buttonSecondaryBg = normalizeHex(buttons.secondary_background_color) ?? normalizeHex(surface.card_background_color) ?? surfaceCardFallback;
+  const buttonSecondaryParts = hexToHslParts(buttonSecondaryBg, surfaceCardParts);
+  const buttonSecondaryTextAuto = tupleToCssColor(getReadableForeground(buttonSecondaryParts, textMainTuple));
+
+  const navCtaBg = normalizeHex(nav.cta_background_color) ?? defaultNavigationTheme.cta_background_color!;
+  const navCtaParts = hexToHslParts(navCtaBg, primaryParts);
+  const navCtaTextAuto = tupleToCssColor(getReadableForeground(navCtaParts, textMainTuple));
+
   setCssVar(root, "--nav-bg", nav.background_color, defaultNavigationTheme.background_color!);
   setCssVar(root, "--nav-text", nav.text_color, defaultNavigationTheme.text_color!);
   setCssVar(root, "--nav-muted", nav.muted_text_color, defaultNavigationTheme.muted_text_color!);
@@ -401,7 +435,7 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   setCssVar(root, "--nav-hover-bg", nav.hover_background_color, defaultNavigationTheme.hover_background_color!);
   setCssVar(root, "--nav-hover-text", nav.hover_text_color, defaultNavigationTheme.hover_text_color!);
   setCssVar(root, "--nav-cta-bg", nav.cta_background_color, defaultNavigationTheme.cta_background_color!);
-  setCssVar(root, "--nav-cta-text", nav.cta_text_color, defaultNavigationTheme.cta_text_color!);
+  setCssVar(root, "--nav-cta-text", nav.cta_text_color, navCtaTextAuto);
   setCssVar(root, "--nav-topbar-bg", nav.topbar_background_color, defaultNavigationTheme.topbar_background_color!);
   setCssVar(root, "--nav-topbar-text", nav.topbar_text_color, defaultNavigationTheme.topbar_text_color!);
   setCssVar(root, "--nav-topbar-accent", nav.topbar_accent_color, defaultNavigationTheme.topbar_accent_color!);
@@ -429,15 +463,20 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   setCssVar(root, "--hero-panel-text", hero.visual_panel_text_color, defaultHeroTheme.visual_panel_text_color!);
 
   setCssVar(root, "--surface-page", surface.page_background_color, surfacePageFallback);
+  setCssVar(root, "--surface-page-foreground", surface.page_foreground_color, surfacePageForegroundAuto);
+  setCssVar(root, "--surface-page-muted", surface.page_muted_color, surfacePageMutedAuto);
   setCssVar(root, "--surface-section", surface.section_background_color, surfaceSectionFallback);
+  setCssVar(root, "--surface-section-foreground", surface.section_foreground_color, surfaceSectionForegroundAuto);
+  setCssVar(root, "--surface-section-muted", surface.section_muted_color, surfaceSectionMutedAuto);
   setCssVar(root, "--surface-card", surface.card_background_color, surfaceCardFallback);
   setCssVar(root, "--surface-card-border", surface.card_border_color, surfaceCardBorderFallback);
-  setCssVar(root, "--surface-card-text", surface.card_text_color, surfaceCardTextFallback);
-  setCssVar(root, "--surface-card-muted", surface.card_muted_color, surfaceCardMutedFallback);
+  setCssVar(root, "--surface-card-text", surface.card_text_color, surfaceCardTextAuto);
+  setCssVar(root, "--surface-card-muted", surface.card_muted_color, surfaceCardMutedAuto);
 
-  setCssVar(root, "--button-primary-bg", buttons.primary_background_color, defaultButtonTheme.primary_background_color!);
-  setCssVar(root, "--button-primary-text", buttons.primary_text_color, defaultButtonTheme.primary_text_color!);
+  setCssVar(root, "--button-primary-bg", buttons.primary_background_color || settings.primary_color_hex, buttonPrimaryBg);
+  setCssVar(root, "--button-primary-text", buttons.primary_text_color, buttonPrimaryTextAuto);
+  root.style.setProperty("--button-primary-hover", normalizeHex(settings.cta_hover_hex) ?? buttonPrimaryHoverAuto);
   setCssVar(root, "--button-secondary-bg", buttons.secondary_background_color, defaultButtonTheme.secondary_background_color!);
-  setCssVar(root, "--button-secondary-text", buttons.secondary_text_color, surfaceCardTextFallback);
+  setCssVar(root, "--button-secondary-text", buttons.secondary_text_color, buttonSecondaryTextAuto);
   setCssVar(root, "--button-secondary-border", buttons.secondary_border_color, surfaceCardBorderFallback);
 };

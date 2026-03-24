@@ -30,7 +30,7 @@ const TrustSection = () => {
     defaultSiteText.home_trust_description;
 
   return (
-    <section className="relative z-20 -mt-8 bg-background pb-8 md:-mt-10" aria-label="Vertrauen">
+    <section className="surface-page-shell relative z-20 -mt-8 bg-background pb-8 md:-mt-10" aria-label="Vertrauen">
       <div className="section-container">
         <div className="premium-card p-5 md:p-7 lg:p-8">
           <div className="mb-6 max-w-3xl">

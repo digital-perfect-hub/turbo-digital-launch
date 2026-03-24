@@ -82,7 +82,7 @@ const PortfolioSection = () => {
   const effectiveItems = portfolioItems.length > 0 ? portfolioItems : fallbackPortfolioItems;
 
   return (
-    <section id="portfolio" className="bg-surface py-24 sm:py-28 md:py-32" aria-label="Portfolio">
+    <section id="portfolio" className="surface-section-shell bg-surface py-24 sm:py-28 md:py-32" aria-label="Portfolio">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

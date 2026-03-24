@@ -108,7 +108,7 @@ const TestimonialsSection = () => {
   }, [api, effectiveTestimonials.length]);
 
   return (
-    <section className="bg-background py-24 sm:py-32" id="testimonials">
+    <section className="surface-page-shell bg-background py-24 sm:py-32" id="testimonials">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

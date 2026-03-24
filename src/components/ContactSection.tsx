@@ -139,7 +139,7 @@ const ContactSection = () => {
 
   if (isSubmitted) {
     return (
-      <section id="kontakt" className="bg-background py-24 md:py-32" ref={ref}>
+      <section id="kontakt" className="surface-page-shell bg-background py-24 md:py-32" ref={ref}>
         <div className="section-container text-center">
           <motion.div
             initial={{ scale: 0.86, opacity: 0 }}
@@ -156,7 +156,7 @@ const ContactSection = () => {
   }
 
   return (
-    <section id="kontakt" className="relative overflow-hidden bg-background py-24 sm:py-32" ref={ref}>
+    <section id="kontakt" className="surface-page-shell relative overflow-hidden bg-background py-24 sm:py-32" ref={ref}>
       <div className="section-container relative z-10">
         <div className="grid gap-12 xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
           <motion.div
@@ -203,7 +203,7 @@ const ContactSection = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="rounded-[2.5rem] border border-border bg-card p-8 shadow-xl sm:p-12"
+            className="surface-card-shell rounded-[2.5rem] border border-border bg-card p-8 shadow-xl sm:p-12"
           >
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid gap-6 sm:grid-cols-2">

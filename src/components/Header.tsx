@@ -21,7 +21,7 @@ type HeaderProps = {
   solidBackgroundClassName?: string;
 };
 
-const Header = ({ forceSolid = false }: HeaderProps) => {
+const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -69,20 +69,23 @@ const Header = ({ forceSolid = false }: HeaderProps) => {
   const topLevelLinks = links.filter((l) => !l.parent_id);
   const getChildren = (parentId: string) => links.filter((l) => l.parent_id === parentId);
 
-  const desktopNavColor = forceSolid ? "var(--hero-headline)" : "var(--nav-text, var(--surface-card-text))";
-  const desktopNavHoverColor = forceSolid ? "var(--theme-primary-hex)" : "var(--nav-hover, var(--theme-primary-hex))";
-  const dropdownShellClass = forceSolid ? "header-dropdown-shell" : "bg-background border-border shadow-xl";
+  const desktopNavColor = forceSolid ? "var(--hero-headline)" : "var(--nav-text, var(--surface-page-foreground))";
+  const desktopNavHoverColor = forceSolid ? "var(--theme-primary-hex)" : "var(--nav-hover-text, var(--theme-primary-hex))";
+  const dropdownShellClass = forceSolid ? "header-dropdown-shell" : "shadow-xl";
+  const dropdownShellStyle = forceSolid ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
   const dropdownHoverBg = forceSolid ? "color-mix(in srgb, var(--hero-headline) 8%, transparent)" : "var(--nav-hover-bg, rgba(255,75,44,0.05))";
-  const mobileOverlayClass = forceSolid ? "header-mobile-shell" : "bg-background border-border text-foreground";
-  const logoColor = forceSolid ? "var(--hero-headline)" : settings.text_logo_color_hex || "inherit";
+  const mobileOverlayClass = forceSolid ? "header-mobile-shell" : "text-foreground";
+  const mobileOverlayStyle = forceSolid ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
+  const logoColor = forceSolid ? "var(--hero-headline)" : settings.text_logo_color_hex || desktopNavColor;
   const headerClassName = forceSolid
-    ? "py-4 header-solid-shell border-b"
+    ? `py-4 header-solid-shell border-b ${solidBackgroundClassName || ""}`
     : isScrolled
-      ? "py-4 bg-background/90 backdrop-blur-xl shadow-lg border-b border-border"
+      ? "py-4 shadow-lg border-b"
       : "py-6 bg-transparent";
+  const headerStyle = forceSolid || !isScrolled ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
 
   return (
-    <header className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${headerClassName}`}>
+    <header className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${headerClassName}`} style={headerStyle}>
       <div className="section-container">
         <div className="flex items-center justify-between">
           <Link to="/" className="relative z-10 flex items-center gap-3 group outline-none">
@@ -129,7 +132,7 @@ const Header = ({ forceSolid = false }: HeaderProps) => {
 
                   {hasChildren && (
                     <div className="absolute left-0 top-full min-w-[200px] translate-y-2 pt-4 opacity-0 invisible transition-all duration-300 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
-                      <div className={`flex flex-col gap-1 rounded-2xl border p-2 ${dropdownShellClass}`}>
+                      <div className={`flex flex-col gap-1 rounded-2xl border p-2 ${dropdownShellClass}`} style={dropdownShellStyle}>
                         {children.map((child) => (
                           <button
                             key={child.id}
@@ -177,8 +180,7 @@ const Header = ({ forceSolid = false }: HeaderProps) => {
 
             <button
               onClick={() => handleLinkClick("#kontakt")}
-              className="btn-primary !px-6 !py-3 shadow-[0_10px_20px_-10px_rgba(var(--primary),0.3)] transition-colors"
-              style={{ "--tw-hover-bg": "var(--cta-hover)" } as any}
+              className={forceSolid ? "btn-primary !px-6 !py-3 shadow-[0_10px_20px_-10px_rgba(var(--primary),0.3)] transition-colors" : "nav-cta-button inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5"}
             >
               Anfrage starten
             </button>
@@ -197,6 +199,7 @@ const Header = ({ forceSolid = false }: HeaderProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={`fixed inset-0 overflow-y-auto border-b px-6 pb-10 pt-32 shadow-2xl lg:hidden ${mobileOverlayClass}`}
+            style={mobileOverlayStyle}
           >
             <div className="flex flex-col gap-4">
               {topLevelLinks.map((item) => {
@@ -246,7 +249,10 @@ const Header = ({ forceSolid = false }: HeaderProps) => {
                 </Link>
               </div>
 
-              <button onClick={() => handleLinkClick("#kontakt")} className="btn-primary mt-6 w-full !py-4 text-lg shadow-xl">
+              <button
+                onClick={() => handleLinkClick("#kontakt")}
+                className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
+              >
                 Projekt anfragen
               </button>
             </div>

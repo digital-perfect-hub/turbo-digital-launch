@@ -491,7 +491,7 @@ const AdminHomepage = () => {
                       <Label htmlFor={field.key}>{field.label}</Label>
 
                       {field.rich ? (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors focus-within:border-[#FF4B2C] [&_.ql-container]:border-none [&_.ql-editor]:min-h-[180px] [&_.ql-toolbar]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-slate-200">
+                        <div className="admin-rich-editor">
                           <ReactQuill
                             theme="snow"
                             modules={quillModules}

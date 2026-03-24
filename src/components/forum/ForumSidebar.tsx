@@ -104,7 +104,7 @@ const ForumSidebar = ({ categories, activeCategorySlug }: ForumSidebarProps) => 
             </div>
           </div>
 
-          <Button asChild className="mt-2 h-11 w-full rounded-full bg-[#FF4B2C] text-white hover:bg-[#ff5f44]">
+          <Button asChild className="btn-primary mt-2 !h-11 !w-full rounded-full">
             <Link to={content.support_button_link || "/login"} className="inline-flex items-center justify-center gap-2">
               <MessageSquare className="h-4 w-4" />
               {content.support_button_text}

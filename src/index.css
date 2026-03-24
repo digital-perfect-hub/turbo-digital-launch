@@ -73,7 +73,11 @@
     --sidebar-ring: 9 100% 59%;
 
     --surface-page: #FFFFFF;
+    --surface-page-foreground: #0F172A;
+    --surface-page-muted: #64748B;
     --surface-section: #F8FAFC;
+    --surface-section-foreground: #0F172A;
+    --surface-section-muted: #64748B;
     --surface-card: rgba(255,255,255,0.88);
     --surface-card-border: rgba(148,163,184,0.22);
     --surface-card-text: #0F172A;
@@ -81,6 +85,7 @@
 
     --button-primary-bg: #FF4B2C;
     --button-primary-text: #FFFFFF;
+    --button-primary-hover: #E03A1E;
     --button-secondary-bg: rgba(255,255,255,0.84);
     --button-secondary-text: #0F172A;
     --button-secondary-border: rgba(148,163,184,0.26);
@@ -247,14 +252,14 @@
     font-size: 1rem;
     font-weight: 700;
     color: var(--button-primary-text);
-    box-shadow: 0 24px 55px -24px rgba(255,75,44,0.64);
+    box-shadow: 0 24px 55px -24px color-mix(in srgb, var(--button-primary-bg) 64%, transparent);
     transition: all 0.3s ease;
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    opacity: 0.96;
-    box-shadow: 0 26px 58px -20px rgba(255,75,44,0.7);
+    background: var(--button-primary-hover, var(--cta-hover, var(--button-primary-bg)));
+    box-shadow: 0 26px 58px -20px color-mix(in srgb, var(--button-primary-hover, var(--button-primary-bg)) 72%, transparent);
   }
 
   .btn-outline {
@@ -279,6 +284,92 @@
     transform: translateY(-2px);
     border-color: color-mix(in srgb, var(--button-secondary-border) 50%, var(--theme-primary-hex));
     color: var(--theme-primary-hex);
+  }
+
+  .surface-page-shell {
+    background: var(--surface-page);
+    color: var(--surface-page-foreground);
+  }
+
+  .surface-page-shell h1,
+  .surface-page-shell h2,
+  .surface-page-shell h3,
+  .surface-page-shell h4,
+  .surface-page-shell h5,
+  .surface-page-shell h6,
+  .surface-page-shell .section-title,
+  .surface-page-shell .text-foreground {
+    color: var(--surface-page-foreground) !important;
+  }
+
+  .surface-page-shell .text-muted-foreground {
+    color: var(--surface-page-muted) !important;
+  }
+
+  .surface-section-shell {
+    background: var(--surface-section);
+    color: var(--surface-section-foreground);
+  }
+
+  .surface-section-shell h1,
+  .surface-section-shell h2,
+  .surface-section-shell h3,
+  .surface-section-shell h4,
+  .surface-section-shell h5,
+  .surface-section-shell h6,
+  .surface-section-shell .section-title,
+  .surface-section-shell .text-foreground {
+    color: var(--surface-section-foreground) !important;
+  }
+
+  .surface-section-shell .text-muted-foreground {
+    color: var(--surface-section-muted) !important;
+  }
+
+  .surface-card-shell {
+    background: var(--surface-card);
+    color: var(--surface-card-text);
+    border-color: var(--surface-card-border);
+  }
+
+  .surface-card-shell h1,
+  .surface-card-shell h2,
+  .surface-card-shell h3,
+  .surface-card-shell h4,
+  .surface-card-shell h5,
+  .surface-card-shell h6,
+  .surface-card-shell .text-foreground {
+    color: var(--surface-card-text) !important;
+  }
+
+  .surface-card-shell .text-muted-foreground {
+    color: var(--surface-card-muted) !important;
+  }
+
+  .surface-accent-pill {
+    background: color-mix(in srgb, var(--button-primary-bg) 10%, transparent);
+    color: var(--button-primary-bg);
+  }
+
+  .surface-secondary-pill {
+    background: color-mix(in srgb, var(--theme-secondary-hex) 10%, transparent);
+    color: var(--theme-secondary-hex);
+  }
+
+  .surface-check-icon {
+    background: color-mix(in srgb, var(--button-primary-bg) 10%, transparent);
+    color: var(--button-primary-bg);
+  }
+
+  .nav-cta-button {
+    background: var(--nav-cta-bg);
+    color: var(--nav-cta-text);
+    box-shadow: 0 20px 42px -22px color-mix(in srgb, var(--nav-cta-bg) 62%, transparent);
+  }
+
+  .nav-cta-button:hover {
+    background: color-mix(in srgb, var(--nav-cta-bg) 88%, black 12%);
+    color: var(--nav-cta-text);
   }
 
   .text-balance {

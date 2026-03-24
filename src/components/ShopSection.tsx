@@ -52,7 +52,7 @@ const ShopSection = () => {
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <section id="shop" className="relative overflow-hidden bg-background py-24 sm:py-32" aria-label="Produkte & Pakete">
+    <section id="shop" className="surface-page-shell relative overflow-hidden py-24 sm:py-32" aria-label="Produkte & Pakete">
       <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -88,7 +88,7 @@ const ShopSection = () => {
               >
                 <div className="pointer-events-none absolute -right-24 -top-28 h-56 w-56 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_72%)] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
 
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100/70">
+                <div className="relative aspect-[16/10] w-full overflow-hidden" style={{ background: "color-mix(in srgb, var(--surface-section) 70%, transparent)" }}>
                   {productImage ? (
                     <img
                       src={productImage}
@@ -97,12 +97,12 @@ const ShopSection = () => {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-slate-100">
+                    <div className="flex h-full items-center justify-center" style={{ background: "var(--surface-section)" }}>
                       <ImageIcon size={44} className="text-slate-300" strokeWidth={1.5} />
                     </div>
                   )}
 
-                  <div className="absolute left-5 top-5 inline-flex items-center rounded-full bg-background/92 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-[#0E1F53] shadow-sm backdrop-blur-md">
+                  <div className="surface-accent-pill absolute left-5 top-5 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] shadow-sm backdrop-blur-md">
                     Produkt
                   </div>
                 </div>
@@ -111,7 +111,7 @@ const ShopSection = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       {product.slug ? (
-                        <Link to={`/produkt/${product.slug}`} className="transition-colors hover:text-[#FF4B2C]">
+                        <Link to={`/produkt/${product.slug}`} className="transition-colors hover:text-primary">
                           <h3 className="text-2xl font-bold leading-tight text-foreground">{product.title}</h3>
                         </Link>
                       ) : (
@@ -121,16 +121,22 @@ const ShopSection = () => {
                         {product.description || "Klare Leistung, fixer Preis und direkter Weg zum Checkout."}
                       </p>
                     </div>
-                    <div className="shrink-0 rounded-2xl bg-[#FF4B2C]/10 px-4 py-3 text-right">
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF4B2C]">Preis</div>
-                      <div className="mt-1 text-2xl font-black tracking-tight text-[#0E1F53]">{product.price}</div>
+                    <div
+                      className="shrink-0 rounded-2xl border px-4 py-3 text-right"
+                      style={{
+                        background: "color-mix(in srgb, var(--button-primary-bg) 10%, var(--surface-card))",
+                        borderColor: "color-mix(in srgb, var(--button-primary-bg) 18%, var(--surface-card-border))",
+                      }}
+                    >
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Preis</div>
+                      <div className="mt-1 text-2xl font-black tracking-tight text-foreground">{product.price}</div>
                     </div>
                   </div>
 
                   <ul className="mt-8 space-y-3">
                     {features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700">
-                        <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                      <li key={feature} className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+                        <span className="surface-check-icon mt-0.5">
                           <CheckCircle2 size={14} />
                         </span>
                         <span>{feature}</span>
@@ -142,7 +148,7 @@ const ShopSection = () => {
                     {product.checkout_url ? (
                       <Button
                         asChild
-                        className="h-14 w-full rounded-2xl bg-[#FF4B2C] text-base font-bold text-white shadow-lg shadow-[#FF4B2C]/20 transition-transform hover:scale-[1.01] hover:bg-[#E03A1E]"
+                        className="btn-primary !h-14 !w-full !rounded-2xl !text-base transition-transform hover:scale-[1.01]"
                       >
                         <a href={product.checkout_url} target="_blank" rel="noreferrer">
                           Jetzt sichern

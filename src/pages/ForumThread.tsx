@@ -366,12 +366,12 @@ const ForumThreadPage = () => {
 
                                     <Button
                                       variant="outline"
-                                      className="rounded-full border-slate-200 bg-white px-4 text-slate-600 hover:border-[#FF4B2C]/30 hover:text-[#FF4B2C]"
+                                      className="rounded-full border-border bg-card px-4 text-muted-foreground hover:border-primary/30 hover:text-primary"
                                       onClick={() => toggleLike.mutate(reply)}
                                       disabled={toggleLike.isPending}
                                     >
                                       <Heart
-                                        className={`mr-2 h-4 w-4 ${reply.user_has_liked ? "fill-[#FF4B2C] text-[#FF4B2C]" : ""}`}
+                                        className={`mr-2 h-4 w-4 ${reply.user_has_liked ? "fill-current text-primary" : ""}`}
                                       />
                                       {reply.like_count}
                                     </Button>
@@ -414,7 +414,7 @@ const ForumThreadPage = () => {
                                 </p>
                                 <Button
                                   type="submit"
-                                  className="rounded-full bg-[#FF4B2C] px-6 text-white hover:bg-[#ff5f44]"
+                                  className="btn-primary rounded-full px-6"
                                   disabled={addReply.isPending || thread.is_locked}
                                 >
                                   {thread.is_locked ? "Thread geschlossen" : addReply.isPending ? "Wird gesendet..." : "Antwort veröffentlichen"}
@@ -429,7 +429,7 @@ const ForumThreadPage = () => {
                                   Melde dich an, um dich an der Diskussion zu beteiligen und Likes zu setzen.
                                 </p>
                               </div>
-                              <Button asChild className="rounded-full bg-[#0E1F53] px-6 text-white hover:bg-[#162a69]">
+                              <Button asChild className="btn-primary rounded-full px-6">
                                 <Link to="/login">Zum Login</Link>
                               </Button>
                             </div>
@@ -449,7 +449,7 @@ const ForumThreadPage = () => {
                         Dieser Forenbeitrag ist nicht aktiv, wurde verschoben oder existiert nicht mehr.
                       </p>
                       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                        <Button asChild className="rounded-full bg-[#FF4B2C] px-6 text-white hover:bg-[#ff5f44]">
+                        <Button asChild className="btn-primary rounded-full px-6">
                           <Link to="/forum">Zur Forum-Übersicht</Link>
                         </Button>
                         <Button asChild variant="outline" className="rounded-full border-slate-200 px-6">

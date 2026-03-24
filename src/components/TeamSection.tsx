@@ -96,7 +96,7 @@ const TeamSection = () => {
   const effectiveTeam = teamMembers.length > 0 ? teamMembers : fallbackTeam;
 
   return (
-    <section id="team" className="bg-background py-24 md:py-28">
+    <section id="team" className="surface-page-shell bg-background py-24 md:py-28">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

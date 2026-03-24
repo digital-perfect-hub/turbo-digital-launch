@@ -4,29 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { applyThemeToRoot } from "@/lib/theme-settings";
+import {
+  applyThemeToRoot,
+  defaultButtonTheme,
+  defaultHeroTheme,
+  defaultNavigationTheme,
+  defaultSurfaceTheme,
+  mergeThemeSettings,
+  type GlobalThemeSettings as BaseThemeSettings,
+} from "@/lib/theme-settings";
 
-export type GlobalThemeSettings = {
-  id: string;
-  primary_color_hex: string | null;
-  secondary_color_hex: string | null;
-  accent_color_hex: string | null;
-  bg_main_hex: string | null;
-  bg_card_hex: string | null;
-  text_main_hex: string | null;
-  text_muted_hex: string | null;
-  border_color_hex: string | null;
-  border_radius: string | null;
-  font_family: string | null;
-  company_name: string | null;
-  logo_path: string | null;
+export type GlobalThemeSettings = BaseThemeSettings & {
   use_text_logo: boolean | null;
   text_logo_color_hex: string | null;
   show_logo_dot: boolean | null;
   logo_dot_color_hex: string | null;
   logo_font_family: string | null;
-  cta_hover_hex: string | null;
-  footer_bg_hex: string | null;
   nav_text_color_hex: string | null;
   nav_hover_color_hex: string | null;
   nav_font_weight: string | null;
@@ -35,10 +28,7 @@ export type GlobalThemeSettings = {
   nav_show_underline: boolean | null;
   nav_underline_color_hex: string | null;
   nav_animate_underline: boolean | null;
-  imprint_company: string | null;
-  imprint_address: string | null;
-  imprint_contact: string | null;
-  imprint_legal: string | null;
+  footer_bg_hex: string | null;
   footer_description: string | null;
   social_instagram_url: string | null;
   social_linkedin_url: string | null;
@@ -57,7 +47,11 @@ export type GlobalThemeSettings = {
 };
 
 const defaultTheme: GlobalThemeSettings = {
-  id: "default",
+  ...mergeThemeSettings({
+    id: "default",
+    cta_hover_hex: "#E03A1E",
+    company_name: "Digital-Perfect",
+  }),
   primary_color_hex: "#FF4B2C",
   secondary_color_hex: "#0E1F53",
   accent_color_hex: "#0E1F53",
@@ -67,7 +61,6 @@ const defaultTheme: GlobalThemeSettings = {
   text_muted_hex: "#64748B",
   border_color_hex: "#E2E8F0",
   border_radius: "1rem",
-  font_family: "default",
   company_name: "Digital-Perfect",
   logo_path: null,
   use_text_logo: false,
@@ -77,7 +70,7 @@ const defaultTheme: GlobalThemeSettings = {
   logo_font_family: "default",
   cta_hover_hex: "#E03A1E",
   footer_bg_hex: "#020617",
-  nav_text_color_hex: "#94a3b8",
+  nav_text_color_hex: "#94A3B8",
   nav_hover_color_hex: "#FF4B2C",
   nav_font_weight: "bold",
   nav_font_style: "normal",
@@ -104,6 +97,10 @@ const defaultTheme: GlobalThemeSettings = {
   tracking_body_code: null,
   enable_tab_retention: true,
   tab_retention_texts: ["Komm doch zurück! 👋", "Wir vermissen dich 🥺"],
+  navigation_theme: defaultNavigationTheme,
+  hero_theme: defaultHeroTheme,
+  surface_theme: defaultSurfaceTheme,
+  button_theme: defaultButtonTheme,
 };
 
 export const useGlobalTheme = () => {
@@ -116,22 +113,33 @@ export const useGlobalTheme = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("global_settings").select("*").eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
-      return (data as unknown as GlobalThemeSettings | null) ?? null;
+      return (data as unknown as Partial<GlobalThemeSettings> | null) ?? null;
     },
   });
 
-  const settings = useMemo(() => ({ ...defaultTheme, ...(data || {}) }), [data]);
+  const settings = useMemo<GlobalThemeSettings>(() => {
+    const mergedTheme = mergeThemeSettings(data as Partial<BaseThemeSettings> | null) as BaseThemeSettings;
+    return {
+      ...defaultTheme,
+      ...(data || {}),
+      ...mergedTheme,
+      navigation_theme: mergedTheme.navigation_theme ?? defaultNavigationTheme,
+      hero_theme: mergedTheme.hero_theme ?? defaultHeroTheme,
+      surface_theme: mergedTheme.surface_theme ?? defaultSurfaceTheme,
+      button_theme: mergedTheme.button_theme ?? defaultButtonTheme,
+    };
+  }, [data]);
 
   useEffect(() => {
     const root = document.documentElement;
 
-    applyThemeToRoot(settings as any);
+    applyThemeToRoot(settings as BaseThemeSettings);
 
-    root.style.setProperty("--cta-hover", settings.cta_hover_hex || settings.primary_color_hex || "#E03A1E");
+    root.style.setProperty("--cta-hover", settings.cta_hover_hex || settings.button_theme?.primary_background_color || settings.primary_color_hex || "#E03A1E");
     root.style.setProperty("--footer-bg", settings.footer_bg_hex || "var(--theme-secondary-hex)");
 
     if (settings.nav_text_color_hex) root.style.setProperty("--nav-text", settings.nav_text_color_hex);
-    if (settings.nav_hover_color_hex) root.style.setProperty("--nav-hover", settings.nav_hover_color_hex);
+    if (settings.nav_hover_color_hex) root.style.setProperty("--nav-hover-text", settings.nav_hover_color_hex);
     if (settings.nav_underline_color_hex) root.style.setProperty("--nav-underline", settings.nav_underline_color_hex);
 
     let baseTitle = "Digital-Perfect";

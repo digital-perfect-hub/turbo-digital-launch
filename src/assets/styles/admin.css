@@ -1,0 +1,212 @@
+.admin-ui-scope,
+body.admin-ui-portal-scope {
+  --background: 210 38% 98%;
+  --foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --primary: 9 100% 59%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 0 0% 100%;
+
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+
+  --muted: 210 24% 94%;
+  --muted-foreground: 215 16% 42%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 214 31% 91%;
+  --input: 214 31% 91%;
+  --ring: 9 100% 59%;
+  --radius: 1rem;
+
+  --sidebar-background: 224 71% 12%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 9 100% 59%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 224 45% 18%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 223 48% 22%;
+  --sidebar-ring: 9 100% 59%;
+
+  --admin-sidebar-bg: 224 71% 12%;
+  --admin-sidebar-fg: 210 40% 98%;
+  --admin-sidebar-muted: 215 20% 72%;
+  --admin-sidebar-border: 223 48% 22%;
+}
+
+.admin-ui-scope {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.admin-ui-scope :where(select) {
+  appearance: none;
+  width: 100%;
+  border: 1px solid hsl(var(--input));
+  border-radius: 1rem;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background-image:
+    linear-gradient(45deg, transparent 50%, hsl(var(--muted-foreground)) 50%),
+    linear-gradient(135deg, hsl(var(--muted-foreground)) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-ui-scope :where(select):focus,
+.admin-ui-scope :where(select):focus-visible {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 4px hsl(var(--ring) / 0.16);
+}
+
+.admin-ui-scope :where(select):disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.admin-ui-scope :where(select) option {
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
+.admin-ui-scope :where(.admin-native-select--inverse) {
+  border-color: hsl(var(--admin-sidebar-border) / 0.9);
+  background-color: hsl(var(--admin-sidebar-bg) / 0.94);
+  color: hsl(var(--admin-sidebar-fg));
+  box-shadow: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, hsl(var(--admin-sidebar-muted)) 50%),
+    linear-gradient(135deg, hsl(var(--admin-sidebar-muted)) 50%, transparent 50%);
+}
+
+.admin-ui-scope :where(.admin-native-select--inverse):focus,
+.admin-ui-scope :where(.admin-native-select--inverse):focus-visible {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.18);
+}
+
+.admin-ui-scope :where(.admin-native-select--inverse) option {
+  background: hsl(222 47% 11%);
+  color: hsl(var(--admin-sidebar-fg));
+}
+
+.admin-ui-scope .admin-rich-editor {
+  overflow: hidden;
+  border: 1px solid hsl(var(--input));
+  border-radius: 1rem;
+  background: hsl(var(--card));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-ui-scope .admin-rich-editor:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 4px hsl(var(--ring) / 0.16);
+}
+
+.admin-ui-scope .admin-rich-editor .ql-toolbar.ql-snow {
+  border: 0;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.58);
+}
+
+.admin-ui-scope .admin-rich-editor .ql-container.ql-snow {
+  border: 0;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-editor {
+  min-height: 180px;
+  color: hsl(var(--foreground));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground));
+  font-style: normal;
+  opacity: 0.9;
+}
+
+.admin-ui-scope .admin-rich-editor .ql-toolbar button,
+.admin-ui-scope .admin-rich-editor .ql-toolbar .ql-picker,
+.admin-ui-scope .admin-rich-editor .ql-toolbar .ql-picker-label,
+.admin-ui-scope .admin-rich-editor .ql-toolbar .ql-picker-item {
+  color: hsl(var(--foreground));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-stroke {
+  stroke: hsl(var(--foreground));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item.ql-selected .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label.ql-active .ql-fill {
+  fill: hsl(var(--foreground));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-options,
+.admin-ui-scope .admin-rich-editor .ql-tooltip {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  box-shadow: 0 20px 50px -28px rgba(15, 23, 42, 0.28);
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  margin-top: 0.5rem;
+  border-radius: 0.85rem;
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label:hover,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item:hover,
+.admin-ui-scope .admin-rich-editor .ql-snow button:hover,
+.admin-ui-scope .admin-rich-editor .ql-snow button:focus,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label.ql-active,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item.ql-selected,
+.admin-ui-scope .admin-rich-editor .ql-snow button.ql-active {
+  color: hsl(var(--primary));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow button:hover .ql-stroke,
+.admin-ui-scope .admin-rich-editor .ql-snow button:focus .ql-stroke,
+.admin-ui-scope .admin-rich-editor .ql-snow button.ql-active .ql-stroke,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label:hover .ql-stroke,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label.ql-active .ql-stroke,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item.ql-selected .ql-stroke,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item:hover .ql-stroke {
+  stroke: hsl(var(--primary));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow button:hover .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow button:focus .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow button.ql-active .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label:hover .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-label.ql-active .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item.ql-selected .ql-fill,
+.admin-ui-scope .admin-rich-editor .ql-snow .ql-picker-item:hover .ql-fill {
+  fill: hsl(var(--primary));
+}
+
+.admin-ui-scope .admin-rich-editor .ql-snow a {
+  color: hsl(var(--primary));
+}

@@ -45,7 +45,7 @@ const ForumTeaser = () => {
                 <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">{content.description}</p>
               </div>
 
-              <Button asChild className="rounded-full bg-[#FF4B2C] px-7 text-white hover:bg-[#ff5f44]">
+              <Button asChild className="btn-primary rounded-full px-7">
                 <Link to={content.cta_link || "/forum"} className="inline-flex items-center gap-2">
                   {content.cta_text}
                   <ArrowRight className="h-4 w-4" />

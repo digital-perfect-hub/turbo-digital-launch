@@ -142,10 +142,6 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const normalizeColor = (value: string | null | undefined) => {
-  const color = (value || "").trim();
-  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color) ? color : "#FF4B2C";
-};
 
 const ProductDetail = () => {
   const { activeSiteId } = useSiteContext();
@@ -189,7 +185,6 @@ const ProductDetail = () => {
   const netTotal = baseNetPrice + upsellNetPrice;
   const taxAmount = netTotal * (taxRate / 100);
   const grossTotal = netTotal + taxAmount;
-  const ctaColor = normalizeColor(product?.cta_color);
   const ctaText = (product?.cta_text || "Jetzt sichern").trim() || "Jetzt sichern";
 
   useEffect(() => {
@@ -271,8 +266,8 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <Header forceSolid solidBackgroundClassName="bg-[#0E1F53] border-b border-white/10 shadow-lg shadow-slate-950/20" />
+    <div className="surface-page-shell min-h-screen bg-[var(--surface-page)]">
+      <Header forceSolid solidBackgroundClassName="!bg-[var(--theme-secondary-hex)] border-b border-white/10 shadow-lg shadow-slate-950/20" />
       <main className="pt-28 md:pt-32">
         {isLoading ? (
           <section className="py-20 sm:py-24">
@@ -303,14 +298,14 @@ const ProductDetail = () => {
           <section className="py-20 sm:py-24">
             <div className="section-container">
               <div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm">
-                <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#FF4B2C]/10 text-[#FF4B2C]">
+                <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--button-primary-bg) 12%, transparent)", color: "var(--button-primary-bg)" }}>
                   <Layers3 size={28} />
                 </div>
-                <h1 className="mt-6 text-3xl font-black tracking-tight text-slate-900">Produkt nicht gefunden</h1>
-                <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600">
+                <h1 className="mt-6 text-3xl font-black tracking-tight text-foreground">Produkt nicht gefunden</h1>
+                <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
                   Dieses Produkt ist aktuell nicht verfügbar oder der Link ist veraltet. Prüfe den Slug oder geh zurück zur Startseite.
                 </p>
-                <Button asChild className="mt-8 h-12 rounded-2xl bg-[#FF4B2C] px-6 text-white hover:bg-[#E03A1E]">
+                <Button asChild className="btn-primary mt-8 !h-12 !rounded-2xl px-6">
                   <Link to="/">
                     <ArrowLeft size={18} />
                     Zur Startseite
@@ -323,7 +318,7 @@ const ProductDetail = () => {
           <section className="py-14 sm:py-16 md:py-20">
             <div className="section-container">
               <div className="mb-8">
-                <Link to="/#shop" className="inline-flex items-center gap-2 text-sm font-semibold text-[#FF4B2C] hover:underline">
+                <Link to="/#shop" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
                   <ArrowLeft size={16} />
                   Zur Produktübersicht
                 </Link>
@@ -334,23 +329,23 @@ const ProductDetail = () => {
                   <section className="overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-sm">
                     <div className="grid gap-8 p-8 md:p-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                       <div>
-                        <div className="inline-flex items-center rounded-full bg-[#FF4B2C]/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#FF4B2C]">
+                        <div className="surface-accent-pill px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]">
                           Produkt-Landingpage
                         </div>
-                        <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">{product.title}</h1>
-                        <p className="mt-5 max-w-3xl text-lg leading-relaxed text-slate-600">
+                        <h1 className="mt-6 text-4xl font-black tracking-tight text-foreground sm:text-5xl">{product.title}</h1>
+                        <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">
                           {product.description || "Premium-Produkt mit direktem Checkout, Live-Demo und klarer Leistungsstruktur."}
                         </p>
 
                         <div className="mt-8 flex flex-wrap items-center gap-4">
-                          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
-                            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF4B2C]">Preis</div>
-                            <div className="mt-1 text-3xl font-black tracking-tight text-[#0E1F53]">{product.price}</div>
+                          <div className="rounded-[1.5rem] border border-border bg-[var(--surface-section)] px-5 py-4">
+                            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Preis</div>
+                            <div className="mt-1 text-3xl font-black tracking-tight text-foreground">{product.price}</div>
                           </div>
                           {product.target_audience && (
-                            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
-                              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Für wen?</div>
-                              <div className="mt-1 text-sm font-semibold text-slate-700">{product.target_audience}</div>
+                            <div className="rounded-[1.5rem] border border-border bg-[var(--surface-section)] px-5 py-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Für wen?</div>
+                              <div className="mt-1 text-sm font-semibold text-foreground">{product.target_audience}</div>
                             </div>
                           )}
                         </div>
@@ -359,15 +354,14 @@ const ProductDetail = () => {
                           <Button
                             onClick={handleCheckout}
                             disabled={isCheckoutLoading || !product.stripe_price_id}
-                            className="h-14 rounded-2xl px-7 text-base font-bold text-white shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                            style={{ backgroundColor: ctaColor }}
+                            className="btn-primary !h-14 !rounded-2xl px-7 text-base font-bold shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {isCheckoutLoading ? "Checkout wird vorbereitet..." : ctaText}
                             <ArrowUpRight size={18} />
                           </Button>
 
                           {product.checkout_url && (
-                            <Button asChild variant="outline" className="h-14 rounded-2xl border-slate-200 px-7 text-base font-semibold text-slate-800">
+                            <Button asChild variant="outline" className="h-14 rounded-2xl border-border bg-background/70 px-7 text-base font-semibold text-foreground">
                               <a href={product.checkout_url} target="_blank" rel="noreferrer">
                                 Externen Link öffnen
                                 <ArrowUpRight size={18} />
@@ -377,12 +371,12 @@ const ProductDetail = () => {
                         </div>
                       </div>
 
-                      <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 shadow-inner">
-                        <div className="aspect-[16/11] w-full overflow-hidden bg-slate-100">
+                      <div className="overflow-hidden rounded-[2rem] border border-border bg-[var(--surface-section)] shadow-inner">
+                        <div className="aspect-[16/11] w-full overflow-hidden" style={{ background: "var(--surface-section)" }}>
                           {detailImage ? (
                             <img src={detailImage} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
                           ) : (
-                            <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-300">
+                            <div className="flex h-full items-center justify-center text-muted-foreground/40" style={{ background: "linear-gradient(135deg, var(--surface-section), color-mix(in srgb, var(--surface-section) 82%, black))" }}>
                               <ImageIcon size={54} strokeWidth={1.5} />
                             </div>
                           )}
@@ -395,12 +389,12 @@ const ProductDetail = () => {
                     <section className="rounded-[2.2rem] border border-slate-200 bg-white p-8 shadow-sm md:p-10">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                          <div className="inline-flex items-center gap-2 rounded-full bg-[#0E1F53]/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#0E1F53]">
+                          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]" style={{ background: "color-mix(in srgb, var(--theme-secondary-hex) 8%, transparent)", color: "var(--theme-secondary-hex)" }}>
                             <Eye size={14} />
                             Live-View
                           </div>
-                          <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950">Sieh das System live in Aktion</h2>
-                          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
+                          <h2 className="mt-5 text-3xl font-black tracking-tight text-foreground">Sieh das System live in Aktion</h2>
+                          <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
                             Direkt im Browser-Mockup. Ohne Sales-Blabla — der Kunde sieht sofort, wie sich das Produkt anfühlt.
                           </p>
                         </div>
@@ -429,33 +423,33 @@ const ProductDetail = () => {
                   )}
 
                   <section className="rounded-[2.2rem] border border-slate-200 bg-white p-8 shadow-sm md:p-10">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-[#FF4B2C]/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#FF4B2C]">
+                    <div className="surface-accent-pill px-4 py-2 text-xs font-bold uppercase tracking-[0.2em]">
                       <Sparkles size={14} />
                       Deep-Dive
                     </div>
-                    <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950">Was genau drin ist</h2>
+                    <h2 className="mt-5 text-3xl font-black tracking-tight text-foreground">Was genau drin ist</h2>
                     <div className="mt-8 grid gap-6 lg:grid-cols-2">
-                      <div className="rounded-[1.8rem] border border-slate-200 bg-slate-50 p-6">
-                        <h3 className="text-lg font-black text-[#0E1F53]">Leistungsumfang</h3>
+                      <div className="rounded-[1.8rem] border border-border bg-[var(--surface-section)] p-6">
+                        <h3 className="text-lg font-black text-foreground">Leistungsumfang</h3>
                         <ul className="mt-5 space-y-3">
                           {features.length ? (
                             features.map((feature) => (
-                              <li key={feature} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700">
-                                <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                              <li key={feature} className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+                                <span className="surface-check-icon mt-0.5">
                                   <CheckCircle2 size={14} />
                                 </span>
                                 <span>{feature}</span>
                               </li>
                             ))
                           ) : (
-                            <li className="text-sm leading-relaxed text-slate-500">Für dieses Produkt wurden noch keine Features gepflegt.</li>
+                            <li className="text-sm leading-relaxed text-muted-foreground">Für dieses Produkt wurden noch keine Features gepflegt.</li>
                           )}
                         </ul>
                       </div>
 
-                      <div className="rounded-[1.8rem] border border-slate-200 bg-slate-50 p-6">
-                        <h3 className="text-lg font-black text-[#0E1F53]">Strategischer Nutzen</h3>
-                        <div className="mt-5 space-y-4 text-sm leading-7 text-slate-700">
+                      <div className="rounded-[1.8rem] border border-border bg-[var(--surface-section)] p-6">
+                        <h3 className="text-lg font-black text-foreground">Strategischer Nutzen</h3>
+                        <div className="mt-5 space-y-4 text-sm leading-7 text-muted-foreground">
                           {longDescriptionParagraphs.length ? (
                             longDescriptionParagraphs.map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)
                           ) : (
@@ -499,8 +493,8 @@ const ProductDetail = () => {
                 </div>
 
                 <aside className="xl:sticky xl:top-32">
-                  <div className="overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white shadow-[0_28px_70px_-38px_rgba(15,23,42,0.35)]">
-                    <div className="border-b border-slate-200 bg-[#0E1F53] px-7 py-6 text-white">
+                  <div className="overflow-hidden rounded-[2.2rem] border border-border bg-card shadow-[0_28px_70px_-38px_rgba(15,23,42,0.35)]">
+                    <div className="border-b border-border px-7 py-6 text-white" style={{ background: "var(--theme-secondary-hex)" }}>
                       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Edge-Checkout</div>
                       <div className="mt-2 text-3xl font-black tracking-tight">{product.price}</div>
                       <p className="mt-2 text-sm leading-relaxed text-white/75">Wähle optionale Erweiterungen direkt hier. Der Checkout wird sicher über Stripe gestartet.</p>
@@ -508,7 +502,7 @@ const ProductDetail = () => {
 
                     <div className="space-y-7 px-7 py-7">
                       <div>
-                        <div className="text-sm font-black text-slate-950">Optional dazubuchen</div>
+                        <div className="text-sm font-black text-foreground">Optional dazubuchen</div>
                         <div className="mt-4 space-y-3">
                           {upsells.length ? (
                             upsells.map((upsell) => {
@@ -519,8 +513,8 @@ const ProductDetail = () => {
                                 <label
                                   key={upsell.id}
                                   className={`flex cursor-pointer items-start gap-3 rounded-[1.4rem] border p-4 transition-all ${
-                                    isSelected ? "border-[#FF4B2C] bg-[#FF4B2C]/5" : "border-slate-200 bg-slate-50"
-                                  } ${isDisabled ? "cursor-not-allowed opacity-60" : "hover:border-[#FF4B2C]/40"}`}
+                                    isSelected ? "border-primary/40 bg-primary/5" : "border-border bg-[var(--surface-section)]"
+                                  } ${isDisabled ? "cursor-not-allowed opacity-60" : "hover:border-primary/30"}`}
                                 >
                                   <Checkbox
                                     checked={isSelected}
@@ -530,35 +524,35 @@ const ProductDetail = () => {
                                   />
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-start justify-between gap-3">
-                                      <span className="text-sm font-semibold text-slate-900">{upsell.title}</span>
-                                      <span className="shrink-0 text-sm font-black text-[#0E1F53]">+ {formatCurrency(upsell.price_numeric)}</span>
+                                      <span className="text-sm font-semibold text-foreground">{upsell.title}</span>
+                                      <span className="shrink-0 text-sm font-black text-foreground">+ {formatCurrency(upsell.price_numeric)}</span>
                                     </div>
-                                    {isDisabled && <p className="mt-2 text-xs text-slate-500">Stripe Price ID fehlt — Upsell aktuell nicht aktiv.</p>}
+                                    {isDisabled && <p className="mt-2 text-xs text-muted-foreground">Stripe Price ID fehlt — Upsell aktuell nicht aktiv.</p>}
                                   </div>
                                 </label>
                               );
                             })
                           ) : (
-                            <div className="rounded-[1.4rem] border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                            <div className="rounded-[1.4rem] border border-dashed border-border bg-[var(--surface-section)] p-4 text-sm text-muted-foreground">
                               Noch keine Upsells gepflegt.
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="rounded-[1.8rem] border border-slate-200 bg-slate-50 p-5">
-                        <div className="flex items-center justify-between gap-4 text-sm text-slate-600">
+                      <div className="rounded-[1.8rem] border border-border bg-[var(--surface-section)] p-5">
+                        <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
                           <span>Netto</span>
-                          <span className="font-semibold text-slate-900">{formatCurrency(netTotal)}</span>
+                          <span className="font-semibold text-foreground">{formatCurrency(netTotal)}</span>
                         </div>
-                        <div className="mt-3 flex items-center justify-between gap-4 text-sm text-slate-600">
+                        <div className="mt-3 flex items-center justify-between gap-4 text-sm text-muted-foreground">
                           <span>Steuer ({taxRate.toFixed(2).replace(/\.00$/, "")}%)</span>
-                          <span className="font-semibold text-slate-900">{formatCurrency(taxAmount)}</span>
+                          <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span>
                         </div>
-                        <div className="mt-4 border-t border-slate-200 pt-4">
+                        <div className="mt-4 border-t border-border pt-4">
                           <div className="flex items-center justify-between gap-4">
-                            <span className="text-base font-black text-slate-950">Brutto gesamt</span>
-                            <span className="text-2xl font-black tracking-tight text-[#0E1F53]">{formatCurrency(grossTotal)}</span>
+                            <span className="text-base font-black text-foreground">Brutto gesamt</span>
+                            <span className="text-2xl font-black tracking-tight text-foreground">{formatCurrency(grossTotal)}</span>
                           </div>
                         </div>
                       </div>
@@ -566,25 +560,24 @@ const ProductDetail = () => {
                       <Button
                         onClick={handleCheckout}
                         disabled={isCheckoutLoading || !product.stripe_price_id}
-                        className="h-14 w-full rounded-2xl text-base font-bold text-white shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                        style={{ backgroundColor: ctaColor }}
+                        className="btn-primary !h-14 !w-full !rounded-2xl text-base font-bold shadow-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isCheckoutLoading ? "Checkout wird vorbereitet..." : ctaText}
                         <ArrowUpRight size={18} />
                       </Button>
 
-                      <div className="space-y-3 rounded-[1.6rem] border border-slate-200 bg-white p-4">
-                        <div className="flex items-start gap-3 text-sm text-slate-700">
-                          <MonitorSmartphone size={18} className="mt-0.5 text-[#FF4B2C]" />
+                      <div className="space-y-3 rounded-[1.6rem] border border-border bg-card p-4">
+                        <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                          <MonitorSmartphone size={18} className="mt-0.5 text-primary" />
                           <span>Checkout läuft extern über Stripe — kein fragiles Cart-Management im Frontend.</span>
                         </div>
-                        <div className="flex items-start gap-3 text-sm text-slate-700">
-                          <Globe size={18} className="mt-0.5 text-[#FF4B2C]" />
+                        <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                          <Globe size={18} className="mt-0.5 text-primary" />
                           <span>Automatische Steuerberechnung läuft im Stripe Checkout abhängig vom Land des Käufers.</span>
                         </div>
                         {product.target_audience && (
-                          <div className="flex items-start gap-3 text-sm text-slate-700">
-                            <Users2 size={18} className="mt-0.5 text-[#FF4B2C]" />
+                          <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                            <Users2 size={18} className="mt-0.5 text-primary" />
                             <span>{product.target_audience}</span>
                           </div>
                         )}

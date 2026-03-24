@@ -21,7 +21,7 @@ const GLOBAL_SETTINGS_EDITABLE_COLUMNS = [
   "font_family", "company_name", "logo_path", "use_text_logo",
   "text_logo_color_hex", "show_logo_dot", "logo_dot_color_hex", "logo_font_family", "cta_hover_hex", "footer_bg_hex",
   "imprint_company", "imprint_address", "imprint_contact", "imprint_legal",
-  "loader_heading", "loader_subtext", "loader_bg_hex", "loader_text_hex"
+  "loader_heading", "loader_subtext", "loader_bg_hex", "loader_text_hex", "button_theme"
 ] as const;
 
 type ThemePresetColors = {
@@ -159,6 +159,17 @@ const THEME_PRESETS: ThemePreset[] = [
 
 const toUpperHex = (value?: string | null) => (value || "").trim().toUpperCase();
 
+const getReadableButtonText = (hex?: string | null) => {
+  const safe = (hex || "").trim();
+  const fallback = "#FFFFFF";
+  if (!/^#([0-9a-fA-F]{6})$/.test(safe)) return fallback;
+  const r = parseInt(safe.slice(1, 3), 16);
+  const g = parseInt(safe.slice(3, 5), 16);
+  const b = parseInt(safe.slice(5, 7), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.62 ? "#0F172A" : "#FFFFFF";
+};
+
 const AdminBranding = () => {
   const queryClient = useQueryClient();
   const { activeSiteId } = useSiteContext();
@@ -168,7 +179,18 @@ const AdminBranding = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (settings) setForm(settings);
+    if (!settings) return;
+
+    setForm({
+      ...settings,
+      button_theme: {
+        primary_background_color: settings.button_theme?.primary_background_color || settings.primary_color_hex || "#FF4B2C",
+        primary_text_color: settings.button_theme?.primary_text_color || getReadableButtonText(settings.button_theme?.primary_background_color || settings.primary_color_hex || "#FF4B2C"),
+        secondary_background_color: settings.button_theme?.secondary_background_color || "rgba(255,255,255,0.84)",
+        secondary_text_color: settings.button_theme?.secondary_text_color || settings.text_main_hex || "#0F172A",
+        secondary_border_color: settings.button_theme?.secondary_border_color || settings.border_color_hex || "rgba(148,163,184,0.26)",
+      },
+    });
   }, [settings]);
 
   const activePresetId = useMemo(() => {
@@ -212,8 +234,34 @@ const AdminBranding = () => {
     setForm((prev: any) => ({ ...prev, [key]: value }));
   };
 
+  const updateButtonThemeField = (key: string, value: string) => {
+    setForm((prev: any) => {
+      const nextButtonTheme = {
+        ...(prev?.button_theme || {}),
+        [key]: value,
+      };
+
+      if (key === "primary_background_color") {
+        nextButtonTheme.primary_text_color = getReadableButtonText(value);
+      }
+
+      return {
+        ...prev,
+        button_theme: nextButtonTheme,
+      };
+    });
+  };
+
   const applyPreset = (presetColors: ThemePresetColors) => {
-    setForm((prev: any) => ({ ...prev, ...presetColors }));
+    setForm((prev: any) => ({
+      ...prev,
+      ...presetColors,
+      button_theme: {
+        ...(prev?.button_theme || {}),
+        primary_background_color: presetColors.primary_color_hex,
+        primary_text_color: getReadableButtonText(presetColors.primary_color_hex),
+      },
+    }));
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,6 +398,31 @@ const AdminBranding = () => {
                     value={form.cta_hover_hex || "#E03A1E"}
                     onChange={(e) => updateField("cta_hover_hex", e.target.value.toUpperCase())}
                   />
+                </div>
+              </div>
+
+              <div className="mb-6 rounded-[1.5rem] border border-slate-100 bg-slate-50/80 p-5 md:p-6">
+                <div className="mb-4">
+                  <Label className="text-base font-bold text-slate-900 block">Globale Buttons</Label>
+                  <p className="mt-1 text-sm text-slate-500">Steuert alle Primary-CTAs global. Textfarbe wird per Smart Contrast automatisch gesetzt.</p>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-slate-700">Primary Button Farbe</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={form.button_theme?.primary_background_color || form.primary_color_hex || "#FF4B2C"}
+                      onChange={(e) => updateButtonThemeField("primary_background_color", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700">Automatische Textfarbe</Label>
+                    <div className="flex h-12 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">
+                      {form.button_theme?.primary_text_color || getReadableButtonText(form.button_theme?.primary_background_color || form.primary_color_hex || "#FF4B2C")}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -573,7 +646,13 @@ const AdminBranding = () => {
                   )}
                 </div>
                 <div className="flex gap-3 mt-8">
-                  <span className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold shadow-md transition-colors" style={{ backgroundColor: form.primary_color_hex || "#FF4B2C", color: "#FFFFFF" }}>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold shadow-md transition-colors"
+                    style={{
+                      backgroundColor: form.button_theme?.primary_background_color || form.primary_color_hex || "#FF4B2C",
+                      color: form.button_theme?.primary_text_color || getReadableButtonText(form.button_theme?.primary_background_color || form.primary_color_hex || "#FF4B2C"),
+                    }}
+                  >
                     <CheckCircle2 size={16} /> Beispiel CTA
                   </span>
                 </div>

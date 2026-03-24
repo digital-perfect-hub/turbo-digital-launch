@@ -82,7 +82,7 @@ const ServicesSection = () => {
   const effectiveServices = services?.length ? services : fallbackServices;
 
   return (
-    <section id="leistungen" className="bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="Unsere Leistungen">
+    <section id="leistungen" className="surface-section-shell bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="Unsere Leistungen">
       <div className="section-container relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 md:mb-24">
           <motion.div

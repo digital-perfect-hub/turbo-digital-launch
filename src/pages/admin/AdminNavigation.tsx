@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link2, Plus, Trash2, Edit2, Palette, ChevronRight, Menu, Type, LayoutTemplate } from "lucide-react";
+import { Edit2, Link2, Menu, Palette, Plus, Trash2, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,71 +9,216 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { defaultNavigationTheme, type NavigationTheme } from "@/lib/theme-settings";
+
+type NavigationLink = {
+  id: string;
+  label: string;
+  url: string;
+  parent_id: string | null;
+};
+
+type StylingState = {
+  nav_font_weight: string;
+  nav_font_style: string;
+  nav_font_family: string;
+  nav_show_underline: boolean;
+  nav_underline_color_hex: string;
+  nav_animate_underline: boolean;
+  nav_background_hex: string;
+  nav_background_opacity: number;
+  nav_glass_effect: boolean;
+  nav_text_color_hex: string;
+  nav_hover_color_hex: string;
+  nav_cta_color_hex: string;
+};
+
+const DEFAULT_STYLING: StylingState = {
+  nav_font_weight: "bold",
+  nav_font_style: "normal",
+  nav_font_family: "default",
+  nav_show_underline: false,
+  nav_underline_color_hex: "#FF4B2C",
+  nav_animate_underline: true,
+  nav_background_hex: "#FFFFFF",
+  nav_background_opacity: 92,
+  nav_glass_effect: true,
+  nav_text_color_hex: "#0E1F53",
+  nav_hover_color_hex: "#FF4B2C",
+  nav_cta_color_hex: "#FF4B2C",
+};
+
+const normalizeHex = (value?: string | null, fallback = "#FF4B2C") => {
+  const raw = (value || "").trim();
+  if (/^#([0-9a-fA-F]{6})$/.test(raw)) return raw.toUpperCase();
+  if (/^#([0-9a-fA-F]{3})$/.test(raw)) {
+    const short = raw.slice(1).split("").map((char) => `${char}${char}`).join("");
+    return `#${short}`.toUpperCase();
+  }
+  return fallback;
+};
+
+const hexToRgb = (hex: string) => {
+  const safeHex = normalizeHex(hex, "#FFFFFF").slice(1);
+  return {
+    r: parseInt(safeHex.slice(0, 2), 16),
+    g: parseInt(safeHex.slice(2, 4), 16),
+    b: parseInt(safeHex.slice(4, 6), 16),
+  };
+};
+
+const rgbaFromHex = (hex: string, opacity: number) => {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, opacity))})`;
+};
+
+const parseStoredBackground = (value?: string | null) => {
+  const raw = (value || "").trim();
+  if (!raw) return { hex: "#FFFFFF", opacity: 92, glass: true };
+
+  if (/^rgba?\(/i.test(raw)) {
+    const values = raw.replace(/rgba?\(/i, "").replace(")", "").split(",").map((item) => item.trim());
+    const [r = "255", g = "255", b = "255", a = "0.92"] = values;
+    const toHex = (channel: string) => Number(channel).toString(16).padStart(2, "0");
+    return {
+      hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase(),
+      opacity: Math.round(Math.max(0, Math.min(1, Number(a))) * 100),
+      glass: Number(a) < 1,
+    };
+  }
+
+  return {
+    hex: normalizeHex(raw, "#FFFFFF"),
+    opacity: 100,
+    glass: false,
+  };
+};
+
+const getReadableText = (hex: string) => {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.62 ? "#0F172A" : "#FFFFFF";
+};
 
 const AdminNavigation = () => {
   const qc = useQueryClient();
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ label: "", url: "", parent_id: "" });
-  
-  const [styling, setStyling] = useState({ 
-    nav_text_color_hex: "#94a3b8", 
-    nav_hover_color_hex: "#FF4B2C",
-    nav_font_weight: "bold",
-    nav_font_style: "normal",
-    nav_font_family: "default",
-    nav_show_underline: false,
-    nav_underline_color_hex: "#FF4B2C",
-    nav_animate_underline: true
-  });
+  const [styling, setStyling] = useState<StylingState>(DEFAULT_STYLING);
 
   const { data: themeSettings } = useQuery({
     queryKey: ["global_settings_nav", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("global_settings")
-        .select("id, nav_text_color_hex, nav_hover_color_hex, nav_font_weight, nav_font_style, nav_font_family, nav_show_underline, nav_underline_color_hex, nav_animate_underline")
-        .eq("site_id", siteId).limit(1).maybeSingle();
+      const { data, error } = await supabase
+        .from("global_settings")
+        .select("id, navigation_theme, nav_text_color_hex, nav_hover_color_hex, nav_font_weight, nav_font_style, nav_font_family, nav_show_underline, nav_underline_color_hex, nav_animate_underline")
+        .eq("site_id", siteId)
+        .limit(1)
+        .maybeSingle();
+
       if (error) throw error;
       return data;
     },
   });
 
   useEffect(() => {
-    if (themeSettings) {
-      setStyling({
-        nav_text_color_hex: themeSettings.nav_text_color_hex || "#94a3b8",
-        nav_hover_color_hex: themeSettings.nav_hover_color_hex || "#FF4B2C",
-        nav_font_weight: themeSettings.nav_font_weight || "bold",
-        nav_font_style: themeSettings.nav_font_style || "normal",
-        nav_font_family: themeSettings.nav_font_family || "default",
-        nav_show_underline: themeSettings.nav_show_underline ?? false,
-        nav_underline_color_hex: themeSettings.nav_underline_color_hex || "#FF4B2C",
-        nav_animate_underline: themeSettings.nav_animate_underline ?? true,
-      });
-    }
+    const navTheme = {
+      ...defaultNavigationTheme,
+      ...((themeSettings?.navigation_theme as NavigationTheme | null) || {}),
+    };
+    const parsedBackground = parseStoredBackground(navTheme.background_color);
+
+    setStyling({
+      nav_font_weight: themeSettings?.nav_font_weight || DEFAULT_STYLING.nav_font_weight,
+      nav_font_style: themeSettings?.nav_font_style || DEFAULT_STYLING.nav_font_style,
+      nav_font_family: themeSettings?.nav_font_family || DEFAULT_STYLING.nav_font_family,
+      nav_show_underline: themeSettings?.nav_show_underline ?? DEFAULT_STYLING.nav_show_underline,
+      nav_underline_color_hex: normalizeHex(themeSettings?.nav_underline_color_hex, DEFAULT_STYLING.nav_underline_color_hex),
+      nav_animate_underline: themeSettings?.nav_animate_underline ?? DEFAULT_STYLING.nav_animate_underline,
+      nav_background_hex: parsedBackground.hex,
+      nav_background_opacity: parsedBackground.opacity,
+      nav_glass_effect: parsedBackground.glass,
+      nav_text_color_hex: normalizeHex(themeSettings?.nav_text_color_hex || navTheme.text_color, DEFAULT_STYLING.nav_text_color_hex),
+      nav_hover_color_hex: normalizeHex(themeSettings?.nav_hover_color_hex || navTheme.hover_text_color, DEFAULT_STYLING.nav_hover_color_hex),
+      nav_cta_color_hex: normalizeHex(navTheme.cta_background_color, DEFAULT_STYLING.nav_cta_color_hex),
+    });
   }, [themeSettings]);
 
   const { data: links = [], isLoading: linksLoading } = useQuery({
     queryKey: ["navigation_links", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("navigation_links").select("*").eq("site_id", siteId).order("sort_order", { ascending: true }).order("created_at", { ascending: true });
+      const { data, error } = await supabase
+        .from("navigation_links")
+        .select("*")
+        .eq("site_id", siteId)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
       if (error) throw error;
-      return data;
+      return (data || []) as NavigationLink[];
     },
   });
 
+  const previewTheme = useMemo(() => {
+    const opacity = styling.nav_glass_effect ? styling.nav_background_opacity / 100 : 1;
+    const backgroundColor = styling.nav_glass_effect
+      ? rgbaFromHex(styling.nav_background_hex, opacity)
+      : normalizeHex(styling.nav_background_hex, "#FFFFFF");
+
+    const textColor = normalizeHex(styling.nav_text_color_hex, DEFAULT_STYLING.nav_text_color_hex);
+    const hoverColor = normalizeHex(styling.nav_hover_color_hex, DEFAULT_STYLING.nav_hover_color_hex);
+    const ctaColor = normalizeHex(styling.nav_cta_color_hex, DEFAULT_STYLING.nav_cta_color_hex);
+
+    const borderColor = styling.nav_glass_effect
+      ? rgbaFromHex(textColor, 0.14)
+      : rgbaFromHex(textColor, 0.18);
+
+    return {
+      background_color: backgroundColor,
+      text_color: textColor,
+      muted_text_color: rgbaFromHex(textColor, 0.72),
+      border_color: borderColor,
+      hover_background_color: rgbaFromHex(hoverColor, 0.08),
+      hover_text_color: hoverColor,
+      cta_background_color: ctaColor,
+      cta_text_color: getReadableText(ctaColor),
+      topbar_background_color: styling.nav_glass_effect ? rgbaFromHex(styling.nav_background_hex, Math.max(0.72, opacity - 0.08)) : backgroundColor,
+      topbar_text_color: textColor,
+      topbar_accent_color: ctaColor,
+      logo_badge_background_color: defaultNavigationTheme.logo_badge_background_color,
+      logo_badge_text_color: defaultNavigationTheme.logo_badge_text_color,
+    } satisfies NavigationTheme;
+  }, [styling]);
+
   const saveStyling = useMutation({
-    mutationFn: async (values: typeof styling) => {
+    mutationFn: async (values: StylingState) => {
       const rowId = themeSettings?.id || "default";
-      const { error } = await supabase.from("global_settings").upsert({ id: rowId, site_id: siteId, ...values }, { onConflict: "site_id" });
+      const payload = {
+        id: rowId,
+        site_id: siteId,
+        navigation_theme: previewTheme,
+        nav_text_color_hex: values.nav_text_color_hex,
+        nav_hover_color_hex: values.nav_hover_color_hex,
+        nav_font_weight: values.nav_font_weight,
+        nav_font_style: values.nav_font_style,
+        nav_font_family: values.nav_font_family,
+        nav_show_underline: values.nav_show_underline,
+        nav_underline_color_hex: values.nav_underline_color_hex,
+        nav_animate_underline: values.nav_animate_underline,
+      };
+
+      const { error } = await supabase.from("global_settings").upsert(payload, { onConflict: "site_id" });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["global_settings"] });
-      toast.success("Navigations-Styling gespeichert!");
+      qc.invalidateQueries({ queryKey: ["global_settings_nav", siteId] });
+      toast.success("Navigation gespeichert.");
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (error: any) => toast.error(error?.message || "Navigation konnte nicht gespeichert werden."),
   });
 
   const saveLink = useMutation({
@@ -84,21 +229,23 @@ const AdminNavigation = () => {
         url: form.url,
         parent_id: form.parent_id === "none" || !form.parent_id ? null : form.parent_id,
       };
+
       if (editingId) {
         const { error } = await supabase.from("navigation_links").update(payload).eq("id", editingId);
         if (error) throw error;
-      } else {
-        const { error } = await supabase.from("navigation_links").insert([payload]);
-        if (error) throw error;
+        return;
       }
+
+      const { error } = await supabase.from("navigation_links").insert([payload]);
+      if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["navigation_links"] });
-      setForm({ label: "", url: "", parent_id: "" });
+      qc.invalidateQueries({ queryKey: ["navigation_links", siteId] });
       setEditingId(null);
-      toast.success("Link gespeichert!");
+      setForm({ label: "", url: "", parent_id: "" });
+      toast.success("Navigationslink gespeichert.");
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (error: any) => toast.error(error?.message || "Link konnte nicht gespeichert werden."),
   });
 
   const deleteLink = useMutation({
@@ -107,231 +254,260 @@ const AdminNavigation = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["navigation_links"] });
-      toast.success("Link gelöscht!");
+      qc.invalidateQueries({ queryKey: ["navigation_links", siteId] });
+      toast.success("Link gelöscht.");
     },
+    onError: (error: any) => toast.error(error?.message || "Link konnte nicht gelöscht werden."),
   });
 
-  const topLevelLinks = links.filter((l) => !l.parent_id);
-  const getChildren = (parentId: string) => links.filter((l) => l.parent_id === parentId);
+  const topLevelLinks = links.filter((item) => !item.parent_id);
+  const getChildren = (parentId: string) => links.filter((item) => item.parent_id === parentId);
 
-  // CSS-Klassen für die Vorschau berechnen
-  const previewFontFamily = styling.nav_font_family === 'serif' ? 'font-serif' : styling.nav_font_family === 'mono' ? 'font-mono' : 'font-sans';
-  const previewFontWeight = styling.nav_font_weight === 'normal' ? 'font-normal' : styling.nav_font_weight === 'medium' ? 'font-medium' : styling.nav_font_weight === 'extrabold' ? 'font-extrabold' : 'font-bold';
-  const previewFontStyle = styling.nav_font_style === 'italic' ? 'italic' : 'not-italic';
-  const previewClasses = `${previewFontFamily} ${previewFontWeight} ${previewFontStyle} uppercase tracking-widest text-sm relative group cursor-pointer py-1`;
+  const previewFontFamily = styling.nav_font_family === "serif" ? "font-serif" : styling.nav_font_family === "mono" ? "font-mono" : "font-sans";
+  const previewFontWeight = styling.nav_font_weight === "normal" ? "font-normal" : styling.nav_font_weight === "medium" ? "font-medium" : styling.nav_font_weight === "extrabold" ? "font-extrabold" : "font-bold";
+  const previewFontStyle = styling.nav_font_style === "italic" ? "italic" : "not-italic";
+  const previewClasses = `${previewFontFamily} ${previewFontWeight} ${previewFontStyle} relative inline-flex cursor-pointer items-center gap-1.5 py-1 text-sm uppercase tracking-[0.18em] transition-colors duration-300`;
 
   return (
     <div className="p-6 md:p-10 max-w-6xl">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Navigation & Menü</h1>
-          <p className="mt-2 text-sm text-slate-500">Steuere Links, Typografie und Hover-Animationen.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Navigation & Menü</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Live-Vorschau, Smart-Glass und CTA-Farben direkt aus dem vorhandenen navigation_theme.</p>
         </div>
-        <Button onClick={() => saveStyling.mutate(styling)} disabled={saveStyling.isPending} className="rounded-xl bg-[#FF4B2C] hover:bg-[#E03A1E] text-white px-6 py-5 shadow-md shadow-[#FF4B2C]/20 transition-transform hover:scale-105">
-          {saveStyling.isPending ? "Speichere..." : "Styling & Farben speichern"}
+        <Button onClick={() => saveStyling.mutate(styling)} disabled={saveStyling.isPending} className="rounded-xl px-6 py-5 text-white shadow-md transition-transform hover:scale-[1.01]">
+          {saveStyling.isPending ? "Speichere..." : "Navigation speichern"}
         </Button>
       </div>
 
-      {/* STYLING STEUERUNG MIT LIVE-VORSCHAU */}
-      <section className="glass-card rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm mb-8">
-        
-        {/* LIVE-VORSCHAU */}
-        <div className="mb-8 p-6 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center gap-8 shadow-inner overflow-hidden relative">
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none" />
-           <div className="text-xs text-slate-500 absolute top-4 left-4 font-mono">LIVE PREVIEW</div>
-           
-           {/* Dummy Link 1 */}
-           <div 
-             className={previewClasses}
-             style={{ color: styling.nav_text_color_hex }}
-             onMouseEnter={(e) => (e.currentTarget.style.color = styling.nav_hover_color_hex)}
-             onMouseLeave={(e) => (e.currentTarget.style.color = styling.nav_text_color_hex)}
-           >
-             Leistungen
-             {styling.nav_show_underline && (
-               <span className={`absolute -bottom-1 left-0 h-[2px] w-full ${styling.nav_animate_underline ? "origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" : "opacity-0 transition-opacity duration-300 group-hover:opacity-100"}`} style={{ backgroundColor: styling.nav_underline_color_hex }} />
-             )}
-           </div>
-
-           {/* Dummy Link 2 */}
-           <div 
-             className={previewClasses}
-             style={{ color: styling.nav_text_color_hex }}
-             onMouseEnter={(e) => (e.currentTarget.style.color = styling.nav_hover_color_hex)}
-             onMouseLeave={(e) => (e.currentTarget.style.color = styling.nav_text_color_hex)}
-           >
-             Projekte
-             {styling.nav_show_underline && (
-               <span className={`absolute -bottom-1 left-0 h-[2px] w-full ${styling.nav_animate_underline ? "origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" : "opacity-0 transition-opacity duration-300 group-hover:opacity-100"}`} style={{ backgroundColor: styling.nav_underline_color_hex }} />
-             )}
-           </div>
+      <section className="glass-card mb-8 rounded-[2rem] border bg-card p-8 shadow-sm">
+        <div className="mb-6 flex items-center gap-3 text-lg font-bold text-foreground">
+          <Palette size={22} className="text-primary" /> Live-Vorschau
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          
-          {/* Spalte 1: Typografie */}
-          <div className="space-y-6 border-b lg:border-b-0 lg:border-r border-slate-100 pb-6 lg:pb-0 lg:pr-8">
-            <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
-              <Type size={20} className="text-[#FF4B2C]" /> Text & Typografie
+        <div className="overflow-hidden rounded-[1.8rem] border p-5 shadow-inner" style={{ background: previewTheme.background_color || undefined, borderColor: previewTheme.border_color || undefined, backdropFilter: styling.nav_glass_effect ? "blur(18px)" : undefined }}>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="text-xs font-mono uppercase tracking-[0.22em]" style={{ color: previewTheme.muted_text_color || undefined }}>Navigation Preview</div>
+            <div className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]" style={{ background: previewTheme.cta_background_color || undefined, color: previewTheme.cta_text_color || undefined }}>
+              Haupt-CTA
             </div>
-            
+          </div>
+
+          <div className="flex flex-wrap items-center gap-6">
+            {["Leistungen", "Projekte", "Kontakt"].map((label) => (
+              <div key={label} className={`${previewClasses} group`} style={{ color: previewTheme.text_color || undefined }}>
+                {label}
+                {styling.nav_show_underline && (
+                  <span
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full ${styling.nav_animate_underline ? "origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" : "opacity-100"}`}
+                    style={{ backgroundColor: styling.nav_underline_color_hex }}
+                  />
+                )}
+              </div>
+            ))}
+
+            <div className="ml-auto hidden rounded-full px-5 py-3 text-sm font-bold md:inline-flex" style={{ background: previewTheme.cta_background_color || undefined, color: previewTheme.cta_text_color || undefined }}>
+              Anfrage starten
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 text-lg font-bold text-foreground">
+              <Palette size={20} className="text-primary" /> Farben & Glass
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-slate-600 text-xs uppercase tracking-wider">Schriftart</Label>
-                <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none" value={styling.nav_font_family} onChange={(e) => setStyling({ ...styling, nav_font_family: e.target.value })}>
-                  <option value="default">Standard (Sans-Serif)</option>
-                  <option value="serif">Edel (Serif)</option>
-                  <option value="mono">Tech (Monospace)</option>
-                </select>
+                <Label>Navigation Hintergrund</Label>
+                <Input type="color" className="h-12 cursor-pointer" value={styling.nav_background_hex} onChange={(event) => setStyling((prev) => ({ ...prev, nav_background_hex: event.target.value.toUpperCase() }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-600 text-xs uppercase tracking-wider">Dicke (Weight)</Label>
-                <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none" value={styling.nav_font_weight} onChange={(e) => setStyling({ ...styling, nav_font_weight: e.target.value })}>
-                  <option value="normal">Normal</option>
-                  <option value="medium">Medium</option>
-                  <option value="bold">Bold (Dick)</option>
-                  <option value="extrabold">Extra Bold</option>
-                </select>
+                <Label>Textfarbe</Label>
+                <Input type="color" className="h-12 cursor-pointer" value={styling.nav_text_color_hex} onChange={(event) => setStyling((prev) => ({ ...prev, nav_text_color_hex: event.target.value.toUpperCase() }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-600 text-xs uppercase tracking-wider">Stil</Label>
-                <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none" value={styling.nav_font_style} onChange={(e) => setStyling({ ...styling, nav_font_style: e.target.value })}>
-                  <option value="normal">Normal</option>
-                  <option value="italic">Kursiv (Italic)</option>
-                </select>
+                <Label>Hover-Farbe</Label>
+                <Input type="color" className="h-12 cursor-pointer" value={styling.nav_hover_color_hex} onChange={(event) => setStyling((prev) => ({ ...prev, nav_hover_color_hex: event.target.value.toUpperCase() }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-600 text-xs uppercase tracking-wider">Standard Textfarbe</Label>
-                <Input type="color" className="h-10 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={styling.nav_text_color_hex} onChange={(e) => setStyling({ ...styling, nav_text_color_hex: e.target.value.toUpperCase() })} />
+                <Label>CTA-Farbe</Label>
+                <Input type="color" className="h-12 cursor-pointer" value={styling.nav_cta_color_hex} onChange={(event) => setStyling((prev) => ({ ...prev, nav_cta_color_hex: event.target.value.toUpperCase() }))} />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border bg-background/70 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="font-semibold text-foreground">Glass-Effekt aktiv</div>
+                  <p className="mt-1 text-sm text-muted-foreground">Steuert die Transparenz direkt über navigation_theme.background_color.</p>
+                </div>
+                <Switch checked={styling.nav_glass_effect} onCheckedChange={(checked) => setStyling((prev) => ({ ...prev, nav_glass_effect: checked }))} />
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Deckkraft</span>
+                  <span className="font-semibold text-foreground">{styling.nav_background_opacity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="35"
+                  max="100"
+                  value={styling.nav_background_opacity}
+                  onChange={(event) => setStyling((prev) => ({ ...prev, nav_background_opacity: Number(event.target.value) }))}
+                  className="w-full accent-primary"
+                  disabled={!styling.nav_glass_effect}
+                />
               </div>
             </div>
           </div>
 
-          {/* Spalte 2: Hover & Unterstrich */}
-          <div className="space-y-6 lg:pl-4">
-            <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
-              <Palette size={20} className="text-[#FF4B2C]" /> Hover & Effekte
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 text-lg font-bold text-foreground">
+              <Type size={20} className="text-primary" /> Typografie & Effekte
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 mb-4">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-slate-600 text-xs uppercase tracking-wider">Hover Textfarbe</Label>
-                <Input type="color" className="h-10 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full" value={styling.nav_hover_color_hex} onChange={(e) => setStyling({ ...styling, nav_hover_color_hex: e.target.value.toUpperCase() })} />
+                <Label>Schriftart</Label>
+                <select className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none" value={styling.nav_font_family} onChange={(event) => setStyling((prev) => ({ ...prev, nav_font_family: event.target.value }))}>
+                  <option value="default">Standard</option>
+                  <option value="serif">Serif</option>
+                  <option value="mono">Monospace</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Gewicht</Label>
+                <select className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none" value={styling.nav_font_weight} onChange={(event) => setStyling((prev) => ({ ...prev, nav_font_weight: event.target.value }))}>
+                  <option value="normal">Normal</option>
+                  <option value="medium">Medium</option>
+                  <option value="bold">Bold</option>
+                  <option value="extrabold">Extra Bold</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Stil</Label>
+                <select className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none" value={styling.nav_font_style} onChange={(event) => setStyling((prev) => ({ ...prev, nav_font_style: event.target.value }))}>
+                  <option value="normal">Normal</option>
+                  <option value="italic">Italic</option>
+                </select>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-slate-700 font-bold">Unterstrich bei Hover?</Label>
-                <Switch checked={styling.nav_show_underline} onCheckedChange={(c) => setStyling({ ...styling, nav_show_underline: c })} className="data-[state=checked]:bg-[#FF4B2C]" />
+            <div className="rounded-2xl border bg-background/70 p-5 space-y-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="font-semibold text-foreground">Underline anzeigen</div>
+                  <p className="mt-1 text-sm text-muted-foreground">Unterstreicht Menüpunkte im Frontend.</p>
+                </div>
+                <Switch checked={styling.nav_show_underline} onCheckedChange={(checked) => setStyling((prev) => ({ ...prev, nav_show_underline: checked }))} />
               </div>
 
               {styling.nav_show_underline && (
-                <div className="grid gap-4 md:grid-cols-2 pt-3 border-t border-slate-200">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-slate-600 text-xs uppercase tracking-wider">Unterstrich Farbe</Label>
-                    <Input type="color" className="h-10 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full" value={styling.nav_underline_color_hex} onChange={(e) => setStyling({ ...styling, nav_underline_color_hex: e.target.value.toUpperCase() })} />
+                    <Label>Underline-Farbe</Label>
+                    <Input type="color" className="h-12 cursor-pointer" value={styling.nav_underline_color_hex} onChange={(event) => setStyling((prev) => ({ ...prev, nav_underline_color_hex: event.target.value.toUpperCase() }))} />
                   </div>
-                  <div className="space-y-2 flex flex-col justify-center">
-                    <Label className="text-slate-600 text-xs uppercase tracking-wider mb-2">Animiert einfahren?</Label>
-                    <Switch checked={styling.nav_animate_underline} onCheckedChange={(c) => setStyling({ ...styling, nav_animate_underline: c })} className="data-[state=checked]:bg-[#FF4B2C]" />
+                  <div className="flex items-center justify-between rounded-xl border bg-background px-4 py-3">
+                    <span className="text-sm font-medium text-foreground">Animation aktiv</span>
+                    <Switch checked={styling.nav_animate_underline} onCheckedChange={(checked) => setStyling((prev) => ({ ...prev, nav_animate_underline: checked }))} />
                   </div>
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* MENÜ BUILDER */}
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="glass-card rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
-            <Menu size={24} className="text-[#FF4B2C]" /> Menüstruktur
+        <section className="glass-card rounded-[2rem] border bg-card p-8 shadow-sm">
+          <div className="mb-6 flex items-center gap-3 text-lg font-bold text-foreground">
+            <Menu size={22} className="text-primary" /> Menüstruktur
           </div>
 
           {linksLoading ? (
-            <div className="text-slate-500 text-sm">Lade Menü...</div>
+            <div className="text-sm text-muted-foreground">Lade Menü...</div>
           ) : topLevelLinks.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500 text-sm">
-              Noch keine Links vorhanden.
-            </div>
+            <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">Noch keine Links vorhanden.</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {topLevelLinks.map((link) => (
-                <div key={link.id} className="space-y-2">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <Link2 size={16} className="text-slate-400" />
-                      <span className="font-bold text-slate-800">{link.label}</span>
-                      <span className="text-xs text-slate-400 bg-slate-200 px-2 py-0.5 rounded-md">{link.url}</span>
+                <div key={link.id} className="rounded-2xl border bg-background/70 p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-bold text-foreground">{link.label}</div>
+                      <div className="mt-1 text-sm text-muted-foreground">{link.url}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => { setForm({ label: link.label, url: link.url, parent_id: link.parent_id || "none" }); setEditingId(link.id); }} className="p-1.5 text-slate-400 hover:text-[#FF4B2C] transition-colors"><Edit2 size={16} /></button>
-                      <button onClick={() => { if(window.confirm('Wirklich löschen?')) deleteLink.mutate(link.id) }} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+                      <button onClick={() => { setForm({ label: link.label, url: link.url, parent_id: link.parent_id || "none" }); setEditingId(link.id); }} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={16} /></button>
+                      <button onClick={() => deleteLink.mutate(link.id)} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={16} /></button>
                     </div>
                   </div>
 
-                  {getChildren(link.id).map((child) => (
-                    <div key={child.id} className="ml-8 flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <ChevronRight size={14} className="text-[#FF4B2C]" />
-                        <span className="text-sm font-semibold text-slate-700">{child.label}</span>
-                        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">{child.url}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => { setForm({ label: child.label, url: child.url, parent_id: child.parent_id || "none" }); setEditingId(child.id); }} className="p-1 text-slate-400 hover:text-[#FF4B2C]"><Edit2 size={14} /></button>
-                        <button onClick={() => deleteLink.mutate(child.id)} className="p-1 text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
-                      </div>
+                  {getChildren(link.id).length > 0 && (
+                    <div className="mt-4 space-y-2 border-l pl-4">
+                      {getChildren(link.id).map((child) => (
+                        <div key={child.id} className="flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">{child.label}</div>
+                            <div className="text-xs text-muted-foreground">{child.url}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => { setForm({ label: child.label, url: child.url, parent_id: child.parent_id || "none" }); setEditingId(child.id); }} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={14} /></button>
+                            <button onClick={() => deleteLink.mutate(child.id)} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        <section className="glass-card rounded-[2rem] border border-slate-200 bg-slate-950 p-8 shadow-xl self-start sticky top-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="text-lg font-bold text-white flex items-center gap-2">
-              {editingId ? <Edit2 size={20} className="text-[#FF4B2C]" /> : <Plus size={20} className="text-[#FF4B2C]" />}
+        <section className="overflow-hidden rounded-[2rem] border bg-slate-950 text-white shadow-sm">
+          <div className="border-b border-white/10 px-7 py-6">
+            <div className="flex items-center gap-3 text-lg font-bold">
+              {editingId ? <Edit2 size={20} className="text-primary" /> : <Plus size={20} className="text-primary" />}
               {editingId ? "Link bearbeiten" : "Neuen Link anlegen"}
             </div>
-            {editingId && (
-              <button onClick={() => { setEditingId(null); setForm({ label: "", url: "", parent_id: "" }); }} className="text-xs text-slate-400 hover:text-white">Abbrechen</button>
-            )}
+            <p className="mt-2 text-sm text-white/70">Top-Level oder Dropdown – beides läuft direkt über navigation_links.</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5 px-7 py-7">
             <div className="space-y-2">
-              <Label className="text-slate-300">Anzeige-Name (Label)</Label>
-              <Input className="rounded-xl border-white/10 bg-white/5 text-white focus:border-[#FF4B2C] placeholder:text-slate-600" placeholder="z.B. Leistungen" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+              <Label className="text-white/80">Titel</Label>
+              <Input value={form.label} onChange={(event) => setForm((prev) => ({ ...prev, label: event.target.value }))} placeholder="z. B. Leistungen" className="bg-white/5 text-white placeholder:text-white/40" />
             </div>
-            
             <div className="space-y-2">
-              <Label className="text-slate-300">Ziel-URL oder Anker</Label>
-              <Input className="rounded-xl border-white/10 bg-white/5 text-white focus:border-[#FF4B2C] placeholder:text-slate-600" placeholder="z.B. #leistungen oder /shop" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
+              <Label className="text-white/80">URL</Label>
+              <Input value={form.url} onChange={(event) => setForm((prev) => ({ ...prev, url: event.target.value }))} placeholder="#kontakt oder /impressum" className="bg-white/5 text-white placeholder:text-white/40" />
             </div>
-
             <div className="space-y-2">
-              <Label className="text-slate-300">Unterordnen unter...</Label>
-              <select 
-                className="w-full rounded-xl border border-white/10 bg-slate-900 text-white px-4 py-3 text-sm outline-none focus:border-[#FF4B2C]" 
-                value={form.parent_id || "none"} 
-                onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
-              >
-                <option value="none">-- Hauptmenü (Kein Dropdown) --</option>
-                {topLevelLinks.map(l => (
-                  <option key={l.id} value={l.id}>{l.label}</option>
+              <Label className="text-white/80">Parent</Label>
+              <select className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none" value={form.parent_id || "none"} onChange={(event) => setForm((prev) => ({ ...prev, parent_id: event.target.value }))}>
+                <option value="none">Top-Level Link</option>
+                {topLevelLinks.map((link) => (
+                  <option key={link.id} value={link.id}>{link.label}</option>
                 ))}
               </select>
             </div>
 
-            <Button onClick={() => saveLink.mutate()} disabled={!form.label || !form.url || saveLink.isPending} className="w-full mt-4 rounded-xl bg-[#FF4B2C] hover:bg-[#E03A1E] text-white shadow-md shadow-[#FF4B2C]/20">
-              {saveLink.isPending ? "Speichere..." : "Link speichern"}
-            </Button>
+            <div className="flex items-center gap-3 pt-2">
+              <Button onClick={() => saveLink.mutate()} disabled={!form.label.trim() || !form.url.trim() || saveLink.isPending} className="flex-1 rounded-xl text-white">
+                <Link2 size={16} />
+                {saveLink.isPending ? "Speichere..." : editingId ? "Link aktualisieren" : "Link anlegen"}
+              </Button>
+              {editingId && (
+                <Button variant="outline" onClick={() => { setEditingId(null); setForm({ label: "", url: "", parent_id: "" }); }} className="rounded-xl border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                  Zurücksetzen
+                </Button>
+              )}
+            </div>
           </div>
         </section>
       </div>
