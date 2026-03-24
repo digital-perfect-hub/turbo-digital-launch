@@ -51,6 +51,7 @@ export type SurfaceTheme = {
   card_border_color: string | null;
   card_text_color: string | null;
   card_muted_color: string | null;
+  title_color_hex?: string | null; // NEU: Manuelle Titel-Farbe
 };
 
 export type ButtonTheme = {
@@ -340,7 +341,7 @@ const resolveReadableColor = ({
   backgroundFallback,
   darkCandidate,
   lightCandidate = "#FFFFFF",
-  minimumContrast = 4.5,
+  minimumContrast = 6.0, // ERHÖHT: Zwingt dunkle Farben (wie dein Blau) sofort radikal zu weißer Schrift
 }: {
   explicitColor?: string | null;
   backgroundColor?: string | null;
@@ -752,6 +753,7 @@ export const applyThemeToRoot = (rawSettings?: Partial<GlobalThemeSettings> | nu
   setCssVar(root, "--surface-section", surface.section_background_color, surfaceSectionFallback);
   setCssVar(root, "--surface-section-foreground", safeSurfaceSectionForeground, surfaceSectionForegroundAuto);
   setCssVar(root, "--surface-section-muted", safeSurfaceSectionMuted, surfaceSectionMutedAuto);
+  setCssVar(root, "--surface-title", surface.title_color_hex || safeSurfaceSectionForeground, surfaceSectionForegroundAuto);
   setCssVar(root, "--surface-card", surface.card_background_color, surfaceCardFallback);
   setCssVar(root, "--surface-card-border", surface.card_border_color, surfaceCardBorderFallback);
   setCssVar(root, "--surface-card-text", safeSurfaceCardText, surfaceCardTextAuto);

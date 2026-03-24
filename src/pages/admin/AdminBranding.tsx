@@ -593,18 +593,37 @@ const AdminBranding = () => {
                 <div className="pt-5 border-t border-slate-200">
                   <Label className="text-slate-700 mb-4 block text-base font-bold">Text-Logo Einstellungen</Label>
 
-                  <div className="grid gap-4 md:grid-cols-2 mb-4">
+                  <div className="space-y-4 mb-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-600 text-xs uppercase tracking-wider">Logo Typografie</Label>
-                      <select className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" value={form.logo_font_family || "default"} onChange={(e) => updateField("logo_font_family", e.target.value)}>
-                        <option value="default">Standard (Sans-Serif)</option>
-                        <option value="serif">Edel (Serif)</option>
-                        <option value="mono">Tech (Monospace)</option>
-                      </select>
+                      <Label className="text-slate-700">Titel & Überschriften</Label>
+                      <Input
+                        type="color"
+                        className="h-12 w-full rounded-xl border border-slate-200 bg-white p-1.5 cursor-pointer"
+                        value={form.surface_theme?.title_color_hex || "#0F172A"}
+                        onChange={(e) =>
+                          setForm((prev: any) => ({
+                            ...prev,
+                            surface_theme: { ...prev.surface_theme, title_color_hex: e.target.value },
+                          }))
+                        }
+                      />
+                      <p className="text-[11px] text-slate-500 mt-1">Löschen/Standard = Automatischer Kontrast</p>
                     </div>
+
                     <div className="space-y-2">
-                      <Label className="text-slate-600 text-xs uppercase tracking-wider">Schriftfarbe</Label>
-                      <Input type="color" className="h-[46px] rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full" value={form.text_logo_color_hex || "#0F172A"} onChange={(e) => updateField("text_logo_color_hex", e.target.value.toUpperCase())} />
+                      <Label className="text-slate-700">Text (Haupttext)</Label>
+                      <Input
+                        type="color"
+                        className="h-12 w-full rounded-xl border border-slate-200 bg-white p-1.5 cursor-pointer"
+                        value={form.surface_theme?.page_foreground_color || "#0F172A"}
+                        onChange={(e) =>
+                          setForm((prev: any) => ({
+                            ...prev,
+                            surface_theme: { ...prev.surface_theme, page_foreground_color: e.target.value },
+                          }))
+                        }
+                      />
+                      <p className="text-[11px] text-slate-500 mt-1">Löschen/Standard = Automatischer Kontrast</p>
                     </div>
                   </div>
 

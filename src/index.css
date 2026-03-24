@@ -291,15 +291,14 @@
     color: var(--surface-page-foreground);
   }
 
-  .surface-page-shell h1,
-  .surface-page-shell h2,
-  .surface-page-shell h3,
-  .surface-page-shell h4,
-  .surface-page-shell h5,
-  .surface-page-shell h6,
-  .surface-page-shell .section-title,
-  .surface-page-shell .text-foreground {
-    color: var(--surface-page-foreground) !important;
+  .surface-section-shell h1,
+  .surface-section-shell h2,
+  .surface-section-shell h3,
+  .surface-section-shell h4,
+  .surface-section-shell h5,
+  .surface-section-shell h6,
+  .surface-section-shell .section-title {
+    color: var(--surface-title, var(--surface-section-foreground));
   }
 
   .surface-page-shell .text-muted-foreground {
