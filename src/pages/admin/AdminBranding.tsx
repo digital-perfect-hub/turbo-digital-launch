@@ -284,14 +284,42 @@ const AdminBranding = () => {
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 
   return (
-    <div className="p-6 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Branding & Theme</h1>
-        <p className="mt-2 text-sm text-slate-500">Volle Kontrolle über Agentur-Identität, Logo und Farben.</p>
+    <div className="max-w-[1680px] p-6 md:p-10">
+      <div className="mb-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF4B2C]/15 bg-[#FF4B2C]/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF4B2C]">
+              <Palette size={12} />
+              Branding Control Center
+            </div>
+            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">Branding & Theme</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
+              Farben, Identität und Ladebildschirm zentral steuern. Die Live-Vorschauen bleiben rechts sichtbar, damit der Kunde jederzeit versteht, was gerade verändert wird.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-3">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">01</div>
+              <div className="mt-2 text-sm font-bold text-slate-900">Theme-Basis</div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">Preset wählen und Farben feinjustieren.</p>
+            </div>
+            <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-3">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">02</div>
+              <div className="mt-2 text-sm font-bold text-slate-900">Identität</div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">Firmenname, Logo und Text-Logo sauber pflegen.</p>
+            </div>
+            <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-3">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">03</div>
+              <div className="mt-2 text-sm font-bold text-slate-900">Loading</div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">Gatekeeper-Startscreen direkt mit Vorschau anpassen.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-8">
+      <div className="grid gap-8 2xl:grid-cols-[minmax(0,1.08fr)_420px]">
+        <div className="min-w-0 space-y-8">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
               <Palette size={24} className="text-[#FF4B2C]" /> Farben & Schriften
@@ -546,8 +574,8 @@ const AdminBranding = () => {
           </section>
         </div>
 
-        <div className="space-y-8">
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="flex flex-col gap-8 2xl:sticky 2xl:top-8 self-start">
+          <section className="order-3 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex items-center gap-3 text-lg font-bold text-slate-900 mb-6">
               <Type size={24} className="text-[#FF4B2C]" /> Identität & Logo
             </div>
@@ -645,7 +673,11 @@ const AdminBranding = () => {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+          <section className="order-1 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="mb-5 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4 text-sm leading-relaxed text-slate-500">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Live-Vorschau</span>
+              <p className="mt-2">Marke, Logo und CTA bleiben hier beim Bearbeiten sichtbar. So sieht der Kunde sofort, wie sich das Branding im System anfühlt.</p>
+            </div>
             <div className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
               Live-Vorschau (Main)
             </div>
@@ -679,7 +711,7 @@ const AdminBranding = () => {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+          <section className="order-2 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
               Ladebildschirm Vorschau
             </div>

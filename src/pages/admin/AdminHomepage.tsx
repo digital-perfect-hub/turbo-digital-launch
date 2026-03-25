@@ -1366,11 +1366,11 @@ const AdminHomepage = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)_420px]">
-        <aside className="space-y-4">
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[220px_minmax(0,1fr)_360px]">
+        <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 max-h-[calc(100vh-12rem)] space-y-2 overflow-auto pr-1">
               {orderedSectionGroups.map((group, index) => {
                 const active = group.id === activeSectionId;
                 const isFirst = index === 0;
@@ -1378,41 +1378,41 @@ const AdminHomepage = () => {
                 return (
                   <div
                     key={group.id}
-                    className={`w-full rounded-[1.25rem] border px-4 py-4 text-left transition-all ${
+                    className={`w-full rounded-[1.15rem] border p-3 text-left transition-all ${
                       active
                         ? "border-[#FF4B2C] bg-[#FF4B2C]/5 shadow-sm"
                         : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
                       <button type="button" onClick={() => setActiveSection(group.id)} className="min-w-0 flex-1 text-left">
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center justify-between gap-2">
                           <span className={`text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
                           <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
-                            {group.fields.length} Felder
+                            {group.fields.length}
                           </span>
                         </div>
-                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{group.description}</p>
+                        <p className="mt-1.5 text-[11px] leading-4 text-slate-500">{group.description}</p>
                       </button>
 
-                      <div className="ml-2 flex shrink-0 flex-col gap-2">
+                      <div className="flex shrink-0 flex-col gap-1.5">
                         <button
                           type="button"
                           aria-label={`${group.title} nach oben verschieben`}
                           onClick={() => moveSection(group.id as HomepageSectionId, "up")}
                           disabled={isFirst}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
                         >
-                          <ArrowUp size={14} />
+                          <ArrowUp size={13} />
                         </button>
                         <button
                           type="button"
                           aria-label={`${group.title} nach unten verschieben`}
                           onClick={() => moveSection(group.id as HomepageSectionId, "down")}
                           disabled={isLast}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
                         >
-                          <ArrowDown size={14} />
+                          <ArrowDown size={13} />
                         </button>
                       </div>
                     </div>
@@ -1453,12 +1453,14 @@ const AdminHomepage = () => {
           </Tabs>
         </div>
 
-        <SectionPreviewPanel
-          sectionId={activeSectionId}
-          sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}
-          preview={getPreviewPayload(activeSectionId)}
-          styleVars={resolveHomepageSectionStyleVars(sectionStyles, activeSectionId)}
-        />
+        <div className="xl:col-span-2 2xl:col-span-1">
+          <SectionPreviewPanel
+            sectionId={activeSectionId}
+            sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}
+            preview={getPreviewPayload(activeSectionId)}
+            styleVars={resolveHomepageSectionStyleVars(sectionStyles, activeSectionId)}
+          />
+        </div>
       </div>
     </div>
   );

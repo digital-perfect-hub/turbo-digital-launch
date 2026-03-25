@@ -202,3 +202,9 @@ export const resolveHomepageSectionStyleVarsFromSettings = (
   const allStyles = parseHomepageSectionStyles(settings.home_section_styles);
   return resolveHomepageSectionStyleVars(allStyles, sectionId);
 };
+
+// Backward compatibility for mixed patch states:
+// older components may still import these helpers, but pattern rendering now runs via style vars/CSS overlays.
+export const resolveHomepageSectionPatternClass = () => "";
+
+export const resolveHomepageSectionPatternClassFromSettings = () => "";

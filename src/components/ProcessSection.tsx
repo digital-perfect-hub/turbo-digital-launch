@@ -2,7 +2,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowRight } from "lucide-react";
 import { defaultProcessSteps, defaultSiteText, type ProcessStep, useSiteSettings } from "@/hooks/useSiteSettings";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const navigateToTarget = (target: string) => {
   const normalized = (target || "").trim();
@@ -22,6 +22,7 @@ const ProcessSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { getSetting, getJsonSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "process");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "process");
 
   const steps = normalizeSteps(getJsonSetting<ProcessStep[]>("home_process_steps", defaultProcessSteps));
   const kicker =
@@ -36,7 +37,7 @@ const ProcessSection = () => {
     defaultSiteText.home_process_cta_link;
 
   return (
-    <section id="ablauf" className="homepage-style-scope relative overflow-hidden dark-section py-24 md:py-32" ref={ref} style={sectionStyleVars}>
+    <section id="ablauf" className={`homepage-style-scope dark-section ${sectionPatternClass} relative overflow-hidden py-24 md:py-32`} ref={ref} style={sectionStyleVars}>
       <div className="noise-overlay pointer-events-none absolute inset-0 z-0 opacity-20" />
 
       <div className="section-container relative z-10">

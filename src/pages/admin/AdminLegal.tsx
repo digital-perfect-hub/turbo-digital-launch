@@ -103,7 +103,7 @@ const AdminLegal = () => {
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl">
+    <div className="max-w-7xl p-6 md:p-8 lg:p-10">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Rechtsseiten</h1>
@@ -115,7 +115,7 @@ const AdminLegal = () => {
       </div>
 
       <Tabs value={activeSlug} onValueChange={(value) => setActiveSlug(value as LegalPageSlug)} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-slate-100 p-1">
+        <TabsList className="admin-tabs-shell grid w-full grid-cols-3 rounded-2xl p-1">
           {(Object.keys(slugMeta) as LegalPageSlug[]).map((slug) => {
             const Icon = slugMeta[slug].icon;
             return (
@@ -128,10 +128,10 @@ const AdminLegal = () => {
 
         {(Object.keys(slugMeta) as LegalPageSlug[]).map((slug) => (
           <TabsContent key={slug} value={slug} className="mt-6 space-y-6">
-            <Card className="rounded-[2rem] border-slate-200">
+            <Card className="admin-surface-card rounded-[2rem] border-slate-200 bg-white shadow-sm">
               <CardHeader>
-                <CardTitle>{slugMeta[slug].label} · Metadaten</CardTitle>
-                <CardDescription>Seitentitel, SEO-Defaults und Veröffentlichungsstatus für diese Rechtsseite.</CardDescription>
+                <CardTitle className="text-slate-900">{slugMeta[slug].label} · Metadaten</CardTitle>
+                <CardDescription className="text-slate-500">Seitentitel, SEO-Defaults und Veröffentlichungsstatus für diese Rechtsseite.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
@@ -146,7 +146,7 @@ const AdminLegal = () => {
                   <Label>SEO Description</Label>
                   <Input value={forms[slug].seo_description || ""} onChange={(e) => setForms((prev) => ({ ...prev, [slug]: { ...prev[slug], seo_description: e.target.value } }))} />
                 </div>
-                <div className="md:col-span-2 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="md:col-span-2 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/85 px-4 py-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Seite veröffentlicht</p>
                     <p className="text-xs text-slate-500">Nur veröffentlichte Legal-Pages sollen public ausgespielt werden.</p>
@@ -156,10 +156,10 @@ const AdminLegal = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[2rem] border-slate-200">
+            <Card className="admin-surface-card rounded-[2rem] border-slate-200 bg-white shadow-sm">
               <CardHeader>
-                <CardTitle>{slugMeta[slug].label} · Inhalt</CardTitle>
-                <CardDescription>Der Inhalt wird als HTML gespeichert und auf der öffentlichen Seite sanitisiert gerendert.</CardDescription>
+                <CardTitle className="text-slate-900">{slugMeta[slug].label} · Inhalt</CardTitle>
+                <CardDescription className="text-slate-500">Der Inhalt wird als HTML gespeichert und auf der öffentlichen Seite sanitisiert gerendert.</CardDescription>
               </CardHeader>
               <CardContent>
                 <RichTextEditor

@@ -24,6 +24,7 @@ import {
   DEFAULT_HOMEPAGE_SECTION_ORDER,
   normalizeHomepageSectionOrder,
 } from "@/lib/homepage-section-order";
+import { createDefaultLoadingScreenConfig, parseHomepageSectionVisibility, parseLoadingScreenConfig } from "@/lib/site-ui-config";
 import type { HomepageSectionId } from "@/lib/homepage-section-styles";
 
 const sectionRegistry: Record<HomepageSectionId, ComponentType> = {
@@ -48,16 +49,25 @@ const Index = () => {
   const { settings } = useSiteSettings();
 
   const sectionOrder = normalizeHomepageSectionOrder(settings.home_section_order || DEFAULT_HOMEPAGE_SECTION_ORDER);
+  const sectionVisibility = parseHomepageSectionVisibility(settings.home_section_visibility);
+  const loadingScreenConfig = parseLoadingScreenConfig(settings.loading_screen_config || createDefaultLoadingScreenConfig());
 
   // GATEKEEPER-GESETZ: Solange der Tenant (Site) ODER das Theme im Hintergrund aufgelöst wird,
   // blockieren wir das Rendering der unfertigen Seite und zeigen exklusiv den Loader mit Kunden-Branding.
   if (isLoading || isThemeLoading) {
     return (
       <LoadingScreen
-        heading={theme?.loader_heading}
-        subtext={theme?.loader_subtext}
-        bgHex={theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex}
-        textHex={theme?.loader_loader_text_hex ?? theme?.loader_text_hex}
+        heading={theme?.loader_heading || loadingScreenConfig.heading}
+        subtext={theme?.loader_subtext || loadingScreenConfig.subtext}
+        bgHex={theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex ?? loadingScreenConfig.background_color}
+        textHex={theme?.loader_loader_text_hex ?? theme?.loader_text_hex ?? loadingScreenConfig.text_color}
+        config={{
+          ...loadingScreenConfig,
+          heading: theme?.loader_heading || loadingScreenConfig.heading,
+          subtext: theme?.loader_subtext || loadingScreenConfig.subtext,
+          background_color: theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex ?? loadingScreenConfig.background_color,
+          text_color: theme?.loader_loader_text_hex ?? theme?.loader_text_hex ?? loadingScreenConfig.text_color,
+        }}
       />
     );
   }
@@ -69,10 +79,12 @@ const Index = () => {
         <Header />
         <main>
           <HeroSection />
-          {sectionOrder.map((sectionId) => {
-            const SectionComponent = sectionRegistry[sectionId];
-            return <SectionComponent key={sectionId} />;
-          })}
+          {sectionOrder
+            .filter((sectionId) => sectionVisibility[sectionId] !== false)
+            .map((sectionId) => {
+              const SectionComponent = sectionRegistry[sectionId];
+              return <SectionComponent key={sectionId} />;
+            })}
         </main>
         <Footer />
       </div>

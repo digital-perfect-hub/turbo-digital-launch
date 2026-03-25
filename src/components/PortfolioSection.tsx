@@ -7,7 +7,7 @@ import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type PortfolioItem = Database["public"]["Tables"]["portfolio_items"]["Row"];
 
@@ -64,6 +64,7 @@ const PORTFOLIO_SELECT = "id, title, description, image_url, url, tags, sort_ord
 const PortfolioSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "portfolio");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "portfolio");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -84,7 +85,7 @@ const PortfolioSection = () => {
   const effectiveItems = portfolioItems.length > 0 ? portfolioItems : fallbackPortfolioItems;
 
   return (
-    <section id="portfolio" className="homepage-style-scope surface-section-shell py-24 sm:py-28 md:py-32" aria-label="Portfolio" style={sectionStyleVars}>
+    <section id="portfolio" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 sm:py-28 md:py-32`} aria-label="Portfolio" style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

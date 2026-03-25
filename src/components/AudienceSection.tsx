@@ -1,7 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { defaultAudienceItems, defaultSiteText, type AudienceItem, useSiteSettings } from "@/hooks/useSiteSettings";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const normalizeAudience = (items: AudienceItem[]) =>
   items
@@ -17,6 +17,7 @@ const AudienceSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { getSetting, getJsonSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "audience");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "audience");
 
   const audience = normalizeAudience(getJsonSetting<AudienceItem[]>("home_audience_items", defaultAudienceItems));
   const kicker =
@@ -31,7 +32,7 @@ const AudienceSection = () => {
     defaultSiteText.home_audience_item_badge;
 
   return (
-    <section className="homepage-style-scope surface-section-shell py-24 md:py-32" ref={ref} style={sectionStyleVars}>
+    <section className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 md:py-32`} ref={ref} style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

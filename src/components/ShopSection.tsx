@@ -9,7 +9,7 @@ import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type ProductItem = Database["public"]["Tables"]["products"]["Row"];
 
@@ -33,6 +33,7 @@ const normalizeFeatures = (value: Json | null | undefined): string[] => {
 const ShopSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "shop");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "shop");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -54,7 +55,7 @@ const ShopSection = () => {
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <section id="shop" className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Produkte & Pakete" style={sectionStyleVars}>
+    <section id="shop" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden py-24 sm:py-32`} aria-label="Produkte & Pakete" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -6,11 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const FAQSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "faq");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "faq");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -24,7 +25,7 @@ const FAQSection = () => {
   });
 
   return (
-    <section id="faq" className="homepage-style-scope surface-section-shell py-24 sm:py-32 relative overflow-hidden" aria-label="FAQ" style={sectionStyleVars}>
+    <section id="faq" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 sm:py-32 relative overflow-hidden`} aria-label="FAQ" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid gap-12 xl:grid-cols-[0.8fr_1.2fr] xl:gap-16 items-start">
           

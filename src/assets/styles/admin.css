@@ -41,6 +41,35 @@
   --admin-sidebar-fg: 210 40% 98%;
   --admin-sidebar-muted: 215 20% 72%;
   --admin-sidebar-border: 223 48% 22%;
+
+  --surface-page: #f5f7fb;
+  --surface-section: #ffffff;
+  --surface-page-foreground: #0f172a;
+  --surface-page-muted: #64748b;
+  --surface-section-foreground: #0f172a;
+  --surface-section-muted: #64748b;
+  --surface-title: #0f172a;
+  --surface-card: #ffffff;
+  --surface-card-border: rgba(148, 163, 184, 0.22);
+  --surface-card-title: #0f172a;
+  --surface-card-text: #0f172a;
+  --surface-card-muted: #64748b;
+  --theme-primary-hex: #FF4B2C;
+  --theme-secondary-hex: #0E1F53;
+  --theme-text-main-hex: #0f172a;
+  --theme-text-muted-hex: #64748b;
+  --theme-radius: 0.95rem;
+  --hero-panel-bg: linear-gradient(180deg, #112761 0%, #09173f 100%);
+  --hero-panel-text: #f8fafc;
+  --hero-headline: #ffffff;
+  --hero-subheadline: rgba(255,255,255,0.86);
+  --hero-badge-bg: rgba(255,255,255,0.08);
+  --hero-badge-text: #ffffff;
+  --hero-secondary-btn-bg: rgba(255,255,255,0.08);
+  --hero-secondary-btn-border: rgba(255,255,255,0.18);
+  --hero-secondary-btn-text: #ffffff;
+  --hero-stat-bg: linear-gradient(180deg, rgba(13,25,63,0.96) 0%, rgba(9,17,47,0.98) 100%);
+  --hero-stat-value: #ffffff;
 }
 
 body.admin-ui-portal-scope {
@@ -256,3 +285,82 @@ body.admin-ui-portal-scope {
   color: hsl(var(--foreground));
 }
 
+
+
+body.admin-ui-portal-scope {
+  --surface-page: #f5f7fb !important;
+  --surface-section: #ffffff !important;
+  --surface-page-foreground: #0f172a !important;
+  --surface-page-muted: #64748b !important;
+  --surface-section-foreground: #0f172a !important;
+  --surface-section-muted: #64748b !important;
+  --surface-title: #0f172a !important;
+  --surface-card: #ffffff !important;
+  --surface-card-border: rgba(148, 163, 184, 0.22) !important;
+  --surface-card-title: #0f172a !important;
+  --surface-card-text: #0f172a !important;
+  --surface-card-muted: #64748b !important;
+  --theme-primary-hex: #FF4B2C !important;
+  --theme-secondary-hex: #0E1F53 !important;
+  --theme-text-main-hex: #0f172a !important;
+  --theme-text-muted-hex: #64748b !important;
+  --theme-radius: 0.95rem !important;
+}
+
+.admin-ui-scope .glass-card,
+.admin-ui-scope .premium-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%);
+  border-color: rgba(148, 163, 184, 0.22);
+  color: hsl(var(--foreground));
+  box-shadow: 0 22px 48px -36px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.admin-ui-scope .premium-card::before {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.08), transparent 32%),
+    radial-gradient(circle at top right, rgba(255,75,44,0.08), transparent 24%),
+    linear-gradient(120deg, transparent 0%, rgba(14,31,83,0.06) 46%, transparent 72%),
+    radial-gradient(circle at bottom left, rgba(14,31,83,0.04), transparent 28%);
+}
+
+.admin-ui-scope .glass-card h1,
+.admin-ui-scope .glass-card h2,
+.admin-ui-scope .glass-card h3,
+.admin-ui-scope .glass-card h4,
+.admin-ui-scope .glass-card h5,
+.admin-ui-scope .glass-card h6,
+.admin-ui-scope .premium-card h1,
+.admin-ui-scope .premium-card h2,
+.admin-ui-scope .premium-card h3,
+.admin-ui-scope .premium-card h4,
+.admin-ui-scope .premium-card h5,
+.admin-ui-scope .premium-card h6 {
+  color: hsl(var(--foreground));
+}
+
+.admin-ui-scope .glass-card p,
+.admin-ui-scope .premium-card p,
+.admin-ui-scope .glass-card .text-slate-500,
+.admin-ui-scope .glass-card .text-slate-600,
+.admin-ui-scope .premium-card .text-slate-500,
+.admin-ui-scope .premium-card .text-slate-600 {
+  color: hsl(var(--muted-foreground));
+}
+
+.admin-ui-scope .admin-surface-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(248,250,252,0.98) 100%);
+  box-shadow: 0 24px 54px -38px rgba(15, 23, 42, 0.18);
+}
+
+.admin-ui-scope .admin-soft-panel {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.35rem;
+  background: linear-gradient(180deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.95) 100%);
+}
+
+.admin-ui-scope .admin-tabs-shell {
+  background: linear-gradient(180deg, rgba(241,245,249,0.9) 0%, rgba(226,232,240,0.72) 100%);
+}

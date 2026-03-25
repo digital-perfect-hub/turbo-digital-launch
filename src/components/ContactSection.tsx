@@ -12,7 +12,7 @@ import {
 } from "@/hooks/useSiteSettings";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const inputClass =
   "w-full rounded-[1.25rem] border border-border bg-surface px-5 py-4 text-base text-foreground outline-none transition-all placeholder:text-muted-foreground/60 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background";
@@ -70,6 +70,7 @@ const ContactSection = () => {
   const { toast } = useToast();
   const { getSetting, getJsonSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "contact");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "contact");
 
   const content = useMemo(
     () => mergeContactContent(getJsonSetting<ContactSectionContent>("contact_section_content", defaultContactSectionContent)),
@@ -141,7 +142,7 @@ const ContactSection = () => {
 
   if (isSubmitted) {
     return (
-      <section id="kontakt" className="homepage-style-scope surface-section-shell py-24 md:py-32" ref={ref} style={sectionStyleVars}>
+      <section id="kontakt" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 md:py-32`} ref={ref} style={sectionStyleVars}>
         <div className="section-container text-center">
           <motion.div
             initial={{ scale: 0.86, opacity: 0 }}
@@ -158,7 +159,7 @@ const ContactSection = () => {
   }
 
   return (
-    <section id="kontakt" className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" ref={ref} style={sectionStyleVars}>
+    <section id="kontakt" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden py-24 sm:py-32`} ref={ref} style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid gap-12 xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
           <motion.div

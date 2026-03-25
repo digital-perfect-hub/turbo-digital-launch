@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type TeamRow = {
   id: string;
@@ -77,6 +77,7 @@ const toUiMember = (row: TeamRow): UiTeamMember | null => {
 const TeamSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "team");
+  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "team");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -98,7 +99,7 @@ const TeamSection = () => {
   const effectiveTeam = teamMembers.length > 0 ? teamMembers : fallbackTeam;
 
   return (
-    <section id="team" className="homepage-style-scope surface-section-shell py-24 md:py-28" style={sectionStyleVars}>
+    <section id="team" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 md:py-28`} style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

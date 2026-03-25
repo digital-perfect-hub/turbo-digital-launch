@@ -130,7 +130,7 @@ const AdminHero = () => {
   if (isLoading) return <div className="p-6">Laden...</div>;
 
   return (
-    <div className="max-w-6xl p-6">
+    <div className="max-w-7xl p-6 md:p-8 lg:p-10">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Hero-Bereich bearbeiten</h1>
@@ -144,7 +144,7 @@ const AdminHero = () => {
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         
         {/* LINKE SPALTE: DEINE LIVE-VORSCHAU (KOMPLETT UNANGETASTET) */}
-        <section className="glass-card overflow-hidden p-4 md:p-5 self-start sticky top-6">
+        <section className="admin-surface-card overflow-hidden p-4 md:p-5 self-start sticky top-6">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
             <ImagePlus size={16} className="text-gold-dark" /> Live-Vorschau
           </div>
@@ -188,9 +188,9 @@ const AdminHero = () => {
         </section>
 
         {/* RECHTE SPALTE: DAS NEUE TAB-SYSTEM */}
-        <section className="glass-card p-6">
+        <section className="admin-surface-card p-6">
           <Tabs defaultValue="texte" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100 rounded-xl p-1 gap-1">
+            <TabsList className="admin-tabs-shell grid w-full grid-cols-4 gap-1 rounded-xl p-1 mb-6">
               <TabsTrigger value="texte" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><Type size={14} className="mr-1.5 hidden sm:inline-block"/> Texte</TabsTrigger>
               <TabsTrigger value="medien" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><ImageIcon size={14} className="mr-1.5 hidden sm:inline-block"/> Medien</TabsTrigger>
               <TabsTrigger value="stats" className="rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><Layers3 size={14} className="mr-1.5 hidden sm:inline-block"/> KPIs</TabsTrigger>
@@ -201,20 +201,20 @@ const AdminHero = () => {
             <TabsContent value="texte" className="space-y-5 mt-0 outline-none">
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">Badge-Text</Label>
-                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.badge_text || ""} onChange={(e) => setForm({ ...form, badge_text: e.target.value })} />
+                <Input className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]" value={form.badge_text || ""} onChange={(e) => setForm({ ...form, badge_text: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">Hauptüberschrift</Label>
-                <Textarea rows={4} className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C] resize-none" value={form.headline || ""} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
+                <Textarea rows={4} className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C] resize-none" value={form.headline || ""} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
                 <p className="text-xs text-slate-500">Zeilenumbrüche sind erlaubt und werden im Hero sauber übernommen.</p>
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">Unterüberschrift</Label>
-                <Textarea rows={4} className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C] resize-none" value={form.subheadline || ""} onChange={(e) => setForm({ ...form, subheadline: e.target.value })} />
+                <Textarea rows={4} className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C] resize-none" value={form.subheadline || ""} onChange={(e) => setForm({ ...form, subheadline: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">CTA-Button Text</Label>
-                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.cta_text || ""} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
+                <Input className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]" value={form.cta_text || ""} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
               </div>
             </TabsContent>
 
@@ -222,17 +222,17 @@ const AdminHero = () => {
             <TabsContent value="medien" className="space-y-5 mt-0 outline-none">
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">Hero-Hintergrund Desktop (URL/Pfad)</Label>
-                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.background_image_path || ""} onChange={(e) => setForm({ ...form, background_image_path: e.target.value })} placeholder="hero/background-desktop.webp" />
+                <Input className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]" value={form.background_image_path || ""} onChange={(e) => setForm({ ...form, background_image_path: e.target.value })} placeholder="hero/background-desktop.webp" />
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">Hero-Hintergrund Mobile (URL/Pfad)</Label>
-                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.background_mobile_image_path || ""} onChange={(e) => setForm({ ...form, background_mobile_image_path: e.target.value })} placeholder="hero/background-mobile.webp" />
+                <Input className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]" value={form.background_mobile_image_path || ""} onChange={(e) => setForm({ ...form, background_mobile_image_path: e.target.value })} placeholder="hero/background-mobile.webp" />
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-700 font-semibold">Rechtes Hero-Visual (URL/Pfad)</Label>
-                <Input className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]" value={form.image_path || ""} onChange={(e) => setForm({ ...form, image_path: e.target.value })} placeholder="hero/digital-perfect-visual.webp" />
+                <Input className="rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]" value={form.image_path || ""} onChange={(e) => setForm({ ...form, image_path: e.target.value })} placeholder="hero/digital-perfect-visual.webp" />
               </div>
-              <div className="space-y-2 pt-4 border-t border-slate-100">
+              <div className="space-y-2 border-t border-slate-200 pt-4">
                 <Label className="text-slate-700 font-semibold">Overlay-Stärke ({overlayOpacity}%)</Label>
                 <input
                   type="range" min={0} max={100} step={1} value={overlayOpacity}
@@ -245,7 +245,7 @@ const AdminHero = () => {
             {/* TAB 3: KPIs */}
             <TabsContent value="stats" className="space-y-4 mt-0 outline-none">
               {[1, 2, 3].map((nr) => (
-                <div key={nr} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div key={nr} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                     Statistik {nr}
                   </div>
@@ -266,7 +266,7 @@ const AdminHero = () => {
             {/* TAB 4: LAYER & BOXEN */}
             <TabsContent value="layer" className="space-y-6 mt-0 outline-none">
               
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                 <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Oberer Bereich (Visual Kicker)</Label>
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-500">Kicker</Label>
@@ -282,7 +282,7 @@ const AdminHero = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                 <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Innerer Layer (Auf Bild oben links)</Label>
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-500">Kicker</Label>
@@ -294,7 +294,7 @@ const AdminHero = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-6">
                 <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Untere Info-Boxen (Optional)</Label>
                 
                 <div className="space-y-4 pb-4 border-b border-slate-200">
