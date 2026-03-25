@@ -141,7 +141,7 @@ const ContactSection = () => {
 
   if (isSubmitted) {
     return (
-      <section id="kontakt" className="homepage-style-scope surface-page-shell bg-background py-24 md:py-32" ref={ref} style={sectionStyleVars}>
+      <section id="kontakt" className="homepage-style-scope surface-section-shell py-24 md:py-32" ref={ref} style={sectionStyleVars}>
         <div className="section-container text-center">
           <motion.div
             initial={{ scale: 0.86, opacity: 0 }}
@@ -158,7 +158,7 @@ const ContactSection = () => {
   }
 
   return (
-    <section id="kontakt" className="homepage-style-scope surface-page-shell relative overflow-hidden bg-background py-24 sm:py-32" ref={ref} style={sectionStyleVars}>
+    <section id="kontakt" className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" ref={ref} style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid gap-12 xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
           <motion.div

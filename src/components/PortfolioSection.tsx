@@ -84,7 +84,7 @@ const PortfolioSection = () => {
   const effectiveItems = portfolioItems.length > 0 ? portfolioItems : fallbackPortfolioItems;
 
   return (
-    <section id="portfolio" className="homepage-style-scope surface-section-shell bg-surface py-24 sm:py-28 md:py-32" aria-label="Portfolio" style={sectionStyleVars}>
+    <section id="portfolio" className="homepage-style-scope surface-section-shell py-24 sm:py-28 md:py-32" aria-label="Portfolio" style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

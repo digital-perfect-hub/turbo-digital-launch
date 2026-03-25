@@ -31,7 +31,7 @@ const AudienceSection = () => {
     defaultSiteText.home_audience_item_badge;
 
   return (
-    <section className="homepage-style-scope surface-page-shell bg-background py-24 md:py-32" ref={ref} style={sectionStyleVars}>
+    <section className="homepage-style-scope surface-section-shell py-24 md:py-32" ref={ref} style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -1,5 +1,4 @@
-.admin-ui-scope,
-body.admin-ui-portal-scope {
+.admin-ui-scope {
   --background: 210 38% 98%;
   --foreground: 222 47% 11%;
 
@@ -42,6 +41,21 @@ body.admin-ui-portal-scope {
   --admin-sidebar-fg: 210 40% 98%;
   --admin-sidebar-muted: 215 20% 72%;
   --admin-sidebar-border: 223 48% 22%;
+}
+
+body.admin-ui-portal-scope {
+  --background: 224 46% 10% !important;
+  --foreground: 210 40% 98% !important;
+  --card: 224 36% 14% !important;
+  --card-foreground: 210 40% 98% !important;
+  --popover: 224 36% 14% !important;
+  --popover-foreground: 210 40% 98% !important;
+  --accent: 224 32% 18% !important;
+  --accent-foreground: 210 40% 98% !important;
+  --muted: 224 28% 16% !important;
+  --muted-foreground: 215 20% 78% !important;
+  --border: 223 34% 26% !important;
+  color-scheme: dark;
 }
 
 .admin-ui-scope {

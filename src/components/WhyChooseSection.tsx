@@ -39,7 +39,7 @@ const WhyChooseSection = () => {
     defaultSiteText.home_why_choose_cta_link;
 
   return (
-    <section className="homepage-style-scope surface-section-shell relative overflow-hidden bg-surface py-24 sm:py-32" aria-label="Warum wir?" style={sectionStyleVars}>
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Warum wir?" style={sectionStyleVars}>
       <div className="pointer-events-none absolute -right-[10%] -top-[20%] h-[1000px] w-[1000px] bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_50%)] opacity-[0.03] blur-[120px]" />
 
       <div className="section-container relative z-10">

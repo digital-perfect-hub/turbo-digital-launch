@@ -55,7 +55,7 @@ const IntroSection = () => {
   );
 
   return (
-    <section className="homepage-style-scope surface-page-shell relative overflow-hidden bg-background py-24 sm:py-32" aria-label="Intro" style={sectionStyleVars}>
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Intro" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid items-center gap-8 xl:grid-cols-[1fr_1fr] xl:gap-16">
           <motion.div

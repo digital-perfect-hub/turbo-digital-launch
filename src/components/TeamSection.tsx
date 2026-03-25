@@ -98,7 +98,7 @@ const TeamSection = () => {
   const effectiveTeam = teamMembers.length > 0 ? teamMembers : fallbackTeam;
 
   return (
-    <section id="team" className="homepage-style-scope surface-page-shell bg-background py-24 md:py-28" style={sectionStyleVars}>
+    <section id="team" className="homepage-style-scope surface-section-shell py-24 md:py-28" style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

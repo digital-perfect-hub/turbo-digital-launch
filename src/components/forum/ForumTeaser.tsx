@@ -32,7 +32,7 @@ const ForumTeaser = () => {
   const content = getJsonSetting("forum_teaser_content", defaultForumTeaserContent);
 
   return (
-    <section className="homepage-style-scope surface-page-shell relative overflow-hidden py-20" style={sectionStyleVars}>
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-20" style={sectionStyleVars}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--button-primary-bg)_12%,transparent)_0%,transparent_30%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--theme-secondary-hex)_10%,transparent)_0%,transparent_38%)]" />
       <div className="section-container relative">
         <div className="surface-card-shell overflow-hidden rounded-[40px] border shadow-[0_40px_120px_-70px_rgba(14,31,83,0.36)]">

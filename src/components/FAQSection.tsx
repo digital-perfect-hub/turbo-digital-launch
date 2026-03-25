@@ -24,7 +24,7 @@ const FAQSection = () => {
   });
 
   return (
-    <section id="faq" className="homepage-style-scope surface-section-shell bg-surface py-24 sm:py-32 relative overflow-hidden" aria-label="FAQ" style={sectionStyleVars}>
+    <section id="faq" className="homepage-style-scope surface-section-shell py-24 sm:py-32 relative overflow-hidden" aria-label="FAQ" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid gap-12 xl:grid-cols-[0.8fr_1.2fr] xl:gap-16 items-start">
           

@@ -54,7 +54,7 @@ const ShopSection = () => {
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <section id="shop" className="homepage-style-scope surface-page-shell relative overflow-hidden py-24 sm:py-32" aria-label="Produkte & Pakete" style={sectionStyleVars}>
+    <section id="shop" className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Produkte & Pakete" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

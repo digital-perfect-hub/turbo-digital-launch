@@ -110,7 +110,7 @@ const TestimonialsSection = () => {
   }, [api, effectiveTestimonials.length]);
 
   return (
-    <section className="homepage-style-scope surface-page-shell bg-background py-24 sm:py-32" id="testimonials" style={sectionStyleVars}>
+    <section className="homepage-style-scope surface-section-shell py-24 sm:py-32" id="testimonials" style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
