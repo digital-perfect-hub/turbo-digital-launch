@@ -335,36 +335,6 @@
     color: var(--surface-section-muted) !important;
   }
 
-  .homepage-style-scope.surface-page-shell,
-  .homepage-style-scope.surface-section-shell,
-  .homepage-style-scope.dark-section {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .homepage-style-scope.surface-page-shell::before,
-  .homepage-style-scope.surface-section-shell::before,
-  .homepage-style-scope.dark-section::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: var(--homepage-pattern-opacity, 0);
-    background-image: var(--homepage-pattern-image, none);
-    background-size: var(--homepage-pattern-size, auto);
-    background-position: var(--homepage-pattern-position, center);
-    background-repeat: var(--homepage-pattern-repeat, repeat);
-    mix-blend-mode: var(--homepage-pattern-blend, normal);
-  }
-
-  .homepage-style-scope.surface-page-shell > *,
-  .homepage-style-scope.surface-section-shell > *,
-  .homepage-style-scope.dark-section > * {
-    position: relative;
-    z-index: 1;
-  }
-
   .surface-card-shell {
     background: var(--surface-card);
     color: var(--surface-card-text);
@@ -392,8 +362,29 @@
 
 
   .homepage-style-scope {
+    position: relative;
+    isolation: isolate;
     background: var(--homepage-section-bg, inherit);
     color: var(--homepage-section-text, inherit);
+  }
+
+  .homepage-style-scope::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: var(--homepage-pattern-image, none);
+    background-size: var(--homepage-pattern-size, auto);
+    background-position: var(--homepage-pattern-position, 0 0);
+    background-repeat: var(--homepage-pattern-repeat, no-repeat);
+    opacity: var(--homepage-pattern-opacity, 0);
+    transition: opacity 0.25s ease;
+  }
+
+  .homepage-style-scope > * {
+    position: relative;
+    z-index: 1;
   }
 
   .homepage-style-scope .section-label {

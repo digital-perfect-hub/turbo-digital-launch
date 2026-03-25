@@ -15,7 +15,7 @@ const normalizeTrustPoints = (points: TrustPoint[]) =>
     .filter((item) => item?.title?.trim() && item?.desc?.trim())
     .map((item) => ({
       ...item,
-      icon: item.icon && iconMap[item.icon] ? item.icon : "users",
+      icon: item.icon && iconMap[item.icon as keyof typeof iconMap] ? item.icon : "users",
     }));
 
 const TrustSection = () => {
@@ -23,6 +23,12 @@ const TrustSection = () => {
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "trust");
 
   const trustPoints = normalizeTrustPoints(getJsonSetting<TrustPoint[]>("home_trust_points", defaultTrustPoints));
+  
+  // ARCHITEKTUR-GESETZ: Strikter Killswitch
+  if (!trustPoints || trustPoints.length === 0) {
+    return null;
+  }
+
   const kicker =
     getSetting("home_trust_kicker", defaultSiteText.home_trust_kicker).trim() || defaultSiteText.home_trust_kicker;
   const title =
@@ -32,7 +38,8 @@ const TrustSection = () => {
     defaultSiteText.home_trust_description;
 
   return (
-    <section className="homepage-style-scope surface-section-shell relative z-20 pt-8 pb-8 md:pt-10" aria-label="Vertrauen" style={sectionStyleVars}>
+    // PADDING-FIX: Extrem kompaktes Padding (py-6 md:py-8), damit es wie ein verbindendes Element wirkt.
+    <section className="homepage-style-scope surface-section-shell relative z-20 py-6 md:py-8" aria-label="Vertrauen" style={sectionStyleVars}>
       <div className="section-container">
         <div className="premium-card p-5 md:p-7 lg:p-8">
           <div className="mb-6 max-w-3xl">
@@ -43,7 +50,7 @@ const TrustSection = () => {
 
           <div className="relative z-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {trustPoints.map((feature, index) => {
-              const Icon = iconMap[feature.icon || "users"] || Users;
+              const Icon = iconMap[feature.icon as keyof typeof iconMap] || Users;
 
               return (
                 <motion.article

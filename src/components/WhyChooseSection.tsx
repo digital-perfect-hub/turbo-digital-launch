@@ -23,6 +23,11 @@ const WhyChooseSection = () => {
     (item) => item?.title?.trim() && item?.description?.trim(),
   );
 
+  // ARCHITEKTUR-GESETZ: Strikter Killswitch
+  if (!points || points.length === 0) {
+    return null;
+  }
+
   const kicker =
     getSetting("home_why_choose_kicker", defaultSiteText.home_why_choose_kicker).trim() ||
     defaultSiteText.home_why_choose_kicker;
@@ -40,11 +45,12 @@ const WhyChooseSection = () => {
     defaultSiteText.home_why_choose_cta_link;
 
   return (
-    <section className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden py-24 sm:py-32`} aria-label="Warum wir?" style={sectionStyleVars}>
+    // PADDING-FIX: Top-Padding (pt-8 md:pt-12) zieht die Komponente bündig an den Vorgänger heran.
+    <section className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden pt-8 pb-12 md:pt-12 lg:pb-16`} aria-label="Warum wir?" style={sectionStyleVars}>
       <div className="pointer-events-none absolute -right-[10%] -top-[20%] h-[1000px] w-[1000px] bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_50%)] opacity-[0.03] blur-[120px]" />
 
       <div className="section-container relative z-10">
-        <div className="grid gap-12 xl:grid-cols-[0.85fr_1.15fr] xl:gap-16">
+        <div className="grid gap-12 xl:grid-cols-[0.85fr_1.15fr] xl:gap-16 items-start">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
