@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type ServiceItem = {
   id: string;
@@ -63,7 +63,6 @@ const safeText = (value: string | null | undefined, fallback: string) => {
 const ServicesSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "services");
-  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "services");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -85,7 +84,7 @@ const ServicesSection = () => {
   const effectiveServices = services?.length ? services : fallbackServices;
 
   return (
-    <section id="leistungen" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 sm:py-32 relative overflow-hidden`} aria-label="Unsere Leistungen" style={sectionStyleVars}>
+    <section id="leistungen" className="homepage-style-scope surface-section-shell py-24 sm:py-32 relative overflow-hidden" aria-label="Unsere Leistungen" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 md:mb-24">
           <motion.div
@@ -129,8 +128,6 @@ const ServicesSection = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className={`group relative h-full rounded-[2.5rem] border border-border bg-card p-8 sm:p-10 shadow-sm transition-all duration-500 hover:shadow-xl overflow-hidden flex flex-col ${isLoading ? "animate-pulse bg-muted" : ""}`}
               >
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500 blur-2xl pointer-events-none" />
-
                 <div className="relative z-10 flex-1 flex flex-col">
                   <div className="mb-8 flex items-center justify-between">
                     <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">

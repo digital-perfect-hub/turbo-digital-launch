@@ -286,10 +286,9 @@ const AdminNavigation = () => {
         </div>
 
         <div className="overflow-hidden rounded-[1.8rem] border p-5 shadow-inner" style={{ background: previewTheme.background_color || undefined, borderColor: previewTheme.border_color || undefined, backdropFilter: styling.nav_glass_effect ? "blur(18px)" : undefined }}>
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="text-xs font-mono uppercase tracking-[0.22em]" style={{ color: previewTheme.muted_text_color || undefined }}>Navigation Preview</div>
-            <div className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]" style={{ background: previewTheme.cta_background_color || undefined, color: previewTheme.cta_text_color || undefined }}>
-              Haupt-CTA
+          <div className="mb-5 flex flex-wrap items-center gap-4">
+            <div className="text-xs font-mono uppercase tracking-[0.22em]" style={{ color: previewTheme.muted_text_color || undefined }}>
+              Navigation Preview
             </div>
           </div>
 

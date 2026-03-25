@@ -8,7 +8,7 @@ import { useForumFeaturedThreads } from "@/hooks/useForum";
 import { getForumRenderImageUrl } from "@/lib/forumHtml";
 import { defaultForumTeaserContent, useSiteSettings } from "@/hooks/useSiteSettings";
 import { stripHtmlToText } from "@/lib/content";
-import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const formatDate = (value?: string | null) =>
   value
@@ -29,15 +29,13 @@ const ForumTeaser = () => {
   const { data: threads = [], isLoading } = useForumFeaturedThreads(3);
   const { getJsonSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "forum");
-  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "forum");
   const content = getJsonSetting("forum_teaser_content", defaultForumTeaserContent);
 
   return (
-    <section className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden py-20`} style={sectionStyleVars}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--button-primary-bg)_12%,transparent)_0%,transparent_30%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--theme-secondary-hex)_10%,transparent)_0%,transparent_38%)]" />
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-20" style={sectionStyleVars}>
       <div className="section-container relative">
         <div className="surface-card-shell overflow-hidden rounded-[40px] border shadow-[0_40px_120px_-70px_rgba(14,31,83,0.36)]">
-          <div className="border-b border-border px-6 py-8 md:px-10 md:py-10" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--surface-card) 96%, white) 0%, color-mix(in srgb, var(--surface-section) 92%, white) 55%, color-mix(in srgb, var(--button-primary-bg) 6%, transparent) 100%)' }}>
+          <div className="border-b border-border px-6 py-8 md:px-10 md:py-10" style={{ background: "var(--surface-card)" }}>
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <Badge className="rounded-full border-none px-4 py-1.5 text-[11px] uppercase tracking-[0.24em]" style={{ background: 'var(--theme-secondary-hex)', color: 'hsl(var(--secondary-foreground))' }}>
@@ -85,7 +83,6 @@ const ForumTeaser = () => {
                               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                               loading="lazy"
                             />
-                            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--theme-secondary-hex) 12%, transparent) 45%, color-mix(in srgb, var(--theme-secondary-hex) 42%, transparent) 100%)' }} />
                           </div>
                         ) : (
                           <div className="support-dark-card flex aspect-[16/9] items-end p-6">

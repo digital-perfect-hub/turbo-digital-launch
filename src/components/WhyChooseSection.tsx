@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { defaultSiteText, defaultWhyChoosePoints, type WhyChoosePoint, useSiteSettings } from "@/hooks/useSiteSettings";
 import { sanitizeRichHtml } from "@/lib/content";
-import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 const navigateToTarget = (target: string) => {
   const normalized = (target || "").trim();
@@ -17,16 +17,10 @@ const navigateToTarget = (target: string) => {
 const WhyChooseSection = () => {
   const { getSetting, getJsonSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "why-choose");
-  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "why-choose");
 
   const points = getJsonSetting<WhyChoosePoint[]>("home_why_choose_points", defaultWhyChoosePoints).filter(
     (item) => item?.title?.trim() && item?.description?.trim(),
   );
-
-  // ARCHITEKTUR-GESETZ: Strikter Killswitch
-  if (!points || points.length === 0) {
-    return null;
-  }
 
   const kicker =
     getSetting("home_why_choose_kicker", defaultSiteText.home_why_choose_kicker).trim() ||
@@ -45,12 +39,10 @@ const WhyChooseSection = () => {
     defaultSiteText.home_why_choose_cta_link;
 
   return (
-    // PADDING-FIX: Top-Padding (pt-8 md:pt-12) zieht die Komponente bündig an den Vorgänger heran.
-    <section className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden pt-8 pb-12 md:pt-12 lg:pb-16`} aria-label="Warum wir?" style={sectionStyleVars}>
-      <div className="pointer-events-none absolute -right-[10%] -top-[20%] h-[1000px] w-[1000px] bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_50%)] opacity-[0.03] blur-[120px]" />
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Warum wir?" style={sectionStyleVars}>
 
       <div className="section-container relative z-10">
-        <div className="grid gap-12 xl:grid-cols-[0.85fr_1.15fr] xl:gap-16 items-start">
+        <div className="grid gap-12 xl:grid-cols-[0.85fr_1.15fr] xl:gap-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -58,8 +50,6 @@ const WhyChooseSection = () => {
             transition={{ duration: 0.6 }}
             className="dark-panel-shell relative self-start overflow-hidden rounded-[2.5rem] p-10 xl:sticky xl:top-32 md:p-12 lg:p-14"
           >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--hero-headline)_6%,transparent)_0%,transparent_50%)]" />
-
             <div className="relative z-10">
               <p className="dark-panel-kicker mb-6 inline-flex rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] backdrop-blur-md">
                 {kicker}
@@ -96,8 +86,6 @@ const WhyChooseSection = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-8 shadow-sm transition-all duration-500 hover:shadow-xl"
               >
-                <div className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
-
                 <div className="relative z-10 flex flex-1 flex-col">
                   <div className="mb-8 flex items-start justify-between gap-4">
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110">

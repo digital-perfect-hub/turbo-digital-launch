@@ -77,6 +77,15 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const mobileOverlayClass = forceSolid ? "header-mobile-shell" : "text-foreground";
   const mobileOverlayStyle = forceSolid ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
   const logoColor = forceSolid ? "var(--hero-headline)" : settings.text_logo_color_hex || desktopNavColor;
+  const navigationThemeSettings = ((settings.navigation_theme && typeof settings.navigation_theme === "object" && !Array.isArray(settings.navigation_theme))
+    ? (settings.navigation_theme as Record<string, unknown>)
+    : {}) as Record<string, unknown>;
+  const navCtaLabel = typeof navigationThemeSettings.cta_label === "string" && navigationThemeSettings.cta_label.trim()
+    ? navigationThemeSettings.cta_label.trim()
+    : "Anfrage starten";
+  const navCtaLink = typeof navigationThemeSettings.cta_link === "string" && navigationThemeSettings.cta_link.trim()
+    ? navigationThemeSettings.cta_link.trim()
+    : "#kontakt";
   const headerClassName = forceSolid
     ? `py-4 header-solid-shell border-b ${solidBackgroundClassName || ""}`
     : isScrolled
@@ -158,32 +167,14 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
               );
             })}
 
-            <Link
-              to="/forum"
-              className={`relative flex items-center gap-1.5 py-1 text-sm uppercase tracking-widest outline-none transition-colors duration-300 ${navTypographyClasses}`}
-              style={{ color: desktopNavColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = desktopNavHoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = desktopNavColor)}
-            >
-              Forum
-              {settings.nav_show_underline && (
-                <span
-                  className={`absolute -bottom-1 left-0 h-[2px] w-full ${
-                    settings.nav_animate_underline
-                      ? "origin-left scale-x-0 transition-transform duration-300 ease-out hover:scale-x-100"
-                      : "opacity-0 transition-opacity duration-300 hover:opacity-100"
-                  }`}
-                  style={{ backgroundColor: forceSolid ? "var(--theme-primary-hex)" : "var(--nav-underline, var(--theme-primary-hex))" }}
-                />
-              )}
-            </Link>
-
-            <button
-              onClick={() => handleLinkClick("#kontakt")}
-              className={forceSolid ? "btn-primary !px-6 !py-3 shadow-[0_10px_20px_-10px_rgba(var(--primary),0.3)] transition-colors" : "nav-cta-button inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5"}
-            >
-              Anfrage starten
-            </button>
+            {navCtaLabel ? (
+              <button
+                onClick={() => handleLinkClick(navCtaLink)}
+                className={forceSolid ? "btn-primary !px-6 !py-3 shadow-[0_10px_20px_-10px_rgba(var(--primary),0.3)] transition-colors" : "nav-cta-button inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5"}
+              >
+                {navCtaLabel}
+              </button>
+            ) : null}
           </nav>
 
           <button className={`relative z-10 p-2 outline-none lg:hidden ${forceSolid ? "header-solid-text" : "text-foreground"}`} onClick={() => setIsMobileOpen(!isMobileOpen)}>
@@ -239,22 +230,14 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
                   </div>
                 );
               })}
-              <div className={`flex flex-col border-b pb-4 ${forceSolid ? "header-solid-border" : "border-border/50"}`}>
-                <Link
-                  to="/forum"
-                  onClick={() => setIsMobileOpen(false)}
-                  className={`flex-1 text-left text-xl outline-none ${forceSolid ? "header-solid-text" : "text-foreground"} ${navTypographyClasses}`}
+              {navCtaLabel ? (
+                <button
+                  onClick={() => handleLinkClick(navCtaLink)}
+                  className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
                 >
-                  Forum
-                </Link>
-              </div>
-
-              <button
-                onClick={() => handleLinkClick("#kontakt")}
-                className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
-              >
-                Projekt anfragen
-              </button>
+                  {navCtaLabel}
+                </button>
+              ) : null}
             </div>
           </motion.div>
         )}

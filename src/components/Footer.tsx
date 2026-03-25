@@ -2,11 +2,6 @@ import { ArrowUp, Clock3, Globe, Instagram, Linkedin, Mail, MapPin, Phone } from
 import { Link } from "react-router-dom";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { defaultFooterContactItems, type FooterContactItem, useSiteSettings } from "@/hooks/useSiteSettings";
-import {
-  createDefaultFooterStyleConfig,
-  parseFooterStyleConfig,
-  resolveFooterStyleVars,
-} from "@/lib/site-ui-config";
 
 const footerIconMap = {
   mail: Mail,
@@ -23,21 +18,6 @@ const resolveFooterHref = (item: FooterContactItem) => {
   return "";
 };
 
-const resolveFooterPatternClass = (pattern: string) => {
-  switch (pattern) {
-    case "grid":
-      return "homepage-pattern-shell homepage-pattern-grid";
-    case "mesh":
-      return "homepage-pattern-shell homepage-pattern-mesh";
-    case "lines":
-      return "homepage-pattern-shell homepage-pattern-lines";
-    case "noise":
-      return "homepage-pattern-shell homepage-pattern-noise";
-    default:
-      return "";
-  }
-};
-
 const Footer = () => {
   const { logoUrl, settings } = useGlobalTheme();
   const { getSetting, getJsonSetting } = useSiteSettings();
@@ -51,13 +31,6 @@ const Footer = () => {
   const footerContactTitle = getSetting("footer_contact_title", "Kontakt");
   const backToTopText = getSetting("footer_back_to_top_text", "Back to Top");
   const copyrightTemplate = getSetting("footer_copyright_text", "© {{year}} {{brand}}. Alle Rechte vorbehalten.");
-  const footerStyle = parseFooterStyleConfig(getJsonSetting("footer_style_config", createDefaultFooterStyleConfig()));
-  const footerStyleVars = resolveFooterStyleVars({
-    ...footerStyle,
-    background_color: footerStyle.background_color || settings.footer_bg_hex || createDefaultFooterStyleConfig().background_color,
-  });
-  const footerPatternClass = resolveFooterPatternClass(footerStyle.pattern_type);
-
   const footerContactItems = getJsonSetting<FooterContactItem[]>("footer_contact_items", defaultFooterContactItems)
     .filter((item) => item?.value?.trim())
     .map((item) => ({
@@ -80,14 +53,7 @@ const Footer = () => {
   const contactItems = footerContactItems.length ? footerContactItems : fallbackContactItems;
 
   return (
-    <footer
-      className={`homepage-style-scope footer-shell ${footerPatternClass} relative overflow-hidden pt-24 pb-12`}
-      style={footerStyleVars}
-    >
-      <div
-        className="pointer-events-none absolute bottom-0 left-1/2 h-[320px] w-[680px] -translate-x-1/2 blur-[110px]"
-        style={{ background: `radial-gradient(circle at center, ${footerStyle.glow_color} 0%, transparent 68%)` }}
-      />
+    <footer className="footer-shell relative overflow-hidden pt-24 pb-12">
 
       <div className="section-container relative z-10">
         <div className="grid gap-12 lg:grid-cols-[1.2fr_auto_auto_auto]">
@@ -98,11 +64,11 @@ const Footer = () => {
               ) : (
                 <span
                   className={`text-3xl font-black tracking-tighter ${fontClass}`}
-                  style={{ color: settings.text_logo_color_hex === "#000000" || settings.text_logo_color_hex === "#0F172A" ? "var(--footer-text)" : settings.text_logo_color_hex || "var(--footer-text)" }}
+                  style={{ color: settings.text_logo_color_hex === "#000000" || settings.text_logo_color_hex === "#0F172A" ? "var(--hero-headline)" : settings.text_logo_color_hex || "var(--hero-headline)" }}
                 >
                   {brandName}
                   {settings.show_logo_dot !== false && (
-                    <span style={{ color: settings.logo_dot_color_hex || footerStyle.accent_color || settings.primary_color_hex || "var(--footer-link-hover)" }}>.</span>
+                    <span style={{ color: settings.logo_dot_color_hex || settings.primary_color_hex || "var(--theme-primary-hex)" }}>.</span>
                   )}
                 </span>
               )}
@@ -115,12 +81,12 @@ const Footer = () => {
             {settings.show_socials !== false && (
               <div className="flex items-center gap-4">
                 {settings.social_instagram_url && (
-                  <a href={settings.social_instagram_url} target="_blank" rel="noreferrer" className="footer-social flex h-12 w-12 items-center justify-center rounded-2xl transition-all">
+                  <a href={settings.social_instagram_url} target="_blank" rel="noreferrer" className="footer-social h-12 w-12 rounded-2xl flex items-center justify-center transition-all">
                     <Instagram size={20} />
                   </a>
                 )}
                 {settings.social_linkedin_url && (
-                  <a href={settings.social_linkedin_url} target="_blank" rel="noreferrer" className="footer-social flex h-12 w-12 items-center justify-center rounded-2xl transition-all">
+                  <a href={settings.social_linkedin_url} target="_blank" rel="noreferrer" className="footer-social h-12 w-12 rounded-2xl flex items-center justify-center transition-all">
                     <Linkedin size={20} />
                   </a>
                 )}
@@ -133,7 +99,7 @@ const Footer = () => {
             <ul className="footer-muted space-y-4">
               {navLinks.map((link: any, idx: number) => (
                 <li key={idx}>
-                  {typeof link.url === "string" && link.url.startsWith("#") ? (
+                  {link.url.startsWith("#") ? (
                     <button onClick={() => document.querySelector(link.url)?.scrollIntoView({ behavior: "smooth" })} className="footer-link outline-none">
                       {link.label}
                     </button>
@@ -167,7 +133,7 @@ const Footer = () => {
                 const Icon = footerIconMap[item.icon || "mail"] || Mail;
                 const content = (
                   <>
-                    <Icon size={18} className="shrink-0 mt-0.5" style={{ color: footerStyle.accent_color || "var(--footer-link-hover)" }} />
+                    <Icon size={18} className="text-primary shrink-0 mt-0.5" />
                     <div>
                       {item.label ? <div className="footer-subtle text-[11px] font-semibold uppercase tracking-[0.18em]">{item.label}</div> : null}
                       <div>{item.value}</div>
@@ -194,7 +160,7 @@ const Footer = () => {
         <div className="footer-divider mt-20 flex flex-col items-center justify-between gap-6 border-t pt-8 md:flex-row">
           <p className="footer-subtle text-sm">{renderedCopyright}</p>
           <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="footer-link footer-muted group flex items-center gap-2 text-sm font-bold uppercase tracking-widest outline-none">
-            {backToTopText} <ArrowUp size={16} className="transition-transform group-hover:-translate-y-1" style={{ color: footerStyle.accent_color || "var(--footer-link-hover)" }} />
+            {backToTopText} <ArrowUp size={16} className="text-primary transition-transform group-hover:-translate-y-1" />
           </button>
         </div>
       </div>

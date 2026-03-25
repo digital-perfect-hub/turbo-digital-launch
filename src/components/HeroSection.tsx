@@ -209,7 +209,6 @@ const HeroSection = () => {
             className="relative"
           >
             <div className={`premium-dark-card overflow-hidden p-4 sm:p-5 lg:p-6 ${isLoading ? "premium-skeleton" : ""}`}>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--theme-primary-hex)_18%,transparent)_0%,transparent_22%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--hero-bg-color)_18%,transparent)_0%,transparent_22%)]" />
               <div className="relative z-10 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>

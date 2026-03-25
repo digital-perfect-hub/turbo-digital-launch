@@ -28,7 +28,7 @@ const normalizeQuickWins = (wins: IntroQuickWin[]) =>
     .filter((item) => item?.title?.trim() && item?.text?.trim())
     .map((item) => ({
       ...item,
-      icon: item.icon && introIconMap[item.icon as keyof typeof introIconMap] ? item.icon : "layers",
+      icon: item.icon && introIconMap[item.icon] ? item.icon : "layers",
     }));
 
 const IntroSection = () => {
@@ -36,33 +36,26 @@ const IntroSection = () => {
   const { settings } = useGlobalTheme();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(siteSettings, "intro");
 
-  const quickWins = normalizeQuickWins(
-    getJsonSetting<IntroQuickWin[]>("home_intro_quick_wins", defaultIntroQuickWins)?.length
-      ? getJsonSetting<IntroQuickWin[]>("home_intro_quick_wins", defaultIntroQuickWins)
-      : defaultIntroQuickWins,
-  );
-
-  const introBody = getSetting("home_intro_body", defaultSiteText.home_intro_body).trim();
-
-  // ARCHITEKTUR-GESETZ: Strikter Killswitch
-  if (!introBody && quickWins.length === 0) {
-    return null;
-  }
-
   const introBadge =
     getSetting("home_intro_badge", settings.company_name || defaultSiteText.home_intro_badge).trim() ||
     settings.company_name ||
     defaultSiteText.home_intro_badge;
 
   const introTitle = getSetting("home_intro_title", defaultSiteText.home_intro_title).trim() || defaultSiteText.home_intro_title;
+  const introBody = getSetting("home_intro_body", defaultSiteText.home_intro_body).trim();
   const introCtaText =
     getSetting("home_intro_cta_text", defaultSiteText.home_intro_cta_text).trim() || defaultSiteText.home_intro_cta_text;
   const introCtaLink =
     getSetting("home_intro_cta_link", defaultSiteText.home_intro_cta_link).trim() || defaultSiteText.home_intro_cta_link;
 
+  const quickWins = normalizeQuickWins(
+    getJsonSetting<IntroQuickWin[]>("home_intro_quick_wins", defaultIntroQuickWins)?.length
+      ? getJsonSetting<IntroQuickWin[]>("home_intro_quick_wins", defaultIntroQuickWins)
+      : defaultIntroQuickWins,
+  );
+
   return (
-    // PADDING-FIX: Die monströsen py-32 wurden auf py-12 md:py-16 gestutzt.
-    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-12 md:py-16" aria-label="Intro" style={sectionStyleVars}>
+    <section className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Intro" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid items-center gap-8 xl:grid-cols-[1fr_1fr] xl:gap-16">
           <motion.div
@@ -72,8 +65,6 @@ const IntroSection = () => {
             transition={{ duration: 0.6 }}
             className="dark-panel-shell relative overflow-hidden rounded-[2.5rem] p-10 md:p-14"
           >
-            <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_60%)] opacity-20 blur-[80px]" />
-
             <div className="relative z-10">
               <p className="dark-panel-kicker mb-6 inline-flex rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] backdrop-blur-md">
                 {introBadge}
@@ -110,15 +101,13 @@ const IntroSection = () => {
             className="grid gap-6"
           >
             {quickWins.map((item) => {
-              const Icon = introIconMap[item.icon as keyof typeof introIconMap] || Layers3;
+              const Icon = introIconMap[item.icon || "layers"] || Layers3;
 
               return (
                 <div
                   key={item.title}
                   className="group relative flex items-start gap-6 overflow-hidden rounded-[2rem] border border-border bg-card p-8 shadow-sm transition-all duration-500 hover:shadow-xl"
                 >
-                  <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_70%)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
-
                   <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110">
                     <Icon size={24} />
                   </div>

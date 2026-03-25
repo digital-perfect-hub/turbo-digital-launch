@@ -9,7 +9,7 @@ import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type ProductItem = Database["public"]["Tables"]["products"]["Row"];
 
@@ -33,7 +33,6 @@ const normalizeFeatures = (value: Json | null | undefined): string[] => {
 const ShopSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "shop");
-  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "shop");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -55,7 +54,7 @@ const ShopSection = () => {
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <section id="shop" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} relative overflow-hidden py-24 sm:py-32`} aria-label="Produkte & Pakete" style={sectionStyleVars}>
+    <section id="shop" className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" aria-label="Produkte & Pakete" style={sectionStyleVars}>
       <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -89,8 +88,6 @@ const ShopSection = () => {
                   isLoading ? "animate-pulse" : ""
                 }`}
               >
-                <div className="pointer-events-none absolute -right-24 -top-28 h-56 w-56 bg-[radial-gradient(circle_at_center,hsl(var(--primary))_0%,transparent_72%)] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-[0.08]" />
-
                 <div className="relative aspect-[16/10] w-full overflow-hidden" style={{ background: "color-mix(in srgb, var(--surface-section) 70%, transparent)" }}>
                   {productImage ? (
                     <img

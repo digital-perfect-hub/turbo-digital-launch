@@ -7,7 +7,7 @@ import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
 type PortfolioItem = Database["public"]["Tables"]["portfolio_items"]["Row"];
 
@@ -64,7 +64,6 @@ const PORTFOLIO_SELECT = "id, title, description, image_url, url, tags, sort_ord
 const PortfolioSection = () => {
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "portfolio");
-  const sectionPatternClass = resolveHomepageSectionPatternClassFromSettings(settings, "portfolio");
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
@@ -85,7 +84,7 @@ const PortfolioSection = () => {
   const effectiveItems = portfolioItems.length > 0 ? portfolioItems : fallbackPortfolioItems;
 
   return (
-    <section id="portfolio" className={`homepage-style-scope surface-section-shell ${sectionPatternClass} py-24 sm:py-28 md:py-32`} aria-label="Portfolio" style={sectionStyleVars}>
+    <section id="portfolio" className="homepage-style-scope surface-section-shell py-24 sm:py-28 md:py-32" aria-label="Portfolio" style={sectionStyleVars}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -118,10 +117,9 @@ const PortfolioSection = () => {
                   {hasImage ? (
                     <div className="relative h-[250px] overflow-hidden border-b" style={{ borderColor: "var(--surface-card-border)", background: "color-mix(in srgb, var(--surface-section) 78%, transparent)" }}>
                       <img src={imageSrc} alt={item.title || "Projekt"} className="h-full w-full object-cover" loading="lazy" />
-                      <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_10%,rgba(15,23,42,0.45)_100%)]" />
                     </div>
                   ) : (
-                    <div className="grid gap-3 border-b p-5 sm:grid-cols-3" style={{ borderColor: "var(--surface-card-border)", background: "radial-gradient(circle at top left, color-mix(in srgb, var(--button-primary-bg) 18%, transparent) 0%, transparent 26%), linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 94%, white 6%), color-mix(in srgb, var(--surface-section) 90%, transparent))" }}>
+                    <div className="grid gap-3 border-b p-5 sm:grid-cols-3" style={{ borderColor: "var(--surface-card-border)", background: "var(--surface-card)" }}>
                       {placeholderTiles.map((tile) => {
                         const Icon = tile.icon;
                         return (
