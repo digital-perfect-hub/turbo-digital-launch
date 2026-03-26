@@ -53,6 +53,7 @@ export type RichTextBlockData = {
 export type FeatureGridItem = {
   title?: string;
   text?: string;
+  iconKey?: string;
 };
 
 export type FeatureGridBlockData = {
@@ -156,9 +157,9 @@ export const createDefaultBlock = (type: PageBlockType): PageBlock => {
           headline: "Das steckt in deinem Angebot",
           description: "Die wichtigsten Bausteine direkt im Überblick.",
           items: [
-            { title: "Mandantenfähig", text: "Mehrere Sites in einem zentralen Hub steuern." },
-            { title: "Performant", text: "Mobile-first Struktur mit sauberem SPA-Setup." },
-            { title: "Erweiterbar", text: "Module und Landingpages blockbasiert aufbauen." },
+            { title: "Mandantenfähig", text: "Mehrere Sites in einem zentralen Hub steuern.", iconKey: "Building2" },
+            { title: "Performant", text: "Mobile-first Struktur mit sauberem SPA-Setup.", iconKey: "TrendingUp" },
+            { title: "Erweiterbar", text: "Module und Landingpages blockbasiert aufbauen.", iconKey: "Blocks" },
           ],
         },
       };
@@ -273,7 +274,7 @@ export const normalizePageBlocks = (value: unknown): PageBlock[] => {
           const items = Array.isArray(data.items)
             ? data.items
                 .filter(isObject)
-                .map((item) => ({ title: asString(item.title), text: asString(item.text) }))
+                .map((item) => ({ title: asString(item.title), text: asString(item.text), iconKey: asString(item.iconKey) }))
             : [];
           return {
             id,

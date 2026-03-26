@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Palette, Type, Upload, Image as ImageIcon, CheckCircle2, Loader2 } from "lucide-react";
+import { Palette, Type, Image as ImageIcon, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import MediaDropzone from "@/components/admin/media/MediaDropzone";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
-import { buildRawImageUrl } from "@/lib/image";
+import { buildStrictRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { uploadBrandingAsset } from "@/lib/storage";
@@ -354,8 +355,7 @@ const AdminBranding = () => {
     }));
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleLogoUpload = async (file?: File | null) => {
     if (!file) return;
     setIsUploading(true);
     try {
@@ -369,7 +369,7 @@ const AdminBranding = () => {
     }
   };
 
-  const logoPreview = form.logo_path ? buildRawImageUrl(form.logo_path, { width: 480, quality: 82 }) : "";
+  const logoPreview = form.logo_path ? buildStrictRenderImageUrl(form.logo_path, { width: 480, quality: 82 }) : "";
 
   if (isLoading) return <div className="p-6 text-slate-500 font-medium">Laden...</div>;
 
@@ -860,21 +860,17 @@ const AdminBranding = () => {
               {!form.use_text_logo ? (
                 <div className="pt-5 border-t border-slate-200">
                   <Label className="text-slate-700 mb-3 block">Logo hochladen</Label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                    {logoPreview ? (
-                      <div className="relative h-20 w-40 shrink-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm flex items-center justify-center">
-                        <img src={logoPreview} alt="Logo" className="max-h-full max-w-full object-contain" />
-                      </div>
-                    ) : (
-                      <div className="flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-slate-400"><ImageIcon size={24} /></div>
-                    )}
-                    <div>
-                      <Label htmlFor="logo-upload" className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:border-[#FF4B2C] hover:text-[#FF4B2C] transition-all">
-                        {isUploading ? "Lädt..." : <><Upload size={16} className="mr-2" /> Bild wählen</>}
-                      </Label>
-                      <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={isUploading} />
-                    </div>
-                  </div>
+                  <MediaDropzone
+                    value={form.logo_path || ""}
+                    previewUrl={logoPreview || null}
+                    title="Logo-Upload"
+                    description="Drag & Drop für Logos. Gespeicherte Ausspielung läuft anschließend über die Render-API."
+                    uploading={isUploading}
+                    onFileSelected={async (file) => {
+                      await handleLogoUpload(file);
+                    }}
+                    onRemove={() => setForm((prev: any) => ({ ...prev, logo_path: "" }))}
+                  />
                 </div>
               ) : (
                 <div className="pt-5 border-t border-slate-200">

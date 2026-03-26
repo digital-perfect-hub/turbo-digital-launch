@@ -1,37 +1,18 @@
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  BarChart,
-  Bot,
-  Globe,
-  MapPin,
-  Megaphone,
-  Monitor,
-  Repeat,
-  Search,
-  Shield,
-  ShoppingCart,
-  Star,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, Monitor } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import { getLucideIcon } from "@/lib/lucide-icon-registry";
 
 type ServiceItem = {
   id: string;
   icon_name: string | null;
   title: string | null;
   description: string | null;
-};
-
-const iconMap: Record<string, any> = {
-  Monitor, ShoppingCart, Search, MapPin, Bot, Wrench,
-  BarChart, Repeat, Globe, Megaphone, Star, Shield,
-  BarChart3: BarChart,
 };
 
 const fallbackServices: ServiceItem[] = [
@@ -117,7 +98,7 @@ const ServicesSection = () => {
 
         <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {effectiveServices.map((service, index) => {
-            const Icon = iconMap[service.icon_name || "Monitor"] || Monitor;
+            const Icon = getLucideIcon(service.icon_name, Monitor);
 
             return (
               <motion.div

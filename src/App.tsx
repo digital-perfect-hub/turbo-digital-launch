@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,11 +6,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import CookieBanner from "@/components/CookieBanner";
 import ConsentScriptGate from "@/components/ConsentScriptGate";
+import PageViewTracker from "@/components/PageViewTracker";
 import { AuthProvider } from "./hooks/useAuth";
 import { SiteProvider } from "./context/SiteContext";
 import { useGlobalTheme } from "./hooks/useGlobalTheme";
 
-// Öffentliche Seiten
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -21,7 +22,6 @@ import Forum from "./pages/Forum";
 import ForumThread from "./pages/ForumThread";
 import DynamicPage from "./pages/DynamicPage";
 
-// Admin Seiten
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFooter from "./pages/admin/AdminFooter";
@@ -42,15 +42,17 @@ import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminLegal from "./pages/admin/AdminLegal";
 import AdminSites from "./pages/admin/AdminSites";
 import AdminPages from "./pages/admin/AdminPages";
+import AdminBilling from "./pages/admin/AdminBilling";
 
 const queryClient = new QueryClient();
 
-const ThemeBootstrap = ({ children }: { children: React.ReactNode }) => {
+const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
   useGlobalTheme();
 
   return (
     <>
       <ConsentScriptGate />
+      <PageViewTracker />
       {children}
       <CookieBanner />
     </>
@@ -67,7 +69,6 @@ const App = () => (
           <BrowserRouter>
             <ThemeBootstrap>
               <Routes>
-                {/* Frontend Routen */}
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/impressum" element={<Impressum />} />
@@ -78,7 +79,6 @@ const App = () => (
                 <Route path="/forum/kategorie/:categorySlug" element={<Forum />} />
                 <Route path="/forum/:slug" element={<ForumThread />} />
 
-                {/* Admin Backend Routen */}
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="branding" element={<AdminBranding />} />
@@ -92,6 +92,7 @@ const App = () => (
                   <Route path="forum" element={<AdminForum />} />
                   <Route path="content" element={<AdminContent />} />
                   <Route path="pages" element={<AdminPages />} />
+                  <Route path="billing" element={<AdminBilling />} />
                   <Route path="team" element={<AdminTeam />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="legal" element={<AdminLegal />} />
@@ -101,10 +102,7 @@ const App = () => (
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
 
-                {/* Dynamische Mandanten-Seiten */}
                 <Route path="/:slug" element={<DynamicPage />} />
-
-                {/* 404 Fallback */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </ThemeBootstrap>

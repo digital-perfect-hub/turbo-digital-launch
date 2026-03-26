@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Building2,
+  CreditCard,
   FileText,
   Files,
   HelpCircle,
@@ -39,6 +40,7 @@ const navItems = [
   { to: "/admin/forum", icon: MessagesSquare, label: "Forum", moduleKey: "hasForum" },
   { to: "/admin/content", icon: FileText, label: "Content-Blöcke" },
   { to: "/admin/pages", icon: Files, label: "Page Builder" },
+  { to: "/admin/billing", icon: CreditCard, label: "Billing & Abos" },
   { to: "/admin/team", icon: Users, label: "Team" },
   { to: "/admin/testimonials", icon: Quote, label: "Testimonials" },
   { to: "/admin/legal", icon: ShieldCheck, label: "Recht & SEO" },
@@ -79,7 +81,7 @@ const AdminLayout = () => {
 
   return (
     <div className="admin-ui-scope flex min-h-screen bg-background text-foreground">
-      <aside className="flex w-72 shrink-0 flex-col border-r border-[hsl(var(--admin-sidebar-border))] bg-[hsl(var(--admin-sidebar-bg))] text-[hsl(var(--admin-sidebar-fg))]">
+      <aside className="flex w-80 shrink-0 flex-col border-r border-[hsl(var(--admin-sidebar-border))] bg-[hsl(var(--admin-sidebar-bg))] text-[hsl(var(--admin-sidebar-fg))]">
         <div className="border-b border-[hsl(var(--admin-sidebar-border))] p-6">
           <h2 className="text-2xl font-black tracking-tight text-[#FF4B2C]">Admin Panel</h2>
           <p className="mt-1 truncate text-xs font-medium text-[hsl(var(--admin-sidebar-muted))]">{user.email}</p>
