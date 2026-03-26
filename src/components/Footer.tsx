@@ -1,6 +1,7 @@
 import { ArrowUp, Clock3, Globe, Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+import { openCookieSettings } from "@/lib/cookie-consent";
 import { defaultFooterContactItems, type FooterContactItem, useSiteSettings } from "@/hooks/useSiteSettings";
 
 const footerIconMap = {
@@ -123,6 +124,11 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
+              <li>
+                <button type="button" onClick={openCookieSettings} className="footer-link text-left outline-none">
+                  Cookie-Einstellungen
+                </button>
+              </li>
             </ul>
           </div>
 

@@ -221,6 +221,9 @@ const AdminSettings = () => {
 
           {/* TAB 3: TRACKING */}
           <TabsContent value="tracking" className="space-y-6 mt-0 outline-none">
+             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Tracking-Code wird jetzt global über das Cookie-Consent-System geladen. Ohne Zustimmung werden diese Scripts nicht injiziert.
+             </div>
              <div className="space-y-2">
                 <Label className="text-slate-700 font-bold flex items-center gap-2">Head Code <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] uppercase">GTM, Pixel</span></Label>
                 <Textarea rows={6} className="font-mono text-xs rounded-xl border-slate-200 bg-slate-900 text-emerald-400 p-4 focus:border-[#FF4B2C]" value={form.tracking_head_code || ""} onChange={(e) => setForm({ ...form, tracking_head_code: e.target.value })} placeholder="\n<script>...</script>" />

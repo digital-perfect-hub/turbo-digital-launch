@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useSiteContext } from "@/context/SiteContext";
 import {
   defaultAudienceItems,
@@ -50,6 +51,12 @@ import {
   normalizeHomepageSectionOrder,
   serializeHomepageSectionOrder,
 } from "@/lib/homepage-section-order";
+import {
+  createDefaultHomepageSectionVisibility,
+  parseHomepageSectionVisibility,
+  serializeHomepageSectionVisibility,
+  type HomepageSectionVisibility,
+} from "@/lib/site-ui-config";
 
 type TextForm = Record<string, string>;
 
@@ -346,6 +353,7 @@ const AdminHomepage = () => {
   const [contactContent, setContactContent] = useState<ContactSectionContent>(defaultContactSectionContent);
   const [sectionStyles, setSectionStyles] = useState<HomepageSectionStyles>(createDefaultHomepageSectionStyles());
   const [sectionOrder, setSectionOrder] = useState<HomepageSectionId[]>(DEFAULT_HOMEPAGE_SECTION_ORDER);
+  const [sectionVisibility, setSectionVisibility] = useState<HomepageSectionVisibility>(createDefaultHomepageSectionVisibility());
   const [activeSection, setActiveSection] = useState<string>(textFieldGroups[0]?.id || "intro");
 
   useEffect(() => {
@@ -373,6 +381,7 @@ const AdminHomepage = () => {
     );
     setSectionStyles(parseHomepageSectionStyles(settings.home_section_styles));
     setSectionOrder(normalizeHomepageSectionOrder(settings.home_section_order));
+    setSectionVisibility(parseHomepageSectionVisibility(settings.home_section_visibility));
   }, [isLoading, settings]);
 
   const mutation = useMutation({
@@ -387,6 +396,7 @@ const AdminHomepage = () => {
         ["contact_section_content", JSON.stringify(contactContent)],
         ["home_section_styles", serializeHomepageSectionStyles(sectionStyles)],
         ["home_section_order", serializeHomepageSectionOrder(sectionOrder)],
+        ["home_section_visibility", serializeHomepageSectionVisibility(sectionVisibility)],
       ];
 
       await Promise.all(payload.map(([key, value]) => upsertSiteSetting(siteId, key, value)));
@@ -497,6 +507,10 @@ const AdminHomepage = () => {
 
   const moveSection = (sectionId: HomepageSectionId, direction: "up" | "down") => {
     setSectionOrder((prev) => moveHomepageSection(prev, sectionId, direction));
+  };
+
+const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean) => {
+    setSectionVisibility((prev) => ({ ...prev, [sectionId]: checked }));
   };
 
   const activeSectionId = (HOMEPAGE_SECTION_IDS.includes(activeSection as HomepageSectionId)
@@ -1366,53 +1380,78 @@ const AdminHomepage = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[220px_minmax(0,1fr)_360px]">
+      <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
           <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
+                <p className="mt-1 text-xs text-slate-500">Reihenfolge, Sichtbarkeit und Fokus der Homepage-Sektionen.</p>
+              </div>
+              <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                {orderedSectionGroups.length} Sektionen
+              </div>
+            </div>
+
             <div className="mt-4 max-h-[calc(100vh-12rem)] space-y-2 overflow-auto pr-1">
               {orderedSectionGroups.map((group, index) => {
                 const active = group.id === activeSectionId;
                 const isFirst = index === 0;
                 const isLast = index === orderedSectionGroups.length - 1;
+                const isVisible = sectionVisibility[group.id as HomepageSectionId] !== false;
                 return (
                   <div
                     key={group.id}
-                    className={`w-full rounded-[1.15rem] border p-3 text-left transition-all ${
+                    className={`w-full rounded-[1.2rem] border p-3 transition-all ${
                       active
-                        ? "border-[#FF4B2C] bg-[#FF4B2C]/5 shadow-sm"
+                        ? "border-[#FF4B2C]/35 bg-[#FF4B2C]/5 shadow-[0_12px_30px_-22px_rgba(255,75,44,0.55)]"
                         : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
                     }`}
                   >
-                    <div className="flex items-start gap-2.5">
-                      <button type="button" onClick={() => setActiveSection(group.id)} className="min-w-0 flex-1 text-left">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
-                          <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
-                            {group.fields.length}
+                    <button type="button" onClick={() => setActiveSection(group.id)} className="block w-full text-left">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
+                          {group.fields.length}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 h-8 overflow-hidden text-[11px] leading-4 text-slate-500">{group.description}</p>
+                    </button>
+
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-200/80 pt-3">
+                      <div className="flex items-center gap-2">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1">
+                          <span className={`inline-flex h-2 w-2 rounded-full ${isVisible ? "bg-emerald-500" : "bg-amber-500"}`} />
+                          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                            {isVisible ? "Sichtbar" : "Ausgeblendet"}
                           </span>
                         </div>
-                        <p className="mt-1.5 text-[11px] leading-4 text-slate-500">{group.description}</p>
-                      </button>
+                        <Switch
+                          checked={isVisible}
+                          onCheckedChange={(checked) => toggleSectionVisibility(group.id as HomepageSectionId, checked)}
+                          className="data-[state=checked]:bg-[#FF4B2C]"
+                          aria-label={`${group.title} sichtbar schalten`}
+                        />
+                      </div>
 
-                      <div className="flex shrink-0 flex-col gap-1.5">
+                      <div className="flex shrink-0 items-center gap-1.5">
                         <button
                           type="button"
                           aria-label={`${group.title} nach oben verschieben`}
                           onClick={() => moveSection(group.id as HomepageSectionId, "up")}
                           disabled={isFirst}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
                         >
-                          <ArrowUp size={13} />
+                          <ArrowUp size={14} />
                         </button>
                         <button
                           type="button"
                           aria-label={`${group.title} nach unten verschieben`}
                           onClick={() => moveSection(group.id as HomepageSectionId, "down")}
                           disabled={isLast}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
                         >
-                          <ArrowDown size={13} />
+                          <ArrowDown size={14} />
                         </button>
                       </div>
                     </div>
@@ -1423,43 +1462,59 @@ const AdminHomepage = () => {
           </div>
         </aside>
 
-        <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-          <div className="mb-6 rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5">
-            <div className="inline-flex rounded-full border border-[#FF4B2C]/15 bg-[#FF4B2C]/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF4B2C]">
-              {HOMEPAGE_SECTION_LABELS[activeSectionId]}
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(430px,0.92fr)]">
+          <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+            <div className="mb-6 rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="inline-flex rounded-full border border-[#FF4B2C]/15 bg-[#FF4B2C]/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF4B2C]">
+                    {HOMEPAGE_SECTION_LABELS[activeSectionId]}
+                  </div>
+                  <h2 className="mt-3 text-2xl font-extrabold text-slate-900">{activeGroup.title}</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">{activeGroup.description}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    <span className={`inline-flex h-2.5 w-2.5 rounded-full ${sectionVisibility[activeSectionId] !== false ? "bg-emerald-500" : "bg-amber-500"}`} />
+                    {sectionVisibility[activeSectionId] !== false ? "Sektion aktiv" : "Sektion ausgeblendet"}
+                  </div>
+                  <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    {activeGroup.fields.length} Felder
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="mt-3 text-2xl font-extrabold text-slate-900">{activeGroup.title}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-500">{activeGroup.description}</p>
+
+            <Tabs defaultValue="content" className="space-y-5">
+              <TabsList className="h-auto flex-wrap justify-start gap-2 rounded-[1.25rem] bg-slate-100 p-2">
+                <TabsTrigger value="content" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Inhalte</TabsTrigger>
+                <TabsTrigger value="structure" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Struktur</TabsTrigger>
+                <TabsTrigger value="design" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Design</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="content" className="mt-0">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">{renderTextFields()}</div>
+              </TabsContent>
+
+              <TabsContent value="structure" className="mt-0">
+                {renderStructureTab()}
+              </TabsContent>
+
+              <TabsContent value="design" className="mt-0">
+                <SectionStyleEditor value={activeSectionStyle} onChange={(nextStyle) => updateSectionStyle(activeSectionId, nextStyle)} />
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <Tabs defaultValue="content" className="space-y-5">
-            <TabsList className="h-auto flex-wrap justify-start gap-2 rounded-[1.25rem] bg-slate-100 p-2">
-              <TabsTrigger value="content" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Inhalte</TabsTrigger>
-              <TabsTrigger value="structure" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Struktur</TabsTrigger>
-              <TabsTrigger value="design" className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white">Design</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="content" className="mt-0">
-              <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">{renderTextFields()}</div>
-            </TabsContent>
-
-            <TabsContent value="structure" className="mt-0">
-              {renderStructureTab()}
-            </TabsContent>
-
-            <TabsContent value="design" className="mt-0">
-              <SectionStyleEditor value={activeSectionStyle} onChange={(nextStyle) => updateSectionStyle(activeSectionId, nextStyle)} />
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="xl:col-span-2 2xl:col-span-1">
-          <SectionPreviewPanel
-            sectionId={activeSectionId}
-            sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}
-            preview={getPreviewPayload(activeSectionId)}
-            styleVars={resolveHomepageSectionStyleVars(sectionStyles, activeSectionId)}
-          />
+          <div className="min-w-0 xl:sticky xl:top-6 xl:self-start">
+            <SectionPreviewPanel
+              sectionId={activeSectionId}
+              sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}
+              preview={getPreviewPayload(activeSectionId)}
+              styleVars={resolveHomepageSectionStyleVars(sectionStyles, activeSectionId)}
+            />
+          </div>
         </div>
       </div>
     </div>

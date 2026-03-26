@@ -7,12 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
 import { buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { uploadBrandingAsset } from "@/lib/storage";
 import { cn } from "@/lib/utils";
+import { upsertSiteSetting } from "@/lib/site-settings";
+import { createDefaultLoadingScreenConfig, parseLoadingScreenConfig, serializeLoadingScreenConfig, type LoadingScreenConfig } from "@/lib/site-ui-config";
 
 const GLOBAL_SETTINGS_EDITABLE_COLUMNS = [
   "primary_color_hex", "secondary_color_hex", "accent_color_hex",
@@ -170,19 +173,71 @@ const getReadableButtonText = (hex?: string | null) => {
   return luminance > 0.62 ? "#0F172A" : "#FFFFFF";
 };
 
+const loadingFontFamilyClassMap = {
+  default: "font-sans",
+  sans: "font-sans",
+  display: "font-display",
+  serif: "font-serif",
+  mono: "font-mono",
+} as const;
+
+const loadingHeadingSizeClassMap = {
+  sm: "text-xl",
+  md: "text-2xl",
+  lg: "text-3xl",
+  xl: "text-4xl",
+} as const;
+
+const loadingSubtextSizeClassMap = {
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-base",
+  xl: "text-lg",
+} as const;
+
+const loadingFontOptions: Array<{ value: LoadingScreenConfig["heading_font_family"]; label: string }> = [
+  { value: "default", label: "Default" },
+  { value: "sans", label: "Sans" },
+  { value: "display", label: "Display" },
+  { value: "serif", label: "Serif" },
+  { value: "mono", label: "Mono" },
+];
+
+const loadingSizeOptions: Array<{ value: LoadingScreenConfig["heading_size"]; label: string }> = [
+  { value: "sm", label: "S" },
+  { value: "md", label: "M" },
+  { value: "lg", label: "L" },
+  { value: "xl", label: "XL" },
+];
+
 const AdminBranding = () => {
   const queryClient = useQueryClient();
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { settings, isLoading } = useGlobalTheme();
+  const { settings: siteSettings } = useSiteSettings();
   const [form, setForm] = useState<any>({});
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!settings) return;
 
+    const baseLoadingConfig = parseLoadingScreenConfig(siteSettings.loading_screen_config || createDefaultLoadingScreenConfig());
+    const mergedLoadingConfig = parseLoadingScreenConfig({
+      ...baseLoadingConfig,
+      heading: settings.loader_heading || baseLoadingConfig.heading,
+      subtext: settings.loader_subtext || baseLoadingConfig.subtext,
+      background_color: settings.loader_bg_hex || baseLoadingConfig.background_color,
+      text_color: settings.loader_text_hex || baseLoadingConfig.text_color,
+    });
+
     setForm({
       ...settings,
+      loading_screen_config: mergedLoadingConfig,
+      loader_heading: mergedLoadingConfig.heading,
+      loader_subtext: mergedLoadingConfig.subtext,
+      loader_bg_hex: mergedLoadingConfig.background_color,
+      loader_text_hex: mergedLoadingConfig.text_color,
       button_theme: {
         primary_background_color: settings.button_theme?.primary_background_color || settings.primary_color_hex || "#FF4B2C",
         primary_text_color: settings.button_theme?.primary_text_color || getReadableButtonText(settings.button_theme?.primary_background_color || settings.primary_color_hex || "#FF4B2C"),
@@ -191,7 +246,7 @@ const AdminBranding = () => {
         secondary_border_color: settings.button_theme?.secondary_border_color || settings.border_color_hex || "rgba(148,163,184,0.26)",
       },
     });
-  }, [settings]);
+  }, [settings, siteSettings]);
 
   const activePresetId = useMemo(() => {
     const matchedPreset = THEME_PRESETS.find((preset) =>
@@ -209,6 +264,12 @@ const AdminBranding = () => {
         return acc;
       }, {});
 
+      const normalizedLoadingConfig = parseLoadingScreenConfig(values.loading_screen_config || createDefaultLoadingScreenConfig());
+      payload.loader_heading = normalizedLoadingConfig.heading;
+      payload.loader_subtext = normalizedLoadingConfig.subtext;
+      payload.loader_bg_hex = normalizedLoadingConfig.background_color;
+      payload.loader_text_hex = normalizedLoadingConfig.text_color;
+
       const { data: updatedRows, error: updateError } = await supabase
         .from("global_settings")
         .update(payload)
@@ -222,9 +283,12 @@ const AdminBranding = () => {
           .upsert({ id: rowId, site_id: siteId, ...payload }, { onConflict: "site_id" });
         if (upsertError) throw upsertError;
       }
+
+      await upsertSiteSetting(siteId, "loading_screen_config", serializeLoadingScreenConfig(normalizedLoadingConfig));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["global_settings"] });
+      queryClient.invalidateQueries({ queryKey: ["site_settings", siteId] });
       toast.success("Endlevel Branding erfolgreich aktualisiert.");
     },
     onError: (error: any) => toast.error(error?.message || "Speichern fehlgeschlagen."),
@@ -233,6 +297,32 @@ const AdminBranding = () => {
   const updateField = (key: string, value: any) => {
     setForm((prev: any) => ({ ...prev, [key]: value }));
   };
+
+  const updateLoadingScreenConfigField = <K extends keyof LoadingScreenConfig,>(key: K, value: LoadingScreenConfig[K]) => {
+    setForm((prev: any) => {
+      const currentConfig = parseLoadingScreenConfig(prev?.loading_screen_config || createDefaultLoadingScreenConfig());
+      const nextConfig = {
+        ...currentConfig,
+        [key]: value,
+      } as LoadingScreenConfig;
+
+      return {
+        ...prev,
+        loading_screen_config: nextConfig,
+        loader_heading: nextConfig.heading,
+        loader_subtext: nextConfig.subtext,
+        loader_bg_hex: nextConfig.background_color,
+        loader_text_hex: nextConfig.text_color,
+      };
+    });
+  };
+
+  const loadingScreenConfig = useMemo(
+    () => parseLoadingScreenConfig(form.loading_screen_config || createDefaultLoadingScreenConfig()),
+    [form.loading_screen_config],
+  );
+
+  const progressLabel = `${loadingScreenConfig.progress_prefix || ""}87${loadingScreenConfig.progress_suffix || ""}`;
 
   const updateButtonThemeField = (key: string, value: string) => {
     setForm((prev: any) => {
@@ -529,46 +619,215 @@ const AdminBranding = () => {
               <Type size={24} className="text-[#FF4B2C]" /> Ladebildschirm
             </div>
             <p className="text-sm text-slate-500 mb-6">
-              Personalisiere den Gatekeeper-Ladebildschirm, den deine Besucher beim Aufrufen sehen.
+              Personalisiere den Gatekeeper-Ladebildschirm präzise: Texte, Modus, Farben, Progress-Look und Typografie.
             </p>
-            <div className="grid gap-5 md:grid-cols-2 mb-6">
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-bold">Lade-Titel</Label>
-                <Input
-                  value={form.loader_heading || ""}
-                  onChange={(e) => updateField("loader_heading", e.target.value)}
-                  placeholder="DIGITAL-PERFECT"
-                  className="rounded-xl border-slate-200 bg-slate-50 focus:bg-white h-12"
-                />
+
+            <div className="space-y-6">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900">Inhalt & Verhalten</h3>
+                    <p className="mt-1 text-xs text-slate-500">Texte, Progress-Label und Anzeigemodus des Ladebildschirms.</p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Live gesteuert
+                  </div>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-slate-700 font-bold">Lade-Titel</Label>
+                    <Input
+                      value={loadingScreenConfig.heading}
+                      onChange={(e) => updateLoadingScreenConfigField("heading", e.target.value)}
+                      placeholder="DIGITAL-PERFECT"
+                      className="rounded-xl border-slate-200 bg-white focus:bg-white h-12"
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-slate-700 font-bold">Subtext</Label>
+                    <Input
+                      value={loadingScreenConfig.subtext}
+                      onChange={(e) => updateLoadingScreenConfigField("subtext", e.target.value)}
+                      placeholder="System wird geladen..."
+                      className="rounded-xl border-slate-200 bg-white focus:bg-white h-12"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Modus</Label>
+                    <select
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                      value={loadingScreenConfig.mode}
+                      onChange={(e) => updateLoadingScreenConfigField("mode", e.target.value as LoadingScreenConfig["mode"])}
+                    >
+                      <option value="both">Spinner + Progressbar</option>
+                      <option value="spinner">Nur Spinner</option>
+                      <option value="bar">Nur Progressbar</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Prozent anzeigen</Label>
+                    <div className="flex h-12 items-center justify-between rounded-xl border border-slate-200 bg-white px-4">
+                      <span className="text-sm text-slate-600">Zahl im Loader anzeigen</span>
+                      <Switch
+                        checked={loadingScreenConfig.show_percentage}
+                        onCheckedChange={(checked) => updateLoadingScreenConfigField("show_percentage", checked)}
+                        className="data-[state=checked]:bg-[#FF4B2C]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Prefix</Label>
+                    <Input
+                      value={loadingScreenConfig.progress_prefix}
+                      onChange={(e) => updateLoadingScreenConfigField("progress_prefix", e.target.value)}
+                      placeholder=""
+                      className="rounded-xl border-slate-200 bg-white h-12"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Suffix</Label>
+                    <Input
+                      value={loadingScreenConfig.progress_suffix}
+                      onChange={(e) => updateLoadingScreenConfigField("progress_suffix", e.target.value)}
+                      placeholder="%"
+                      className="rounded-xl border-slate-200 bg-white h-12"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-bold">Subtext</Label>
-                <Input
-                  value={form.loader_subtext || ""}
-                  onChange={(e) => updateField("loader_subtext", e.target.value)}
-                  placeholder="System wird geladen..."
-                  className="rounded-xl border-slate-200 bg-slate-50 focus:bg-white h-12"
-                />
+
+              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5">
+                <h3 className="text-sm font-extrabold text-slate-900">Farben</h3>
+                <p className="mt-1 text-xs text-slate-500">Hier steuerst du auch Accent, Spinner, Track, Fill und damit den Bereich rund um die Prozentzahl.</p>
+                <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Hintergrund</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={loadingScreenConfig.background_color}
+                      onChange={(e) => updateLoadingScreenConfigField("background_color", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Text</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={loadingScreenConfig.text_color}
+                      onChange={(e) => updateLoadingScreenConfigField("text_color", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Accent-Glow</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={loadingScreenConfig.accent_color}
+                      onChange={(e) => updateLoadingScreenConfigField("accent_color", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Spinner</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={loadingScreenConfig.spinner_color}
+                      onChange={(e) => updateLoadingScreenConfigField("spinner_color", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Progress-Track</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={loadingScreenConfig.track_color}
+                      onChange={(e) => updateLoadingScreenConfigField("track_color", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Progress-Fill</Label>
+                    <Input
+                      type="color"
+                      className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
+                      value={loadingScreenConfig.fill_color}
+                      onChange={(e) => updateLoadingScreenConfigField("fill_color", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="grid gap-5 md:grid-cols-2 pt-6 border-t border-slate-100">
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-bold">Hintergrundfarbe</Label>
-                <Input
-                  type="color"
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                  value={form.loader_bg_hex || "#0F172A"}
-                  onChange={(e) => updateField("loader_bg_hex", e.target.value.toUpperCase())}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-slate-700 font-bold">Textfarbe (Animation)</Label>
-                <Input
-                  type="color"
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                  value={form.loader_text_hex || "#FFFFFF"}
-                  onChange={(e) => updateField("loader_text_hex", e.target.value.toUpperCase())}
-                />
+
+              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5">
+                <h3 className="text-sm font-extrabold text-slate-900">Typografie</h3>
+                <p className="mt-1 text-xs text-slate-500">Steuert Schriftarten und Größen für Titel, Subtext und Prozentanzeige.</p>
+                <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Titel Schrift</Label>
+                    <select
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                      value={loadingScreenConfig.heading_font_family}
+                      onChange={(e) => updateLoadingScreenConfigField("heading_font_family", e.target.value as LoadingScreenConfig["heading_font_family"])}
+                    >
+                      {loadingFontOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Subtext Schrift</Label>
+                    <select
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                      value={loadingScreenConfig.subtext_font_family}
+                      onChange={(e) => updateLoadingScreenConfigField("subtext_font_family", e.target.value as LoadingScreenConfig["subtext_font_family"])}
+                    >
+                      {loadingFontOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Prozent Schrift</Label>
+                    <select
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                      value={loadingScreenConfig.progress_font_family}
+                      onChange={(e) => updateLoadingScreenConfigField("progress_font_family", e.target.value as LoadingScreenConfig["progress_font_family"])}
+                    >
+                      {loadingFontOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Titel Größe</Label>
+                    <select
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                      value={loadingScreenConfig.heading_size}
+                      onChange={(e) => updateLoadingScreenConfigField("heading_size", e.target.value as LoadingScreenConfig["heading_size"])}
+                    >
+                      {loadingSizeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-bold">Subtext Größe</Label>
+                    <select
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                      value={loadingScreenConfig.subtext_size}
+                      onChange={(e) => updateLoadingScreenConfigField("subtext_size", e.target.value as LoadingScreenConfig["subtext_size"])}
+                    >
+                      {loadingSizeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -716,26 +975,65 @@ const AdminBranding = () => {
               Ladebildschirm Vorschau
             </div>
             <div
-              className="rounded-[1.5rem] p-12 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]"
-              style={{ backgroundColor: form.loader_bg_hex || "#0f172a", color: form.loader_text_hex || "#ffffff" }}
+              className="rounded-[1.5rem] p-10 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[340px]"
+              style={{ backgroundColor: loadingScreenConfig.background_color, color: loadingScreenConfig.text_color }}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-white/5 rounded-full blur-[60px] pointer-events-none" />
-              <div className="relative z-10 flex flex-col items-center gap-6">
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute inset-0 bg-white/10 rounded-full blur-xl animate-pulse" />
-                  <Loader2 className="w-12 h-12 animate-spin relative z-10 opacity-70" />
-                  <div className="absolute inset-0 flex items-center justify-center z-20 font-bold text-xs tracking-tighter">
-                    87%
+              <div
+                className="absolute top-1/2 left-1/2 h-[220px] w-[220px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px] pointer-events-none"
+                style={{ backgroundColor: loadingScreenConfig.accent_color, opacity: 0.16 }}
+              />
+              <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-7 text-center">
+                {loadingScreenConfig.mode === "spinner" || loadingScreenConfig.mode === "both" ? (
+                  <div className="relative flex items-center justify-center">
+                    <div
+                      className="absolute inset-0 rounded-full blur-xl animate-pulse"
+                      style={{ backgroundColor: loadingScreenConfig.accent_color, opacity: 0.2 }}
+                    />
+                    <Loader2 className="relative z-10 h-14 w-14 animate-spin opacity-90" style={{ color: loadingScreenConfig.spinner_color || loadingScreenConfig.text_color }} />
+                    {loadingScreenConfig.show_percentage ? (
+                      <div
+                        className={`absolute inset-0 z-20 flex items-center justify-center text-sm font-bold tracking-tight ${loadingFontFamilyClassMap[loadingScreenConfig.progress_font_family]}`}
+                        style={{ color: loadingScreenConfig.text_color }}
+                      >
+                        {progressLabel}
+                      </div>
+                    ) : null}
                   </div>
-                </div>
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <h2 className="text-lg font-display font-black tracking-widest uppercase">
-                    {form.loader_heading || "DIGITAL-PERFECT"}
+                ) : null}
+
+                <div className="flex flex-col items-center gap-2">
+                  <h2
+                    className={`${loadingHeadingSizeClassMap[loadingScreenConfig.heading_size]} ${loadingFontFamilyClassMap[loadingScreenConfig.heading_font_family]} font-black uppercase tracking-[0.18em]`}
+                  >
+                    {loadingScreenConfig.heading}
                   </h2>
-                  <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 animate-pulse">
-                    {form.loader_subtext || "System wird geladen..."}
+                  <p
+                    className={`${loadingSubtextSizeClassMap[loadingScreenConfig.subtext_size]} ${loadingFontFamilyClassMap[loadingScreenConfig.subtext_font_family]} uppercase tracking-[0.22em]`}
+                    style={{ opacity: 0.68 }}
+                  >
+                    {loadingScreenConfig.subtext}
                   </p>
                 </div>
+
+                {loadingScreenConfig.mode === "bar" || loadingScreenConfig.mode === "both" ? (
+                  <div className="w-full space-y-2">
+                    <div className="h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: loadingScreenConfig.track_color }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: "87%",
+                          backgroundColor: loadingScreenConfig.fill_color,
+                          boxShadow: `0 0 24px ${loadingScreenConfig.fill_color}`,
+                        }}
+                      />
+                    </div>
+                    {loadingScreenConfig.mode === "bar" && loadingScreenConfig.show_percentage ? (
+                      <div className={`text-xs font-semibold uppercase tracking-[0.18em] ${loadingFontFamilyClassMap[loadingScreenConfig.progress_font_family]}`} style={{ opacity: 0.72 }}>
+                        {progressLabel}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>

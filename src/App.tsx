@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import CookieBanner from "@/components/CookieBanner";
+import ConsentScriptGate from "@/components/ConsentScriptGate";
 import { AuthProvider } from "./hooks/useAuth";
 import { SiteProvider } from "./context/SiteContext";
 import { useGlobalTheme } from "./hooks/useGlobalTheme";
@@ -17,6 +19,7 @@ import AGB from "./pages/AGB";
 import ProductDetail from "./pages/ProductDetail";
 import Forum from "./pages/Forum";
 import ForumThread from "./pages/ForumThread";
+import DynamicPage from "./pages/DynamicPage";
 
 // Admin Seiten
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -38,13 +41,20 @@ import AdminTeam from "./pages/admin/AdminTeam";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminLegal from "./pages/admin/AdminLegal";
 import AdminSites from "./pages/admin/AdminSites";
+import AdminPages from "./pages/admin/AdminPages";
 
 const queryClient = new QueryClient();
 
-// Bootstraps unser Theme, damit alle CSS-Variablen greifen
 const ThemeBootstrap = ({ children }: { children: React.ReactNode }) => {
   useGlobalTheme();
-  return <>{children}</>;
+
+  return (
+    <>
+      <ConsentScriptGate />
+      {children}
+      <CookieBanner />
+    </>
+  );
 };
 
 const App = () => (
@@ -57,41 +67,45 @@ const App = () => (
           <BrowserRouter>
             <ThemeBootstrap>
               <Routes>
-              {/* Frontend Routen */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/impressum" element={<Impressum />} />
-              <Route path="/datenschutz" element={<Datenschutz />} />
-              <Route path="/agb" element={<AGB />} />
-              <Route path="/produkt/:slug" element={<ProductDetail />} />
-              <Route path="/forum" element={<Forum />} />
-              <Route path="/forum/kategorie/:categorySlug" element={<Forum />} />
-              <Route path="/forum/:slug" element={<ForumThread />} />
+                {/* Frontend Routen */}
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/impressum" element={<Impressum />} />
+                <Route path="/datenschutz" element={<Datenschutz />} />
+                <Route path="/agb" element={<AGB />} />
+                <Route path="/produkt/:slug" element={<ProductDetail />} />
+                <Route path="/forum" element={<Forum />} />
+                <Route path="/forum/kategorie/:categorySlug" element={<Forum />} />
+                <Route path="/forum/:slug" element={<ForumThread />} />
 
-              {/* Admin Backend Routen */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="branding" element={<AdminBranding />} />
-                <Route path="navigation" element={<AdminNavigation />} /> {/* NEUE ROUTE */}
-                <Route path="homepage" element={<AdminHomepage />} />
-                <Route path="hero" element={<AdminHero />} />
-                <Route path="services" element={<AdminServices />} />
-                <Route path="footer" element={<AdminFooter />} />
-                <Route path="portfolio" element={<AdminPortfolio />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="forum" element={<AdminForum />} />
-                <Route path="content" element={<AdminContent />} />
-                <Route path="team" element={<AdminTeam />} />
-                <Route path="testimonials" element={<AdminTestimonials />} />
-                <Route path="legal" element={<AdminLegal />} />
-                <Route path="sites" element={<AdminSites />} />
-                <Route path="faq" element={<AdminFAQ />} />
-                <Route path="leads" element={<AdminLeads />} />
-                <Route path="settings" element={<AdminSettings />} />
-              </Route>
+                {/* Admin Backend Routen */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="branding" element={<AdminBranding />} />
+                  <Route path="navigation" element={<AdminNavigation />} />
+                  <Route path="homepage" element={<AdminHomepage />} />
+                  <Route path="hero" element={<AdminHero />} />
+                  <Route path="services" element={<AdminServices />} />
+                  <Route path="footer" element={<AdminFooter />} />
+                  <Route path="portfolio" element={<AdminPortfolio />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="forum" element={<AdminForum />} />
+                  <Route path="content" element={<AdminContent />} />
+                  <Route path="pages" element={<AdminPages />} />
+                  <Route path="team" element={<AdminTeam />} />
+                  <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="legal" element={<AdminLegal />} />
+                  <Route path="sites" element={<AdminSites />} />
+                  <Route path="faq" element={<AdminFAQ />} />
+                  <Route path="leads" element={<AdminLeads />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Route>
 
-              {/* 404 Fallback */}
-              <Route path="*" element={<NotFound />} />
+                {/* Dynamische Mandanten-Seiten */}
+                <Route path="/:slug" element={<DynamicPage />} />
+
+                {/* 404 Fallback */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </ThemeBootstrap>
           </BrowserRouter>

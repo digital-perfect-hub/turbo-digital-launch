@@ -87,14 +87,41 @@ export const buildRenderImageUrl = (
   storagePath: string | null | undefined,
   options: ImageRenderOptions = {},
 ): string => {
-  // ARCHITEKTUR-FIX: Wir bypassen die fehleranfällige Render-API global
-  // und leiten alles auf die stabile Raw-URL um!
   return buildRawImageUrl(storagePath, options);
 };
 
 /**
- * Architektur-Fix: Bypasst die Render-API und lädt das rohe Bild direkt aus dem öffentlichen Bucket.
- * Wird strategisch im Admin-Panel genutzt, um den 403 Forbidden Fehler des Free-Tiers zu umgehen.
+ * Erzwingt für den Page-Builder die Render-API-Ausgabe.
+ * Fallbackt nur dann auf den Originalwert, wenn kein bekannter Storage-Pfad vorliegt.
+ */
+export const buildStrictRenderImageUrl = (
+  storagePath: string | null | undefined,
+  options: ImageRenderOptions = {},
+): string => {
+  if (!storagePath) return "";
+
+  const trimmed = storagePath.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    try {
+      const url = new URL(trimmed);
+      const normalized = resolveStorageLocation(`${url.pathname}${url.search}`);
+      return normalized ? toRenderPath(normalized.bucket, normalized.objectPath, options) : trimmed;
+    } catch {
+      return trimmed;
+    }
+  }
+
+  const normalizedStoragePath = resolveStorageLocation(trimmed);
+  if (!normalizedStoragePath) return trimmed;
+
+  return toRenderPath(normalizedStoragePath.bucket, normalizedStoragePath.objectPath, options);
+};
+
+/**
+ * Lädt rohe öffentliche Dateien direkt aus dem Bucket.
+ * Nur für Admin-Previews / Upload-Vorschauen gedacht.
  */
 export const buildRawImageUrl = (
   storagePath: string | null | undefined,

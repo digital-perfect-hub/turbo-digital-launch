@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Building2,
   FileText,
+  Files,
   HelpCircle,
   ImageIcon,
   LayoutDashboard,
@@ -37,6 +38,7 @@ const navItems = [
   { to: "/admin/products", icon: Package, label: "Shop", moduleKey: "hasShop" },
   { to: "/admin/forum", icon: MessagesSquare, label: "Forum", moduleKey: "hasForum" },
   { to: "/admin/content", icon: FileText, label: "Content-Blöcke" },
+  { to: "/admin/pages", icon: Files, label: "Page Builder" },
   { to: "/admin/team", icon: Users, label: "Team" },
   { to: "/admin/testimonials", icon: Quote, label: "Testimonials" },
   { to: "/admin/legal", icon: ShieldCheck, label: "Recht & SEO" },
