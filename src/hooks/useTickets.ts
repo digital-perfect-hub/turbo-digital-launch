@@ -57,10 +57,12 @@ export const useTickets = () => {
       priority: TicketPriority;
     }) => {
       const user = (await supabase.auth.getUser()).data.user;
+      
       const { data, error } = await supabase
         .from('tickets' as never)
         .insert({
           site_id: siteId,
+          created_by_user_id: user?.id, // DIESE ZEILE FIxt DEN 403 ERROR
           requester_name: requesterName,
           requester_email: requesterEmail,
           requester_phone: requesterPhone || null,
