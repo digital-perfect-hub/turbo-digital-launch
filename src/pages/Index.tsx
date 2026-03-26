@@ -14,6 +14,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import ContactSection from "@/components/ContactSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
+import SupportWidget from "@/components/support/SupportWidget";
 import SEO from "@/components/SEO";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import ForumTeaser from "@/components/forum/ForumTeaser";
@@ -87,6 +88,7 @@ const Index = () => {
             })}
         </main>
         <Footer />
+        <SupportWidget />
       </div>
     </>
   );

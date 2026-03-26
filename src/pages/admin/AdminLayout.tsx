@@ -8,6 +8,7 @@ import {
   HelpCircle,
   ImageIcon,
   LayoutDashboard,
+  LifeBuoy,
   Lock,
   LogOut,
   Menu,
@@ -27,7 +28,15 @@ import { useSiteContext } from "@/context/SiteContext";
 import { useSiteModules } from "@/hooks/useSiteModules";
 import "@/assets/styles/admin.css";
 
-const navItems = [
+type AdminNavItem = {
+  to: string;
+  icon: any;
+  label: string;
+  end?: boolean;
+  moduleKey?: "hasForum" | "hasShop" | "hasSupportDesk";
+};
+
+const navItems: AdminNavItem[] = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/branding", icon: Palette, label: "Branding & Theme" },
   { to: "/admin/navigation", icon: Menu, label: "Navigation" },
@@ -41,6 +50,7 @@ const navItems = [
   { to: "/admin/content", icon: FileText, label: "Content-Blöcke" },
   { to: "/admin/pages", icon: Files, label: "Page Builder" },
   { to: "/admin/billing", icon: CreditCard, label: "Billing & Abos" },
+  { to: "/admin/tickets", icon: LifeBuoy, label: "Tickets", moduleKey: "hasSupportDesk" },
   { to: "/admin/team", icon: Users, label: "Team" },
   { to: "/admin/testimonials", icon: Quote, label: "Testimonials" },
   { to: "/admin/legal", icon: ShieldCheck, label: "Recht & SEO" },
@@ -53,7 +63,7 @@ const navItems = [
 const AdminLayout = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const { activeSiteId, availableSites, setActiveSiteId } = useSiteContext();
-  const { hasForum, hasShop, isLoading: modulesLoading } = useSiteModules();
+  const { hasForum, hasShop, hasSupportDesk, isLoading: modulesLoading } = useSiteModules();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -120,7 +130,7 @@ const AdminLayout = () => {
               }
             >
               {({ isActive }) => {
-                const isLocked = !modulesLoading && item.moduleKey ? !({ hasForum, hasShop }[item.moduleKey]) : false;
+                const isLocked = !modulesLoading && item.moduleKey ? !({ hasForum, hasShop, hasSupportDesk }[item.moduleKey]) : false;
 
                 return (
                   <>

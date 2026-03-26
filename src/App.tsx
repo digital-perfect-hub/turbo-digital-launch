@@ -43,6 +43,7 @@ import AdminLegal from "./pages/admin/AdminLegal";
 import AdminSites from "./pages/admin/AdminSites";
 import AdminPages from "./pages/admin/AdminPages";
 import AdminBilling from "./pages/admin/AdminBilling";
+import AdminTickets from "./pages/admin/AdminTickets";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => (
                   <Route path="content" element={<AdminContent />} />
                   <Route path="pages" element={<AdminPages />} />
                   <Route path="billing" element={<AdminBilling />} />
+                  <Route path="tickets" element={<AdminTickets />} />
                   <Route path="team" element={<AdminTeam />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="legal" element={<AdminLegal />} />

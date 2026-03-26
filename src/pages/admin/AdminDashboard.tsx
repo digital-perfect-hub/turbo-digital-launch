@@ -17,7 +17,7 @@ const formatDayLabel = (value: Date) => value.toLocaleDateString("de-AT", { day:
 const AdminDashboard = () => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
-  const { hasForum, hasSeoPro, hasShop } = useSiteModules();
+  const { hasForum, hasSeoPro, hasShop, hasSupportDesk } = useSiteModules();
   const { plan, statusLabel, profile } = useBilling();
 
   const dashboardQuery = useQuery({
@@ -81,8 +81,8 @@ const AdminDashboard = () => {
 
   const stats = dashboardQuery.data;
   const activeModules = useMemo(
-    () => [hasShop ? "Shop" : null, hasForum ? "Forum" : null, hasSeoPro ? "SEO Pro" : null].filter(Boolean) as string[],
-    [hasForum, hasSeoPro, hasShop],
+    () => [hasShop ? "Shop" : null, hasForum ? "Forum" : null, hasSeoPro ? "SEO Pro" : null, hasSupportDesk ? "Support Desk" : null].filter(Boolean) as string[],
+    [hasForum, hasSeoPro, hasShop, hasSupportDesk],
   );
 
   return (

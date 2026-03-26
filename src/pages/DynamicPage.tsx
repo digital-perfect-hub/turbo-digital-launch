@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, FileWarning } from "lucide-react";
 import Footer from "@/components/Footer";
+import SupportWidget from "@/components/support/SupportWidget";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
 import PageRenderer from "@/components/page-builder/PageRenderer";
@@ -94,6 +95,7 @@ const DynamicPage = () => {
             </section>
           </main>
           <Footer />
+        <SupportWidget />
         </div>
       </>
     );
@@ -108,6 +110,7 @@ const DynamicPage = () => {
           <PageRenderer blocks={data.content_blocks} />
         </main>
         <Footer />
+        <SupportWidget />
       </div>
     </>
   );
