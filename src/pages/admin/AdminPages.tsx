@@ -46,6 +46,17 @@ type PageDraft = {
   content_blocks: PageBlock[];
 };
 
+const EMPTY_PAGES: PageRecord[] = [];
+const DEFAULT_HERO_TEMPLATE = createDefaultBlock("hero");
+
+const createFallbackHeroBlock = (pageId: string): PageBlock => ({
+  id: `fallback-hero-${pageId}`,
+  type: "hero",
+  data: {
+    ...(DEFAULT_HERO_TEMPLATE.type === "hero" ? DEFAULT_HERO_TEMPLATE.data : {}),
+  },
+});
+
 const createEmptyDraft = (): PageDraft => ({
   id: "",
   slug: "",
@@ -55,6 +66,38 @@ const createEmptyDraft = (): PageDraft => ({
   content_blocks: [createDefaultBlock("hero")],
 });
 
+const createDraftFromPage = (page: PageRecord): PageDraft => ({
+  id: page.id,
+  slug: page.slug,
+  seo_title: page.seo_title || "",
+  seo_description: page.seo_description || "",
+  is_published: page.is_published,
+  content_blocks: page.content_blocks.length ? page.content_blocks : [createFallbackHeroBlock(page.id)],
+});
+
+const isDraftInSyncWithPage = (draft: PageDraft, page: PageRecord) => {
+  const pageDraft = createDraftFromPage(page);
+
+  return (
+    draft.id === pageDraft.id &&
+    draft.slug === pageDraft.slug &&
+    draft.seo_title === pageDraft.seo_title &&
+    draft.seo_description === pageDraft.seo_description &&
+    draft.is_published === pageDraft.is_published &&
+    JSON.stringify(draft.content_blocks) === JSON.stringify(pageDraft.content_blocks)
+  );
+};
+
+const isEmptyDraftState = (draft: PageDraft) => (
+  draft.id === "" &&
+  draft.slug === "" &&
+  draft.seo_title === "" &&
+  draft.seo_description === "" &&
+  draft.is_published === true &&
+  draft.content_blocks.length === 1 &&
+  draft.content_blocks[0]?.type === "hero"
+);
+
 const AdminPages = () => {
   const qc = useQueryClient();
   const { activeSiteId } = useSiteContext();
@@ -63,8 +106,11 @@ const AdminPages = () => {
   const [draft, setDraft] = useState<PageDraft>(createEmptyDraft);
   const uploadRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const { data: pages = [], isLoading } = useQuery({
+  const { data: pagesData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-pages", siteId],
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
     queryFn: async (): Promise<PageRecord[]> => {
       const { data, error } = await supabase
         .from("pages" as never)
@@ -88,10 +134,15 @@ const AdminPages = () => {
     },
   });
 
+  const pages = useMemo(() => pagesData ?? EMPTY_PAGES, [pagesData]);
+
   useEffect(() => {
     if (!pages.length) {
-      setSelectedPageId(null);
-      setDraft(createEmptyDraft());
+      if (selectedPageId !== null) {
+        setSelectedPageId(null);
+      }
+
+      setDraft((prev) => (isEmptyDraftState(prev) ? prev : createEmptyDraft()));
       return;
     }
 
@@ -102,15 +153,11 @@ const AdminPages = () => {
     const selected = pages.find((page) => page.id === nextSelectedId);
     if (!selected) return;
 
-    setSelectedPageId(nextSelectedId);
-    setDraft({
-      id: selected.id,
-      slug: selected.slug,
-      seo_title: selected.seo_title || "",
-      seo_description: selected.seo_description || "",
-      is_published: selected.is_published,
-      content_blocks: selected.content_blocks.length ? selected.content_blocks : [createDefaultBlock("hero")],
-    });
+    if (selectedPageId !== nextSelectedId) {
+      setSelectedPageId(nextSelectedId);
+    }
+
+    setDraft((prev) => (isDraftInSyncWithPage(prev, selected) ? prev : createDraftFromPage(selected)));
   }, [pages, selectedPageId]);
 
   const previewPath = useMemo(() => {
@@ -222,6 +269,44 @@ const AdminPages = () => {
     return <div className="p-6 text-sm font-medium text-slate-500">Seiten werden geladen...</div>;
   }
 
+  if (isError) {
+    const message = error instanceof Error ? error.message : "Der Page Builder konnte nicht geladen werden.";
+
+    return (
+      <div className="max-w-[960px] p-6 md:p-8 lg:p-10">
+        <Card className="rounded-[2rem] border-red-200 bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-slate-900">Page Builder aktuell blockiert</CardTitle>
+            <CardDescription className="text-slate-500">
+              Der Request auf die Tabelle <code>pages</code> wurde von Supabase abgelehnt. Das ist kein Frontend-Crash,
+              sondern ein Rechte-/Policy-Thema in der Datenbank.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
+              {message}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                className="rounded-xl bg-[#FF4B2C] text-white hover:bg-[#E03A1E]"
+                onClick={() => refetch()}
+              >
+                Erneut laden
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-xl border-slate-200"
+                onClick={() => qc.invalidateQueries({ queryKey: ["admin-pages", siteId] })}
+              >
+                Query zurücksetzen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[1680px] p-6 md:p-8 lg:p-10">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -284,14 +369,7 @@ const AdminPages = () => {
                     type="button"
                     onClick={() => {
                       setSelectedPageId(page.id);
-                      setDraft({
-                        id: page.id,
-                        slug: page.slug,
-                        seo_title: page.seo_title || "",
-                        seo_description: page.seo_description || "",
-                        is_published: page.is_published,
-                        content_blocks: page.content_blocks.length ? page.content_blocks : [createDefaultBlock("hero")],
-                      });
+                      setDraft(createDraftFromPage(page));
                     }}
                     className={`w-full rounded-[1.5rem] border px-4 py-4 text-left transition ${
                       isActive
