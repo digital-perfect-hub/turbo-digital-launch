@@ -56,46 +56,30 @@ export const useTickets = () => {
       message: string;
       priority: TicketPriority;
     }) => {
-      const user = (await supabase.auth.getUser()).data.user;
-      
-      const { data, error } = await supabase
+      const { data: newTicketId, error: rpcError } = await (supabase as any).rpc('create_support_ticket', {
+        p_site_id: siteId,
+        p_requester_name: requesterName,
+        p_requester_email: requesterEmail,
+        p_requester_phone: requesterPhone || null,
+        p_subject: subject,
+        p_category: category,
+        p_message: message,
+        p_source: 'admin',
+        p_priority: priority,
+      });
+
+      if (rpcError) throw rpcError;
+      if (!newTicketId) throw new Error('Ticket konnte nicht erstellt werden (keine ID zurückgegeben).');
+
+      const { data: ticketData, error: fetchError } = await supabase
         .from('tickets' as never)
-        .insert({
-          site_id: siteId,
-          created_by_user_id: user?.id, // DIESE ZEILE FIxt DEN 403 ERROR
-          requester_name: requesterName,
-          requester_email: requesterEmail,
-          requester_phone: requesterPhone || null,
-          subject,
-          category,
-          priority,
-          source: 'admin',
-        } as never)
         .select('*')
+        .eq('id', newTicketId as string)
         .single();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      const ticket = mapTicket(data as Record<string, unknown>);
-
-      const { error: messageError } = await supabase.from('ticket_messages' as never).insert({
-        ticket_id: ticket.id,
-        author_user_id: user?.id ?? null,
-        author_type: 'site_user',
-        message,
-        is_internal_note: false,
-      } as never);
-
-      if (messageError) throw messageError;
-
-      await supabase.from('ticket_events' as never).insert({
-        ticket_id: ticket.id,
-        event_type: 'created',
-        performed_by_user_id: user?.id ?? null,
-        payload: { category, priority, source: 'admin' },
-      } as never);
-
-      return ticket;
+      return mapTicket(ticketData as Record<string, unknown>);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['tickets', siteId] });
