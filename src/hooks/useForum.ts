@@ -6,6 +6,7 @@ import type { Database, TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { isForumThreadPubliclyVisible } from "@/lib/forumSchedule";
 
 type ForumCategoryRow = Database["public"]["Tables"]["forum_categories"]["Row"];
 type ForumThreadRow = Database["public"]["Tables"]["forum_threads"]["Row"];
@@ -34,8 +35,8 @@ export type ForumReply = ForumReplyRow & {
 
 export type ForumRedirect = Pick<ForumRedirectRow, "target_path" | "entity_type">;
 
-const isThreadPublished = (thread: Pick<ForumThreadRow, "is_active" | "status">) =>
-  thread.is_active === true && thread.status === "published";
+const isThreadPublished = (thread: Pick<ForumThreadRow, "is_active" | "status" | "admin_notes">) =>
+  thread.is_active === true && isForumThreadPubliclyVisible(thread.status, thread.admin_notes);
 
 const formatAuthorName = (user: { email?: string | null; user_metadata?: Record<string, unknown> } | null) => {
   if (!user) return "Mitglied";
@@ -88,7 +89,7 @@ export const useForumCategories = () => {
             .eq("is_active", true)
             .order("sort_order", { ascending: true })
             .order("name", { ascending: true }),
-          supabase.from("forum_threads").select("category_id, is_active, status").eq("site_id", siteId),
+          supabase.from("forum_threads").select("category_id, is_active, status, admin_notes").eq("site_id", siteId),
         ]);
 
       if (categoriesError) throw categoriesError;
@@ -121,15 +122,17 @@ export const useForumFeaturedThreads = (limit = 3) => {
         .select("*")
         .eq("site_id", siteId)
         .eq("is_active", true)
-        .eq("status", "published")
+        .in("status", ["published", "scheduled"])
         .order("views", { ascending: false })
         .order("last_activity_at", { ascending: false })
         .limit(limit);
 
       if (threadsError) throw threadsError;
 
-      const threadIds = (threads || []).map((thread) => thread.id);
-      const categoryIds = Array.from(new Set((threads || []).map((thread) => thread.category_id).filter(Boolean))) as string[];
+      const visibleThreads = (threads || []).filter((thread) => isThreadPublished(thread));
+
+      const threadIds = visibleThreads.map((thread) => thread.id);
+      const categoryIds = Array.from(new Set(visibleThreads.map((thread) => thread.category_id).filter(Boolean))) as string[];
 
       const [{ data: replies, error: repliesError }, { data: categories, error: categoriesError }] = await Promise.all([
         threadIds.length
@@ -152,7 +155,7 @@ export const useForumFeaturedThreads = (limit = 3) => {
 
       const categoryMap = new Map((categories || []).map((category) => [category.id, category]));
 
-      return (threads || []).map((thread) => ({
+      return visibleThreads.map((thread) => ({
         ...thread,
         category: thread.category_id ? categoryMap.get(thread.category_id) || null : null,
         reply_count: replyCounts.get(thread.id) || 0,
@@ -193,7 +196,7 @@ export const useForumThreads = (categorySlug?: string, page = 1, limit = 50) => 
         .select("*")
         .eq("site_id", siteId)
         .eq("is_active", true)
-        .eq("status", "published")
+        .in("status", ["published", "scheduled"])
         .order("is_pinned", { ascending: false })
         .order("last_activity_at", { ascending: false })
         .range(from, to);
@@ -205,8 +208,10 @@ export const useForumThreads = (categorySlug?: string, page = 1, limit = 50) => 
       const { data: threads, error: threadsError } = await threadQuery;
       if (threadsError) throw threadsError;
 
-      const threadIds = (threads || []).map((thread) => thread.id);
-      const categoryIds = Array.from(new Set((threads || []).map((thread) => thread.category_id).filter(Boolean))) as string[];
+      const visibleThreads = (threads || []).filter((thread) => isThreadPublished(thread));
+
+      const threadIds = visibleThreads.map((thread) => thread.id);
+      const categoryIds = Array.from(new Set(visibleThreads.map((thread) => thread.category_id).filter(Boolean))) as string[];
 
       const [{ data: replies, error: repliesError }, { data: categories, error: categoriesError }] = await Promise.all([
         threadIds.length
@@ -229,7 +234,7 @@ export const useForumThreads = (categorySlug?: string, page = 1, limit = 50) => 
 
       const categoryMap = new Map((categories || []).map((category) => [category.id, category]));
 
-      return (threads || []).map((thread) => ({
+      return visibleThreads.map((thread) => ({
         ...thread,
         category: thread.category_id ? categoryMap.get(thread.category_id) || null : null,
         reply_count: replyCounts.get(thread.id) || 0,
@@ -254,11 +259,11 @@ export const useForumThread = (slug?: string) => {
         .eq("site_id", siteId)
         .eq("slug", slug as string)
         .eq("is_active", true)
-        .eq("status", "published")
+        .in("status", ["published", "scheduled"])
         .maybeSingle();
 
       if (threadError) throw threadError;
-      if (!thread) return null;
+      if (!thread || !isThreadPublished(thread)) return null;
 
       const category = thread.category_id
         ? await supabase

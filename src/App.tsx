@@ -90,7 +90,7 @@ const App = () => (
                   <Route path="footer" element={<AdminFooter />} />
                   <Route path="portfolio" element={<AdminPortfolio />} />
                   <Route path="products" element={<AdminProducts />} />
-                  <Route path="forum" element={<AdminForum />} />
+                  <Route path="forum/*" element={<AdminForum />} />
                   <Route path="content" element={<AdminContent />} />
                   <Route path="pages" element={<AdminPages />} />
                   <Route path="billing" element={<AdminBilling />} />
