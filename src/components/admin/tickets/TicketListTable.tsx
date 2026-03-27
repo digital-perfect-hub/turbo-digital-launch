@@ -17,13 +17,14 @@ const TicketListTable = ({ tickets, selectedTicketId, onSelect }: TicketListTabl
   }
 
   return (
-    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-      <div className="hidden grid-cols-[minmax(0,1.4fr)_0.7fr_0.7fr_0.7fr_auto] gap-4 border-b border-slate-100 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 lg:grid">
+    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm w-full min-w-0">
+      {/* Tabellen-Header mit striktem minmax() */}
+      <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto] gap-4 border-b border-slate-100 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 lg:grid">
         <span>Ticket</span>
         <span>Status</span>
         <span>Priorität</span>
         <span>Kategorie</span>
-        <span className="shrink-0">Aktion</span>
+        <span className="shrink-0 text-right">Aktion</span>
       </div>
 
       <div className="divide-y divide-slate-100">
@@ -31,27 +32,32 @@ const TicketListTable = ({ tickets, selectedTicketId, onSelect }: TicketListTabl
           <div
             key={ticket.id}
             className={cn(
-              'grid gap-4 px-5 py-4 lg:grid-cols-[minmax(0,1.4fr)_0.7fr_0.7fr_0.7fr_auto] lg:items-center',
+              'grid gap-4 px-5 py-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto] lg:items-center w-full min-w-0',
               selectedTicketId === ticket.id && 'bg-[#FFF9F7]',
             )}
           >
-            <div className="min-w-0">
-              <div className="overflow-hidden text-base font-bold text-slate-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] break-words lg:block lg:truncate">
+            {/* Spalte 1: Betreff & Meta */}
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="w-full min-w-0 truncate text-base font-bold text-slate-900">
                 {ticket.subject}
               </div>
-              <div className="mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500">
-                <span className="max-w-full truncate">{ticket.requester_name}</span>
-                <span className="max-w-full truncate">{ticket.requester_email}</span>
+              <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                <span className="max-w-[120px] truncate sm:max-w-[180px]">{ticket.requester_name}</span>
+                <span className="max-w-[140px] truncate sm:max-w-[200px]">{ticket.requester_email}</span>
                 <span className="shrink-0">{new Date(ticket.created_at || Date.now()).toLocaleDateString('de-AT')}</span>
               </div>
             </div>
-            <div className="min-w-0"><TicketStatusBadge value={ticket.status} /></div>
-            <div className="min-w-0"><TicketPriorityBadge value={ticket.priority} /></div>
+            
+            {/* Spalten 2-4: Badges */}
+            <div className="min-w-0 truncate"><TicketStatusBadge value={ticket.status} /></div>
+            <div className="min-w-0 truncate"><TicketPriorityBadge value={ticket.priority} /></div>
             <div className="min-w-0 truncate text-sm font-medium text-slate-600">{getTicketCategoryLabel(ticket.category)}</div>
-            <div className="shrink-0">
+            
+            {/* Spalte 5: Aktion */}
+            <div className="shrink-0 lg:text-right">
               <Button
                 variant={selectedTicketId === ticket.id ? 'default' : 'outline'}
-                className={cn('rounded-xl', selectedTicketId === ticket.id ? 'bg-[#FF4B2C] text-white hover:bg-[#E03A1E]' : 'border-slate-200')}
+                className={cn('rounded-xl w-full lg:w-auto', selectedTicketId === ticket.id ? 'bg-[#FF4B2C] text-white hover:bg-[#E03A1E]' : 'border-slate-200')}
                 onClick={() => onSelect(ticket.id)}
               >
                 Öffnen

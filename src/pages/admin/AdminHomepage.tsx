@@ -1361,7 +1361,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
   }
 
   return (
-    <div className="max-w-[1800px] p-6 md:p-10">
+    <div className="max-w-[1600px] p-6 md:p-10">
       <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Homepage Inhalte</h1>
@@ -1462,8 +1462,8 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
           </div>
         </aside>
 
-        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(430px,0.92fr)]">
-          <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+        <div className="flex min-w-0 flex-col items-start gap-6 xl:flex-row">
+          <div className="flex min-w-0 flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-6 rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
@@ -1507,7 +1507,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
             </Tabs>
           </div>
 
-          <div className="min-w-0 xl:sticky xl:top-6 xl:self-start">
+          <div className="w-full min-w-0 shrink-0 xl:sticky xl:top-6 xl:w-[480px]">
             <SectionPreviewPanel
               sectionId={activeSectionId}
               sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}
