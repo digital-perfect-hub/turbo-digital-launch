@@ -23,8 +23,8 @@ const SectionPreviewPanel = ({ sectionId, sectionLabel, preview, styleVars }: Se
   const isDarkSection = darkSections.has(sectionId);
 
   return (
-    <div className="flex w-full min-w-0 flex-col space-y-4 2xl:sticky 2xl:top-6">
-      <div className="w-full min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="flex w-full min-w-0 flex-col space-y-4 xl:sticky xl:top-6">
+      <div className="w-full min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm xl:p-6">
         <div className="w-full min-w-0">
           <p className="truncate text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Live Preview</p>
           <h3 className="mt-2 truncate text-lg font-extrabold text-slate-900">{sectionLabel}</h3>
@@ -34,7 +34,7 @@ const SectionPreviewPanel = ({ sectionId, sectionLabel, preview, styleVars }: Se
         </div>
       </div>
 
-      <div className="w-full min-w-0 rounded-[2rem] border border-slate-200 bg-slate-100/70 p-3 shadow-inner">
+      <div className="w-full min-w-0 rounded-[2rem] border border-slate-200 bg-slate-100/70 p-3 shadow-inner xl:p-4">
         <div className="w-full min-w-0 overflow-hidden rounded-[1.85rem] border border-slate-200 bg-white shadow-[0_30px_80px_-40px_rgba(15,23,42,0.28)] transition-all duration-300">
           <div className="w-full min-w-0 border-b border-slate-200 bg-white px-4 py-3">
             <div className="flex w-full min-w-0 items-center gap-2">
@@ -48,7 +48,7 @@ const SectionPreviewPanel = ({ sectionId, sectionLabel, preview, styleVars }: Se
           </div>
 
           <div
-            className={`homepage-style-scope w-full min-w-0 min-h-[420px] p-5 lg:p-6 ${
+            className={`homepage-style-scope w-full min-w-0 min-h-[420px] p-5 xl:p-6 ${
               isDarkSection
                 ? "dark-section"
                 : sectionId === "faq" || sectionId === "services" || sectionId === "portfolio"

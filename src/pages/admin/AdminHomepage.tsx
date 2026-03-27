@@ -641,6 +641,23 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
     };
   };
 
+
+  const baseFieldClass = "min-w-0 rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]";
+  const baseTextareaClass = "min-w-0 rounded-xl border-slate-200 bg-white focus:border-[#FF4B2C]";
+  const baseSelectClass =
+    "min-w-0 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]";
+  const fieldCardClass = "min-w-0 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4";
+  const builderSectionClass = "rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm";
+  const builderItemCardClass = "relative min-w-0 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4";
+  const subPanelClass = "min-w-0 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4";
+  const deleteIconButtonClass =
+    "h-9 w-9 rounded-xl border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40";
+  const addButtonClass =
+    "mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5";
+
+  const isWideTextField = (field: { key: string; multiline?: boolean; rich?: boolean }) =>
+    field.multiline || field.rich || field.key.endsWith("_title");
+
   const renderTextFields = () => {
     if (!activeGroup.fields.length) {
       return (
@@ -651,70 +668,87 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
     }
 
     return (
-    <div className="grid gap-6 md:grid-cols-2">
-      {activeGroup.fields.map((field) => (
-        <div key={field.key} className={field.multiline ? "space-y-2 md:col-span-2" : "space-y-2"}>
-          <Label htmlFor={field.key}>{field.label}</Label>
+      <div className="grid min-w-0 gap-6 md:grid-cols-2">
+        {activeGroup.fields.map((field) => {
+          const isWide = isWideTextField(field);
 
-          {field.rich ? (
-            <div className="admin-rich-editor">
-              <ReactQuill
-                theme="snow"
-                modules={quillModules}
-                value={textForm[field.key] || ""}
-                onChange={(value) => updateTextField(field.key, value)}
-              />
+          return (
+            <div
+              key={field.key}
+              className={`${fieldCardClass} ${isWide ? "md:col-span-2" : ""}`}
+            >
+              <div className="min-w-0 space-y-2">
+                <Label htmlFor={field.key} className="text-sm font-semibold text-slate-700">
+                  {field.label}
+                </Label>
+
+                {field.rich ? (
+                  <div className="admin-rich-editor min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white [&_.ql-container]:min-h-[220px] [&_.ql-container]:border-0 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-slate-200">
+                    <ReactQuill
+                      theme="snow"
+                      modules={quillModules}
+                      value={textForm[field.key] || ""}
+                      onChange={(value) => updateTextField(field.key, value)}
+                    />
+                  </div>
+                ) : field.multiline ? (
+                  <Textarea
+                    id={field.key}
+                    rows={field.rows || 5}
+                    className={baseTextareaClass}
+                    value={textForm[field.key] || ""}
+                    onChange={(event) => updateTextField(field.key, event.target.value)}
+                  />
+                ) : (
+                  <Input
+                    id={field.key}
+                    className={baseFieldClass}
+                    value={textForm[field.key] || ""}
+                    onChange={(event) => updateTextField(field.key, event.target.value)}
+                  />
+                )}
+              </div>
             </div>
-          ) : field.multiline ? (
-            <Textarea
-              id={field.key}
-              rows={field.rows || 5}
-              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-              value={textForm[field.key] || ""}
-              onChange={(event) => updateTextField(field.key, event.target.value)}
-            />
-          ) : (
-            <Input
-              id={field.key}
-              className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-              value={textForm[field.key] || ""}
-              onChange={(event) => updateTextField(field.key, event.target.value)}
-            />
-          )}
-        </div>
-      ))}
-    </div>
+          );
+        })}
+      </div>
     );
   };
 
   const renderStructureTab = () => {
     if (activeSectionId === "intro") {
       return (
-        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+        <div className={builderSectionClass}>
           <SectionHeader pill="JSON Builder" title="Quick-Wins" description="Die rechten Karten der Intro-Sektion." />
           <div className="space-y-4">
             {introQuickWins.map((item, index) => (
-              <div key={`quick-win-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-slate-700">Quick-Win #{index + 1}</span>
+              <div key={`quick-win-${index}`} className={builderItemCardClass}>
+                <div className="absolute right-4 top-4 flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    size="icon"
+                    className={deleteIconButtonClass}
                     onClick={() => removeListItem(setIntroQuickWins, index)}
                     disabled={introQuickWins.length === 1}
+                    aria-label={`Quick-Win ${index + 1} entfernen`}
                   >
-                    <Trash2 size={14} className="mr-2" />
-                    Entfernen
+                    <Trash2 size={14} />
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
+                <div className="mb-5 pr-12">
+                  <p className="text-sm font-semibold text-slate-700">Quick-Win #{index + 1}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Icon, Titel und Subtext dieser Intro-Kachel.
+                  </p>
+                </div>
+
+                <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Icon</Label>
                     <select
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
+                      className={baseSelectClass}
                       value={item.icon || "layers"}
                       onChange={(event) => updateQuickWin(index, "icon", event.target.value)}
                     >
@@ -725,19 +759,19 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                       <option value="sparkles">sparkles</option>
                     </select>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Titel</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.title}
                       onChange={(event) => updateQuickWin(index, "title", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-3">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Text</Label>
                     <Textarea
                       rows={3}
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseTextareaClass}
                       value={item.text}
                       onChange={(event) => updateQuickWin(index, "text", event.target.value)}
                     />
@@ -750,7 +784,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
           <Button
             type="button"
             variant="outline"
-            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            className={addButtonClass}
             onClick={() => addListItem(setIntroQuickWins, createEmptyQuickWin)}
           >
             <Plus size={15} className="mr-2" />
@@ -762,31 +796,37 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
 
     if (activeSectionId === "trust") {
       return (
-        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+        <div className={builderSectionClass}>
           <SectionHeader pill="JSON Builder" title="Trust-Punkte" description="Die vier Vertrauens-Karten direkt unter dem Intro." />
           <div className="space-y-4">
             {trustPoints.map((item, index) => (
-              <div key={`trust-point-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-slate-700">Trust-Punkt #{index + 1}</span>
+              <div key={`trust-point-${index}`} className={builderItemCardClass}>
+                <div className="absolute right-4 top-4 flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    size="icon"
+                    className={deleteIconButtonClass}
                     onClick={() => removeListItem(setTrustPoints, index)}
                     disabled={trustPoints.length === 1}
+                    aria-label={`Trust-Punkt ${index + 1} entfernen`}
                   >
-                    <Trash2 size={14} className="mr-2" />
-                    Entfernen
+                    <Trash2 size={14} />
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
+                <div className="mb-5 pr-12">
+                  <p className="text-sm font-semibold text-slate-700">Trust-Punkt #{index + 1}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Icon, Headline und Beschreibung der Vertrauens-Kachel.
+                  </p>
+                </div>
+
+                <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Icon</Label>
                     <select
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
+                      className={baseSelectClass}
                       value={item.icon || "users"}
                       onChange={(event) => updateTrustPoint(index, "icon", event.target.value)}
                     >
@@ -796,19 +836,19 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                       <option value="shield">shield</option>
                     </select>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Titel</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.title}
                       onChange={(event) => updateTrustPoint(index, "title", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-3">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Beschreibung</Label>
                     <Textarea
                       rows={3}
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseTextareaClass}
                       value={item.desc}
                       onChange={(event) => updateTrustPoint(index, "desc", event.target.value)}
                     />
@@ -821,7 +861,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
           <Button
             type="button"
             variant="outline"
-            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            className={addButtonClass}
             onClick={() => addListItem(setTrustPoints, createEmptyTrustPoint)}
           >
             <Plus size={15} className="mr-2" />
@@ -833,40 +873,46 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
 
     if (activeSectionId === "why-choose") {
       return (
-        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+        <div className={builderSectionClass}>
           <SectionHeader pill="JSON Builder" title="Why-Choose Punkte" description="Die Benefit-Karten der Why-Choose-Sektion." />
           <div className="space-y-4">
             {whyChoosePoints.map((item, index) => (
-              <div key={`why-choose-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-slate-700">Punkt #{index + 1}</span>
+              <div key={`why-choose-${index}`} className={builderItemCardClass}>
+                <div className="absolute right-4 top-4 flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    size="icon"
+                    className={deleteIconButtonClass}
                     onClick={() => removeListItem(setWhyChoosePoints, index)}
                     disabled={whyChoosePoints.length === 1}
+                    aria-label={`Why-Choose Punkt ${index + 1} entfernen`}
                   >
-                    <Trash2 size={14} className="mr-2" />
-                    Entfernen
+                    <Trash2 size={14} />
                   </Button>
                 </div>
 
-                <div className="grid gap-4">
-                  <div className="space-y-2">
+                <div className="mb-5 pr-12">
+                  <p className="text-sm font-semibold text-slate-700">Punkt #{index + 1}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Benefit-Titel und Beschreibung für diese Karte.
+                  </p>
+                </div>
+
+                <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Titel</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.title}
                       onChange={(event) => updateWhyChoosePoint(index, "title", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Beschreibung</Label>
                     <Textarea
                       rows={4}
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseTextareaClass}
                       value={item.description}
                       onChange={(event) => updateWhyChoosePoint(index, "description", event.target.value)}
                     />
@@ -879,7 +925,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
           <Button
             type="button"
             variant="outline"
-            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            className={addButtonClass}
             onClick={() => addListItem(setWhyChoosePoints, createEmptyWhyChoosePoint)}
           >
             <Plus size={15} className="mr-2" />
@@ -891,57 +937,68 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
 
     if (activeSectionId === "audience") {
       return (
-        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+        <div className={builderSectionClass}>
           <SectionHeader pill="JSON Builder" title="Audience-Karten" description="Emoji, Titel, Beschreibung und Bullets für die Zielgruppen-Sektion." />
           <div className="space-y-4">
             {audienceItems.map((item, index) => (
-              <div key={`audience-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-slate-700">Audience-Karte #{index + 1}</span>
+              <div key={`audience-${index}`} className={builderItemCardClass}>
+                <div className="absolute right-4 top-4 flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    size="icon"
+                    className={deleteIconButtonClass}
                     onClick={() => removeListItem(setAudienceItems, index)}
                     disabled={audienceItems.length === 1}
+                    aria-label={`Audience-Karte ${index + 1} entfernen`}
                   >
-                    <Trash2 size={14} className="mr-2" />
-                    Entfernen
+                    <Trash2 size={14} />
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+                <div className="mb-5 pr-12">
+                  <p className="text-sm font-semibold text-slate-700">Audience-Karte #{index + 1}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Emoji, Headline, Beschreibung und die zugehörigen Bullet-Argumente.
+                  </p>
+                </div>
+
+                <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Emoji</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.emoji}
                       onChange={(event) => updateAudienceItem(index, "emoji", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Titel</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.title}
                       onChange={(event) => updateAudienceItem(index, "title", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Beschreibung</Label>
                     <Textarea
                       rows={3}
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseTextareaClass}
                       value={item.description}
                       onChange={(event) => updateAudienceItem(index, "description", event.target.value)}
                     />
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-4">
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <span className="text-sm font-semibold text-slate-700">Bullets</span>
+                <div className="mt-5 min-w-0 rounded-[1.25rem] border border-dashed border-slate-200 bg-white/80 p-4">
+                  <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-700">Bullets</p>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                        Jede Aussage bleibt in einer eigenen Zeile stabil und bricht keine URLs oder langen Texte.
+                      </p>
+                    </div>
                     <Button
                       type="button"
                       variant="outline"
@@ -956,22 +1013,31 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
 
                   <div className="space-y-3">
                     {item.bullets.map((bullet, bulletIndex) => (
-                      <div key={`audience-bullet-${index}-${bulletIndex}`} className="flex gap-3">
-                        <Input
-                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                          value={bullet}
-                          onChange={(event) => updateAudienceBullet(index, bulletIndex, event.target.value)}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => removeAudienceBullet(index, bulletIndex)}
-                          disabled={item.bullets.length === 1}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
+                      <div
+                        key={`audience-bullet-${index}-${bulletIndex}`}
+                        className="grid min-w-0 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[minmax(0,1fr)_auto]"
+                      >
+                        <div className="min-w-0 space-y-2">
+                          <Label>Bullet #{bulletIndex + 1}</Label>
+                          <Input
+                            className={baseFieldClass}
+                            value={bullet}
+                            onChange={(event) => updateAudienceBullet(index, bulletIndex, event.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-end md:justify-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={deleteIconButtonClass}
+                            onClick={() => removeAudienceBullet(index, bulletIndex)}
+                            disabled={item.bullets.length === 1}
+                            aria-label={`Audience-Bullet ${bulletIndex + 1} entfernen`}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -983,7 +1049,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
           <Button
             type="button"
             variant="outline"
-            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            className={addButtonClass}
             onClick={() => addListItem(setAudienceItems, createEmptyAudienceItem)}
           >
             <Plus size={15} className="mr-2" />
@@ -995,56 +1061,62 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
 
     if (activeSectionId === "process") {
       return (
-        <div className="rounded-[1.5rem] border border-slate-200 p-5">
+        <div className={builderSectionClass}>
           <SectionHeader pill="JSON Builder" title="Process-Steps" description="Ablaufkarten mit Step, Zeit, Titel und Beschreibung." />
           <div className="space-y-4">
             {processSteps.map((item, index) => (
-              <div key={`process-step-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold text-slate-700">Step #{index + 1}</span>
+              <div key={`process-step-${index}`} className={builderItemCardClass}>
+                <div className="absolute right-4 top-4 flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    size="icon"
+                    className={deleteIconButtonClass}
                     onClick={() => removeListItem(setProcessSteps, index)}
                     disabled={processSteps.length === 1}
+                    aria-label={`Process-Step ${index + 1} entfernen`}
                   >
-                    <Trash2 size={14} className="mr-2" />
-                    Entfernen
+                    <Trash2 size={14} />
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+                <div className="mb-5 pr-12">
+                  <p className="text-sm font-semibold text-slate-700">Step #{index + 1}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Reihenfolge, Timing und Beschreibung dieses Prozess-Schritts.
+                  </p>
+                </div>
+
+                <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Step Nummer</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.step}
                       onChange={(event) => updateProcessStep(index, "step", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>Zeit</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.time || ""}
                       onChange={(event) => updateProcessStep(index, "time", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Titel</Label>
                     <Input
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseFieldClass}
                       value={item.title}
                       onChange={(event) => updateProcessStep(index, "title", event.target.value)}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="min-w-0 space-y-2 md:col-span-2">
                     <Label>Beschreibung</Label>
                     <Textarea
                       rows={4}
-                      className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                      className={baseTextareaClass}
                       value={item.description}
                       onChange={(event) => updateProcessStep(index, "description", event.target.value)}
                     />
@@ -1057,7 +1129,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
           <Button
             type="button"
             variant="outline"
-            className="mt-4 rounded-xl border-dashed border-[#FF4B2C]/35 text-[#FF4B2C] hover:bg-[#FF4B2C]/5"
+            className={addButtonClass}
             onClick={() => addListItem(setProcessSteps, () => createEmptyProcessStep(processSteps.length + 1))}
           >
             <Plus size={15} className="mr-2" />
@@ -1070,7 +1142,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
     if (activeSectionId === "contact") {
       return (
         <Accordion type="multiple" defaultValue={["panel", "signals", "labels"]} className="space-y-4">
-          <AccordionItem value="panel" className="rounded-[1.5rem] border border-slate-200 bg-white px-5">
+          <AccordionItem value="panel" className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white px-5 shadow-sm">
             <AccordionTrigger className="py-5 text-left hover:no-underline">
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900">Dark Panel</h3>
@@ -1078,27 +1150,28 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-5">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Panel Beschreibung</Label>
-                  <Textarea
-                    rows={5}
-                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
-                    value={contactContent.panel_description}
-                    onChange={(event) => setContactContent((prev) => ({ ...prev, panel_description: event.target.value }))}
-                  />
+              <div className="space-y-5">
+                <div className={subPanelClass}>
+                  <div className="min-w-0 space-y-2">
+                    <Label>Panel Beschreibung</Label>
+                    <Textarea
+                      rows={5}
+                      className={baseTextareaClass}
+                      value={contactContent.panel_description}
+                      onChange={(event) => setContactContent((prev) => ({ ...prev, panel_description: event.target.value }))}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-4">
                   {contactContent.trust_signals.map((signal, index) => (
-                    <div key={`contact-signal-${index}`} className="rounded-2xl border border-slate-200 p-4">
-                      <div className="mb-4 flex items-center justify-between gap-4">
-                        <span className="text-sm font-semibold text-slate-700">Signal #{index + 1}</span>
+                    <div key={`contact-signal-${index}`} className={builderItemCardClass}>
+                      <div className="absolute right-4 top-4 flex items-center gap-2">
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
-                          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          size="icon"
+                          className={deleteIconButtonClass}
                           onClick={() =>
                             setContactContent((prev) => ({
                               ...prev,
@@ -1106,17 +1179,24 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                             }))
                           }
                           disabled={contactContent.trust_signals.length === 1}
+                          aria-label={`Kontakt-Signal ${index + 1} entfernen`}
                         >
-                          <Trash2 size={14} className="mr-2" />
-                          Entfernen
+                          <Trash2 size={14} />
                         </Button>
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <div className="space-y-2">
+                      <div className="mb-5 pr-12">
+                        <p className="text-sm font-semibold text-slate-700">Signal #{index + 1}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                          Vertrauenselement für die linke Kontaktspalte.
+                        </p>
+                      </div>
+
+                      <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                        <div className="min-w-0 space-y-2">
                           <Label>Icon</Label>
                           <select
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#FF4B2C]"
+                            className={baseSelectClass}
                             value={signal.icon}
                             onChange={(event) => updateContactTrustSignal(index, "icon", event.target.value)}
                           >
@@ -1125,19 +1205,19 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                             <option value="mail">mail</option>
                           </select>
                         </div>
-                        <div className="space-y-2 md:col-span-2">
+                        <div className="min-w-0 space-y-2">
                           <Label>Titel</Label>
                           <Input
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                            className={baseFieldClass}
                             value={signal.title}
                             onChange={(event) => updateContactTrustSignal(index, "title", event.target.value)}
                           />
                         </div>
-                        <div className="space-y-2 md:col-span-3">
+                        <div className="min-w-0 space-y-2 md:col-span-2">
                           <Label>Text</Label>
                           <Textarea
                             rows={3}
-                            className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                            className={baseTextareaClass}
                             value={signal.text}
                             onChange={(event) => updateContactTrustSignal(index, "text", event.target.value)}
                           />
@@ -1165,7 +1245,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="labels" className="rounded-[1.5rem] border border-slate-200 bg-white px-5">
+          <AccordionItem value="labels" className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white px-5 shadow-sm">
             <AccordionTrigger className="py-5 text-left hover:no-underline">
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900">Labels & Placeholders</h3>
@@ -1173,15 +1253,15 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-5">
-              <div className="grid gap-6 xl:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                <div className={subPanelClass}>
                   <h4 className="mb-4 font-bold text-slate-900">Form Labels</h4>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid min-w-0 gap-4 md:grid-cols-2">
                     {Object.entries(contactContent.labels).map(([key, value]) => (
-                      <div key={key} className="space-y-2">
+                      <div key={key} className="min-w-0 space-y-2">
                         <Label>{key}</Label>
                         <Input
-                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                          className={baseFieldClass}
                           value={value}
                           onChange={(event) =>
                             updateContactLabel(key as keyof ContactSectionContent["labels"], event.target.value)
@@ -1192,14 +1272,14 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 p-4">
+                <div className={subPanelClass}>
                   <h4 className="mb-4 font-bold text-slate-900">Placeholders</h4>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid min-w-0 gap-4 md:grid-cols-2">
                     {Object.entries(contactContent.placeholders).map(([key, value]) => (
-                      <div key={key} className="space-y-2">
+                      <div key={key} className="min-w-0 space-y-2">
                         <Label>{key}</Label>
                         <Input
-                          className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                          className={baseFieldClass}
                           value={value}
                           onChange={(event) =>
                             updateContactPlaceholder(key as keyof ContactSectionContent["placeholders"], event.target.value)
@@ -1213,7 +1293,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="options" className="rounded-[1.5rem] border border-slate-200 bg-white px-5">
+          <AccordionItem value="options" className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white px-5 shadow-sm">
             <AccordionTrigger className="py-5 text-left hover:no-underline">
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900">Auswahlfelder & Status-Texte</h3>
@@ -1222,12 +1302,12 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
             </AccordionTrigger>
             <AccordionContent className="pb-5">
               <div className="space-y-6">
-                <div className="grid gap-6 xl:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 p-4">
+                <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                  <div className={subPanelClass}>
                     <h4 className="mb-4 font-bold text-slate-900">Service Optionen</h4>
                     <Textarea
                       rows={8}
-                      className="rounded-xl border-slate-200 bg-slate-50 font-mono text-sm focus:border-[#FF4B2C]"
+                      className={`${baseTextareaClass} font-mono text-sm`}
                       value={contactContent.service_options.join("\n")}
                       onChange={(event) =>
                         setContactContent((prev) => ({
@@ -1241,11 +1321,11 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 p-4">
+                  <div className={subPanelClass}>
                     <h4 className="mb-4 font-bold text-slate-900">Budget Optionen</h4>
                     <Textarea
                       rows={8}
-                      className="rounded-xl border-slate-200 bg-slate-50 font-mono text-sm focus:border-[#FF4B2C]"
+                      className={`${baseTextareaClass} font-mono text-sm`}
                       value={contactContent.budget_options.join("\n")}
                       onChange={(event) =>
                         setContactContent((prev) => ({
@@ -1260,80 +1340,80 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 p-4">
+                <div className={subPanelClass}>
                   <h4 className="mb-4 font-bold text-slate-900">Submit / Success / Toasts</h4>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
+                  <div className="grid min-w-0 gap-6 md:grid-cols-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Submit Text</Label>
                       <Input
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseFieldClass}
                         value={contactContent.submit_text}
                         onChange={(event) => setContactContent((prev) => ({ ...prev, submit_text: event.target.value }))}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Submitting Text</Label>
                       <Input
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseFieldClass}
                         value={contactContent.submitting_text}
                         onChange={(event) =>
                           setContactContent((prev) => ({ ...prev, submitting_text: event.target.value }))
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Success Titel</Label>
                       <Input
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseFieldClass}
                         value={contactContent.success_title}
                         onChange={(event) => setContactContent((prev) => ({ ...prev, success_title: event.target.value }))}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Success Text</Label>
                       <Textarea
                         rows={3}
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseTextareaClass}
                         value={contactContent.success_text}
                         onChange={(event) => setContactContent((prev) => ({ ...prev, success_text: event.target.value }))}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Success Toast Titel</Label>
                       <Input
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseFieldClass}
                         value={contactContent.success_toast_title}
                         onChange={(event) =>
                           setContactContent((prev) => ({ ...prev, success_toast_title: event.target.value }))
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Success Toast Beschreibung</Label>
                       <Textarea
                         rows={3}
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseTextareaClass}
                         value={contactContent.success_toast_description}
                         onChange={(event) =>
                           setContactContent((prev) => ({ ...prev, success_toast_description: event.target.value }))
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Error Toast Titel</Label>
                       <Input
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseFieldClass}
                         value={contactContent.error_toast_title}
                         onChange={(event) =>
                           setContactContent((prev) => ({ ...prev, error_toast_title: event.target.value }))
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Error Toast Beschreibung</Label>
                       <Textarea
                         rows={3}
-                        className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                        className={baseTextareaClass}
                         value={contactContent.error_toast_description}
                         onChange={(event) =>
                           setContactContent((prev) => ({ ...prev, error_toast_description: event.target.value }))
@@ -1366,7 +1446,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Homepage Inhalte</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
-            Premium-Steuerzentrale mit klarer Bereichsnavigation links, Editor in der Mitte und Live-Preview rechts. So bleibt das System auch für Kunden sauber bedienbar.
+            Premium-Steuerzentrale mit Sektionen oben in voller Breite, Editor links unten und Live-Preview rechts unten. So bleibt das System klar, ruhig und kundenfreundlich bedienbar.
           </p>
         </div>
 
@@ -1380,98 +1460,101 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
         </Button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
-                <p className="mt-1 text-xs text-slate-500">Reihenfolge, Sichtbarkeit und Fokus der Homepage-Sektionen.</p>
-              </div>
-              <div className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                {orderedSectionGroups.length} Sektionen
-              </div>
+      <div className="space-y-6">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+          <div className="flex flex-col gap-3 border-b border-slate-200/80 pb-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
+              <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">Sektionen steuern</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-500">
+                Reihenfolge, Sichtbarkeit und Fokus der Homepage-Sektionen jetzt oben in voller Breite. Darunter arbeiten Editor und Live-Preview ruhiger in einer klaren 2-Spalten-Struktur.
+              </p>
             </div>
-
-            <div className="mt-4 max-h-[calc(100vh-12rem)] space-y-2 overflow-auto pr-1">
-              {orderedSectionGroups.map((group, index) => {
-                const active = group.id === activeSectionId;
-                const isFirst = index === 0;
-                const isLast = index === orderedSectionGroups.length - 1;
-                const isVisible = sectionVisibility[group.id as HomepageSectionId] !== false;
-                return (
-                  <div
-                    key={group.id}
-                    className={`w-full rounded-[1.2rem] border p-3 transition-all ${
-                      active
-                        ? "border-[#FF4B2C]/35 bg-[#FF4B2C]/5 shadow-[0_12px_30px_-22px_rgba(255,75,44,0.55)]"
-                        : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
-                    }`}
-                  >
-                    <button type="button" onClick={() => setActiveSection(group.id)} className="block w-full text-left">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
-                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
-                          {group.fields.length}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 h-8 overflow-hidden text-[11px] leading-4 text-slate-500">{group.description}</p>
-                    </button>
-
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-200/80 pt-3">
-                      <div className="flex items-center gap-2">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1">
-                          <span className={`inline-flex h-2 w-2 rounded-full ${isVisible ? "bg-emerald-500" : "bg-amber-500"}`} />
-                          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                            {isVisible ? "Sichtbar" : "Ausgeblendet"}
-                          </span>
-                        </div>
-                        <Switch
-                          checked={isVisible}
-                          onCheckedChange={(checked) => toggleSectionVisibility(group.id as HomepageSectionId, checked)}
-                          className="data-[state=checked]:bg-[#FF4B2C]"
-                          aria-label={`${group.title} sichtbar schalten`}
-                        />
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <button
-                          type="button"
-                          aria-label={`${group.title} nach oben verschieben`}
-                          onClick={() => moveSection(group.id as HomepageSectionId, "up")}
-                          disabled={isFirst}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
-                        >
-                          <ArrowUp size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`${group.title} nach unten verschieben`}
-                          onClick={() => moveSection(group.id as HomepageSectionId, "down")}
-                          disabled={isLast}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
-                        >
-                          <ArrowDown size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              {orderedSectionGroups.length} Sektionen
             </div>
           </div>
-        </aside>
 
-        <div className="flex min-w-0 flex-col items-start gap-6 xl:flex-row">
-          <div className="flex min-w-0 flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+          <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            {orderedSectionGroups.map((group, index) => {
+              const active = group.id === activeSectionId;
+              const isFirst = index === 0;
+              const isLast = index === orderedSectionGroups.length - 1;
+              const isVisible = sectionVisibility[group.id as HomepageSectionId] !== false;
+              return (
+                <div
+                  key={group.id}
+                  className={`min-w-0 rounded-[1.35rem] border p-4 transition-all ${
+                    active
+                      ? "border-[#FF4B2C]/35 bg-[#FF4B2C]/5 shadow-[0_16px_35px_-24px_rgba(255,75,44,0.55)]"
+                      : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
+                  }`}
+                >
+                  <button type="button" onClick={() => setActiveSection(group.id)} className="block w-full min-w-0 text-left">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <span className={`block truncate text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
+                        <p className="mt-1.5 min-h-[2.5rem] break-words text-[11px] leading-4 text-slate-500">{group.description}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
+                        {group.fields.length}
+                      </span>
+                    </div>
+                  </button>
+
+                  <div className="mt-3 flex min-w-0 flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1">
+                        <span className={`inline-flex h-2 w-2 shrink-0 rounded-full ${isVisible ? "bg-emerald-500" : "bg-amber-500"}`} />
+                        <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                          {isVisible ? "Sichtbar" : "Ausgeblendet"}
+                        </span>
+                      </div>
+                      <Switch
+                        checked={isVisible}
+                        onCheckedChange={(checked) => toggleSectionVisibility(group.id as HomepageSectionId, checked)}
+                        className="data-[state=checked]:bg-[#FF4B2C]"
+                        aria-label={`${group.title} sichtbar schalten`}
+                      />
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        aria-label={`${group.title} nach oben verschieben`}
+                        onClick={() => moveSection(group.id as HomepageSectionId, "up")}
+                        disabled={isFirst}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`${group.title} nach unten verschieben`}
+                        onClick={() => moveSection(group.id as HomepageSectionId, "down")}
+                        disabled={isLast}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
+          <div className="flex min-w-0 flex-col rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
             <div className="mb-6 rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
+                <div className="min-w-0">
                   <div className="inline-flex rounded-full border border-[#FF4B2C]/15 bg-[#FF4B2C]/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF4B2C]">
                     {HOMEPAGE_SECTION_LABELS[activeSectionId]}
                   </div>
-                  <h2 className="mt-3 text-2xl font-extrabold text-slate-900">{activeGroup.title}</h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">{activeGroup.description}</p>
+                  <h2 className="mt-3 break-words text-2xl font-extrabold text-slate-900">{activeGroup.title}</h2>
+                  <p className="mt-2 max-w-3xl break-words text-sm leading-relaxed text-slate-500">{activeGroup.description}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -1507,7 +1590,7 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
             </Tabs>
           </div>
 
-          <div className="w-full min-w-0 shrink-0 xl:sticky xl:top-6 xl:w-[480px]">
+          <div className="min-w-0 xl:sticky xl:top-6 xl:self-start">
             <SectionPreviewPanel
               sectionId={activeSectionId}
               sectionLabel={HOMEPAGE_SECTION_LABELS[activeSectionId]}

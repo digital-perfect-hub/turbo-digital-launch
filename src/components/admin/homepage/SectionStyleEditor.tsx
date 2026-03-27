@@ -78,9 +78,9 @@ const SectionStyleEditor = ({ value, onChange }: SectionStyleEditorProps) => {
   const reset = () => onChange(createDefaultHomepageSectionStyle());
 
   return (
-    <div className="flex w-full min-w-0 flex-col space-y-6">
+    <div className="flex w-full min-w-0 flex-col space-y-5 xl:space-y-6">
       {/* Header Panel */}
-      <div className="flex w-full min-w-0 flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex w-full min-w-0 flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
           <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-indigo-500/15 bg-indigo-500/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600 shadow-sm">
             <Sparkles size={14} className="shrink-0" /> <span className="truncate">Design & Layout</span>
@@ -96,13 +96,13 @@ const SectionStyleEditor = ({ value, onChange }: SectionStyleEditorProps) => {
       </div>
 
       {/* Pattern Selector */}
-      <div className="w-full min-w-0 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="w-full min-w-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <div className="mb-6 w-full min-w-0">
           <h3 className="truncate text-lg font-bold text-slate-900">Hintergrund-Pattern</h3>
           <p className="mt-1 break-words text-sm text-slate-500">Lege eine Textur oder ein Muster über den Sektions-Hintergrund.</p>
         </div>
 
-        <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {patterns.map((pattern) => {
             const Icon = pattern.icon;
             const isActive = value.pattern === pattern.value;
@@ -155,7 +155,7 @@ const SectionStyleEditor = ({ value, onChange }: SectionStyleEditorProps) => {
       </div>
 
       {/* Colors Grid */}
-      <div className={`grid w-full min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${(value as any).inherit_theme ? "pointer-events-none opacity-55" : ""}`}>
+      <div className={`grid w-full min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ${(value as any).inherit_theme ? "pointer-events-none opacity-55" : ""}`}>
         {colorFields.map((field) => (
           <ColorField key={field.key} label={field.label} description={field.description} value={value[field.key] as string} onChange={(nextValue) => update(field.key, nextValue)} />
         ))}
