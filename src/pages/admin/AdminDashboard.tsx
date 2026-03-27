@@ -14,6 +14,15 @@ import { useBilling } from "@/hooks/useBilling";
 
 const formatDayLabel = (value: Date) => value.toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit" });
 
+const getCountryLabel = (countryCode: string) => {
+  try {
+    const displayNames = new Intl.DisplayNames(["de-AT"], { type: "region" });
+    return displayNames.of(countryCode) || countryCode;
+  } catch {
+    return countryCode;
+  }
+};
+
 const AdminDashboard = () => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
@@ -31,13 +40,13 @@ const AdminDashboard = () => {
       const [leadsCountRes, pagesRes, pageViewsRes, leadsTrendRes, productsRes] = await Promise.all([
         supabase.from("leads").select("*", { count: "exact", head: true }).eq("site_id", siteId),
         supabase.from("pages" as never).select("id, is_published").eq("site_id", siteId),
-        supabase.from("page_views" as never).select("id, created_at, session_id").eq("site_id", siteId).gte("created_at", fromIso),
+        supabase.from("page_views" as never).select("id, created_at, session_id, visitor_hash, country").eq("site_id", siteId).gte("created_at", fromIso),
         supabase.from("leads").select("id, created_at").eq("site_id", siteId).gte("created_at", fromIso),
         supabase.from("products").select("*", { count: "exact", head: true }).eq("site_id", siteId),
       ]);
 
       const pages = (pagesRes.data as Array<{ id: string; is_published: boolean }> | null) ?? [];
-      const pageViews = (pageViewsRes.data as Array<{ id: string; created_at: string; session_id: string }> | null) ?? [];
+      const pageViews = ((pageViewsRes.data as Array<{ id: string; created_at: string; session_id: string; visitor_hash?: string | null; country?: string | null }> | null) ?? []);
       const trendLeads = (leadsTrendRes.data as Array<{ id: string; created_at: string }> | null) ?? [];
 
       const days = Array.from({ length: 14 }, (_, index) => {
@@ -64,16 +73,33 @@ const AdminDashboard = () => {
         if (row) row.Views += 1;
       });
 
-      const uniqueSessions = new Set(pageViews.map((entry) => entry.session_id).filter(Boolean));
-      const conversionRate = uniqueSessions.size ? ((trendLeads.length / uniqueSessions.size) * 100).toFixed(1) : "0.0";
+      const uniqueVisitors = new Set(
+        pageViews
+          .map((entry) => entry.visitor_hash || (entry.session_id ? `session:${entry.session_id}` : null))
+          .filter(Boolean),
+      );
+      const conversionRate = uniqueVisitors.size ? ((trendLeads.length / uniqueVisitors.size) * 100).toFixed(1) : "0.0";
+
+      const countryMap = new Map<string, number>();
+      pageViews.forEach((entry) => {
+        if (!entry.country) return;
+        countryMap.set(entry.country, (countryMap.get(entry.country) ?? 0) + 1);
+      });
+
+      const topCountries = Array.from(countryMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([code, count]) => ({ code, count, label: getCountryLabel(code) }));
 
       return {
         leadsCount: leadsCountRes.count ?? 0,
         pagesLive: pages.filter((page) => page.is_published).length,
         pagesDraft: pages.filter((page) => !page.is_published).length,
         pageViewCount: pageViews.length,
+        uniqueVisitors: uniqueVisitors.size,
         productsCount: productsRes.count ?? 0,
         conversionRate,
+        topCountries,
         trend: days.map(({ isoKey: _iso, ...rest }) => rest),
       };
     },
@@ -97,9 +123,9 @@ const AdminDashboard = () => {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Leads" value={stats?.leadsCount ?? "—"} description="Alle Anfragen der aktiven Site." icon={MessageSquare} />
-        <KpiCard title="Views (14 Tage)" value={stats?.pageViewCount ?? "—"} description="Reale page_views mit Consent-Gate." icon={Eye} />
+        <KpiCard title="Views (14 Tage)" value={stats?.pageViewCount ?? "—"} description="Dedupte Page Views via Edge Tracking." icon={Eye} />
         <KpiCard title="Aktive Seiten" value={stats?.pagesLive ?? "—"} description="Veröffentlichte Landingpages." icon={FileText} />
-        <KpiCard title="Conversion" value={stats ? `${stats.conversionRate}%` : "—"} description="Leads pro unique Session der letzten 14 Tage." icon={BarChart3} />
+        <KpiCard title="Conversion" value={stats ? `${stats.conversionRate}%` : "—"} description={`Leads pro ${stats?.uniqueVisitors ?? 0} unique Besucher.`} icon={BarChart3} />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
@@ -128,6 +154,23 @@ const AdminDashboard = () => {
               <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Portal</div>
               <div className="mt-2 inline-flex items-center gap-2 text-lg font-extrabold text-slate-900"><CreditCard size={18} /> Aktiv</div>
             </div>
+          </div>
+
+          <div className="mt-5 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4">
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Top Länder</div>
+            {stats?.topCountries?.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {stats.topCountries.map((country) => (
+                  <span key={country.code} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700">
+                    <span>{country.label}</span>
+                    <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{country.code}</span>
+                    <span className="text-xs text-slate-500">{country.count}</span>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">Noch keine Länder-Daten erfasst.</p>
+            )}
           </div>
         </div>
       </div>

@@ -17,6 +17,24 @@ const getSessionId = () => {
   return next;
 };
 
+const getPageType = (pathname: string) => {
+  if (pathname === "/") return "home";
+  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/forum")) return "forum";
+  if (pathname.startsWith("/produkt/")) return "product";
+  return "page";
+};
+
+const getReferrerHost = () => {
+  if (!document.referrer) return null;
+
+  try {
+    return new URL(document.referrer).hostname;
+  } catch {
+    return null;
+  }
+};
+
 const PageViewTracker = () => {
   const location = useLocation();
   const { activeSiteId } = useSiteContext();
@@ -31,7 +49,7 @@ const PageViewTracker = () => {
       const consent = readCookieConsent();
       if (!consent?.analytics) return;
 
-      const dedupeKey = `${LAST_TRACKED_PREFIX}${pathname}`;
+      const dedupeKey = `${LAST_TRACKED_PREFIX}${siteId}:${pathname}`;
       const lastTrackedAt = window.sessionStorage.getItem(dedupeKey);
       const now = Date.now();
       if (lastTrackedAt && now - Number(lastTrackedAt) < 15_000) return;
@@ -39,14 +57,16 @@ const PageViewTracker = () => {
       window.sessionStorage.setItem(dedupeKey, String(now));
 
       try {
-        await supabase.from("page_views" as never).insert({
-        site_id: siteId,
-        path: pathname,
-        page_type: pathname === "/" ? "home" : pathname.startsWith("/admin") ? "admin" : pathname.startsWith("/forum") ? "forum" : pathname.startsWith("/produkt/") ? "product" : "page",
-        page_slug: pathname.replace(/^\/+/, "") || "home",
-        session_id: getSessionId(),
-        referrer_host: document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch { return null; } })() : null,
-        } as never);
+        await supabase.functions.invoke("track-view", {
+          body: {
+            siteId,
+            path: pathname,
+            pageType: getPageType(pathname),
+            pageSlug: pathname.replace(/^\/+/, "") || "home",
+            sessionId: getSessionId(),
+            referrerHost: getReferrerHost(),
+          },
+        });
       } catch {
         // tracking must never break the frontend
       }

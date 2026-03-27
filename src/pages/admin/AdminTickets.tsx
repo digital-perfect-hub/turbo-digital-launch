@@ -179,11 +179,11 @@ const AdminTickets = () => {
       </Card>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-4">
           {isLoading ? <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">Tickets werden geladen…</div> : <TicketListTable tickets={filteredTickets} selectedTicketId={selectedTicketId} onSelect={setSelectedTicketId} />}
         </section>
 
-        <section>
+        <section className="min-w-0">
           <TicketDetailPanel
             detail={detailQuery.data ?? null}
             isLoading={detailQuery.isLoading}
