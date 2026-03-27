@@ -64,6 +64,13 @@ type CategoryFormState = {
   is_active: boolean;
   seo_title: string;
   seo_description: string;
+  ad_enabled: boolean;
+  ad_headline: string;
+  ad_subheadline: string;
+  ad_cta_text: string;
+  ad_link_url: string;
+  ad_image_url: string;
+  ad_html_code: string;
 };
 
 type ThreadFormState = {
@@ -83,6 +90,13 @@ type ThreadFormState = {
   is_active: boolean;
   status: string;
   admin_notes: string;
+  show_ad: boolean;
+  ad_type: string;
+  ad_image_url: string;
+  ad_image_alt: string;
+  ad_link_url: string;
+  ad_cta_text: string;
+  ad_html_code: string;
 };
 
 type ThreadBooleanKey = "is_active" | "is_pinned" | "is_locked" | "is_answered";
@@ -146,6 +160,13 @@ const createEmptyCategory = (nextSortOrder: number): CategoryFormState => ({
   is_active: true,
   seo_title: "",
   seo_description: "",
+  ad_enabled: false,
+  ad_headline: "",
+  ad_subheadline: "",
+  ad_cta_text: "",
+  ad_link_url: "",
+  ad_image_url: "",
+  ad_html_code: "",
 });
 
 const createEmptyThread = (
@@ -167,6 +188,13 @@ const createEmptyThread = (
   is_active: true,
   status: "published",
   admin_notes: "",
+  show_ad: false,
+  ad_type: "image",
+  ad_image_url: "",
+  ad_image_alt: "",
+  ad_link_url: "",
+  ad_cta_text: "",
+  ad_html_code: "",
 });
 
 const toCategoryFormState = (category: ForumCategoryRow): CategoryFormState => ({
@@ -178,6 +206,13 @@ const toCategoryFormState = (category: ForumCategoryRow): CategoryFormState => (
   is_active: category.is_active,
   seo_title: category.seo_title || "",
   seo_description: category.seo_description || "",
+  ad_enabled: category.ad_enabled || false,
+  ad_headline: category.ad_headline || "",
+  ad_subheadline: category.ad_subheadline || "",
+  ad_cta_text: category.ad_cta_text || "",
+  ad_link_url: category.ad_link_url || "",
+  ad_image_url: category.ad_image_url || "",
+  ad_html_code: category.ad_html_code || "",
 });
 
 const toThreadFormState = (
@@ -200,6 +235,13 @@ const toThreadFormState = (
   is_active: thread.is_active,
   status: thread.status || "published",
   admin_notes: thread.admin_notes || "",
+  show_ad: thread.show_ad || false,
+  ad_type: thread.ad_type || "image",
+  ad_image_url: thread.ad_image_url || "",
+  ad_image_alt: thread.ad_image_alt || "",
+  ad_link_url: thread.ad_link_url || "",
+  ad_cta_text: thread.ad_cta_text || "",
+  ad_html_code: thread.ad_html_code || "",
 });
 
 const getSafeImageUrl = (value: string, width = 1200, quality = 84) => {
@@ -226,6 +268,11 @@ const AdminForum = () => {
   const [replyThreadFilter, setReplyThreadFilter] = useState<string>("all");
   const [replySearch, setReplySearch] = useState("");
   const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
+  const [threadSearch, setThreadSearch] = useState("");
+  const [threadStatusFilter, setThreadStatusFilter] = useState<"all" | "published" | "draft" | "archived">("all");
+  const [threadCategoryFilter, setThreadCategoryFilter] = useState<string>("all");
+  const [contentMode, setContentMode] = useState<"visual" | "html" | "split">("split");
+  const [categorySearch, setCategorySearch] = useState("");
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ["admin-forum-categories", siteId],
@@ -359,6 +406,42 @@ const AdminForum = () => {
     [filteredReplies, selectedReplyId],
   );
 
+  const filteredThreads = useMemo(() => {
+    const search = threadSearch.trim().toLowerCase();
+
+    return threads.filter((thread) => {
+      if (threadStatusFilter !== "all" && thread.status !== threadStatusFilter) return false;
+      if (threadCategoryFilter !== "all" && thread.category_id !== threadCategoryFilter) return false;
+
+      if (!search) return true;
+
+      const category = thread.category_id ? categoryMap.get(thread.category_id) : null;
+      const haystack = [
+        thread.title,
+        thread.slug,
+        thread.author_name || "",
+        thread.raw_html_content || thread.content,
+        category?.name || "",
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(search);
+    });
+  }, [categoryMap, threadCategoryFilter, threadSearch, threadStatusFilter, threads]);
+
+  const filteredCategories = useMemo(() => {
+    const search = categorySearch.trim().toLowerCase();
+    if (!search) return categories;
+
+    return categories.filter((category) =>
+      [category.name, category.slug, category.description || "", category.seo_title || "", category.seo_description || ""]
+        .join(" ")
+        .toLowerCase()
+        .includes(search),
+    );
+  }, [categories, categorySearch]);
+
   useEffect(() => {
     if (!categoryForm && !categoriesLoading) {
       setCategoryForm(createEmptyCategory(nextCategorySortOrder));
@@ -444,6 +527,13 @@ const AdminForum = () => {
         is_active: values.is_active,
         seo_title: values.seo_title.trim() || null,
         seo_description: values.seo_description.trim() || null,
+        ad_enabled: values.ad_enabled,
+        ad_headline: values.ad_headline.trim() || null,
+        ad_subheadline: values.ad_subheadline.trim() || null,
+        ad_cta_text: values.ad_cta_text.trim() || null,
+        ad_link_url: values.ad_link_url.trim() || null,
+        ad_image_url: values.ad_image_url.trim() || null,
+        ad_html_code: values.ad_html_code.trim() || null,
       };
 
       if (!payload.name) throw new Error("Bitte einen Kategorienamen angeben.");
@@ -506,6 +596,13 @@ const AdminForum = () => {
         status: values.status,
         last_activity_at: new Date().toISOString(),
         admin_notes: values.admin_notes.trim() || null,
+        show_ad: values.show_ad,
+        ad_type: values.ad_type.trim() || null,
+        ad_image_url: values.ad_image_url.trim() || null,
+        ad_image_alt: values.ad_image_alt.trim() || null,
+        ad_link_url: values.ad_link_url.trim() || null,
+        ad_cta_text: values.ad_cta_text.trim() || null,
+        ad_html_code: values.ad_html_code.trim() || null,
       };
 
       if (!payload.title) throw new Error("Bitte einen Thread-Titel angeben.");
@@ -734,494 +831,681 @@ const AdminForum = () => {
           </TabsList>
 
           <TabsContent value="threads" className="mt-0">
-            <div className="grid gap-6 xl:grid-cols-[1.05fr_1.4fr]">
-              <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm">
-                <CardHeader className="flex flex-row items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-black tracking-tight text-slate-950">Thread-Übersicht</CardTitle>
-                    <CardDescription className="mt-2 text-sm leading-7 text-slate-500">
-                      Redaktionelle Beiträge, Status, Live-Zugriff und Direkt-Aktionen für Sperren, Pinning und Veröffentlichungsstatus.
-                    </CardDescription>
+            <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+              <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm xl:sticky xl:top-6 xl:h-[calc(100vh-140px)] xl:overflow-hidden">
+                <CardHeader className="space-y-4 border-b border-slate-200">
+                  <div className="flex flex-row items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-2xl font-black tracking-tight text-slate-950">Thread-Übersicht</CardTitle>
+                      <CardDescription className="mt-2 text-sm leading-7 text-slate-500">
+                        Kompakter WP-Stil: suchen, filtern, Thread öffnen und dann rechts sauber redaktionell pflegen.
+                      </CardDescription>
+                    </div>
+                    <Button variant="outline" className="rounded-xl" onClick={openNewThreadForm}>
+                      <RefreshCw className="h-4 w-4" />
+                      Neu
+                    </Button>
                   </div>
-                  <Button variant="outline" className="rounded-xl" onClick={openNewThreadForm}>
-                    <RefreshCw className="h-4 w-4" />
-                    Neu
-                  </Button>
+
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label>Suche</Label>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Input
+                          value={threadSearch}
+                          onChange={(event) => setThreadSearch(event.target.value)}
+                          placeholder="Titel, Slug, Autor oder Inhalt suchen"
+                          className="rounded-2xl pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select
+                          value={threadStatusFilter}
+                          onValueChange={(value: "all" | "published" | "draft" | "archived") => setThreadStatusFilter(value)}
+                        >
+                          <SelectTrigger className="rounded-2xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Alle Status</SelectItem>
+                            <SelectItem value="published">published</SelectItem>
+                            <SelectItem value="draft">draft</SelectItem>
+                            <SelectItem value="archived">archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Kategorie</Label>
+                        <Select value={threadCategoryFilter} onValueChange={setThreadCategoryFilter}>
+                          <SelectTrigger className="rounded-2xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Alle Kategorien</SelectItem>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Gefiltert</p>
+                        <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{filteredThreads.length}</p>
+                      </div>
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Publish</p>
+                        <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{threads.filter((thread) => thread.status === "published").length}</p>
+                      </div>
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Drafts</p>
+                        <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{threads.filter((thread) => thread.status === "draft").length}</p>
+                      </div>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+
+                <CardContent className="max-h-[calc(100vh-430px)] space-y-3 overflow-y-auto p-6">
                   {threadsLoading ? (
                     <p className="text-sm text-slate-500">Threads werden geladen…</p>
-                  ) : threads.length ? (
-                    threads.map((thread) => {
+                  ) : filteredThreads.length ? (
+                    filteredThreads.map((thread) => {
                       const category = thread.category_id ? categoryMap.get(thread.category_id) : null;
-                      const quickPublishAction = thread.status === "published"
-                        ? {
-                            label: "Entpublishen",
-                            patch: { status: "draft" },
-                            successMessage: "Thread auf draft gesetzt.",
-                          }
-                        : {
-                            label: "Publishen",
-                            patch: { status: "published" },
-                            successMessage: "Thread veröffentlicht.",
-                          };
+                      const isSelected = threadForm?.id === thread.id;
 
                       return (
-                        <div key={thread.id} className="rounded-[24px] border border-slate-200 p-5 transition-colors hover:border-[#FF4B2C]/25">
-                          <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                                  {thread.status}
-                                </span>
-                                {thread.is_pinned && (
-                                  <span className="rounded-full bg-[#FF4B2C]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#FF4B2C]">
-                                    Angepinnt
-                                  </span>
-                                )}
-                                {thread.is_locked && (
-                                  <span className="rounded-full bg-slate-950/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-950">
-                                    Gesperrt
-                                  </span>
-                                )}
-                                {!thread.is_active && (
-                                  <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-700">
-                                    Inaktiv
-                                  </span>
-                                )}
-                              </div>
-                              <h3 className="mt-3 truncate text-xl font-black tracking-tight text-slate-950">
-                                {thread.title}
-                              </h3>
-                              <p className="mt-2 text-sm text-slate-500">/{thread.slug}</p>
-                              <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">
-                                {stripHtml(thread.raw_html_content || thread.content).slice(0, 160) || "Noch kein Inhalt."}
-                              </p>
-                              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                                <span>Kategorie: {category?.name || "Ohne Kategorie"}</span>
-                                <span>Views: {thread.views}</span>
-                                <span>Aktivität: {formatDateTime(thread.last_activity_at)}</span>
-                              </div>
-
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl"
-                                  onClick={() =>
-                                    updateThreadQuickAction.mutate({
-                                      threadId: thread.id,
-                                      patch: { is_locked: !thread.is_locked },
-                                      successMessage: thread.is_locked ? "Thread entsperrt." : "Thread gesperrt.",
-                                    })
-                                  }
-                                >
-                                  {thread.is_locked ? <LockOpen className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                                  {thread.is_locked ? "Entsperren" : "Sperren"}
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl"
-                                  onClick={() =>
-                                    updateThreadQuickAction.mutate({
-                                      threadId: thread.id,
-                                      patch: { is_pinned: !thread.is_pinned },
-                                      successMessage: thread.is_pinned ? "Thread entpinnt." : "Thread angepinnt.",
-                                    })
-                                  }
-                                >
-                                  {thread.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                                  {thread.is_pinned ? "Entpinnen" : "Pinnen"}
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl"
-                                  onClick={() =>
-                                    updateThreadQuickAction.mutate({
-                                      threadId: thread.id,
-                                      patch: { is_answered: !thread.is_answered },
-                                      successMessage: thread.is_answered ? "Answer-Flag entfernt." : "Thread als beantwortet markiert.",
-                                    })
-                                  }
-                                >
-                                  {thread.is_answered ? <BadgeCheck className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                                  {thread.is_answered ? "Unanswered" : "Answered"}
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl"
-                                  onClick={() =>
-                                    updateThreadQuickAction.mutate({
-                                      threadId: thread.id,
-                                      patch: quickPublishAction.patch,
-                                      successMessage: quickPublishAction.successMessage,
-                                    })
-                                  }
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  {quickPublishAction.label}
-                                </Button>
-                              </div>
-                            </div>
-
-                            <div className="flex shrink-0 flex-wrap gap-2">
-                              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => openThreadEditor(thread)}>
-                                <PencilLine className="h-4 w-4" />
-                                Bearbeiten
-                              </Button>
-                              <Button variant="outline" size="sm" className="rounded-xl" asChild>
-                                <Link to={`/forum/${thread.slug}`} target="_blank" rel="noreferrer">
-                                  <Eye className="h-4 w-4" />
-                                  Live
-                                </Link>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                onClick={() => deleteThread.mutate(thread.id)}
-                                disabled={deleteThread.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Löschen
-                              </Button>
-                            </div>
+                        <button
+                          key={thread.id}
+                          type="button"
+                          onClick={() => openThreadEditor(thread)}
+                          className={`w-full rounded-[24px] border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-[#0E1F53] bg-[#0E1F53]/5 shadow-sm"
+                              : "border-slate-200 bg-white hover:border-[#FF4B2C]/30 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                              {thread.status}
+                            </span>
+                            {thread.is_pinned ? (
+                              <span className="rounded-full bg-[#FF4B2C]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FF4B2C]">
+                                Angepinnt
+                              </span>
+                            ) : null}
+                            {thread.is_locked ? (
+                              <span className="rounded-full bg-slate-950/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-950">
+                                Gesperrt
+                              </span>
+                            ) : null}
+                            {!thread.is_active ? (
+                              <span className="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                                Inaktiv
+                              </span>
+                            ) : null}
                           </div>
-                        </div>
+
+                          <h3 className="mt-3 line-clamp-2 text-lg font-black tracking-tight text-slate-950">{thread.title}</h3>
+                          <p className="mt-1 text-sm text-slate-500">/{thread.slug}</p>
+                          <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">
+                            {stripHtml(thread.raw_html_content || thread.content).slice(0, 150) || "Noch kein Inhalt."}
+                          </p>
+
+                          <div className="mt-4 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+                            <span>Kategorie: {category?.name || "Ohne Kategorie"}</span>
+                            <span>Autor: {thread.author_name || "–"}</span>
+                            <span>Views: {thread.views}</span>
+                            <span>Aktivität: {formatDateTime(thread.last_activity_at)}</span>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <Button type="button" variant="outline" size="sm" className="rounded-xl" asChild>
+                              <Link to={`/forum/${thread.slug}`} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+                                <Eye className="h-4 w-4" />
+                                Live
+                              </Link>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                deleteThread.mutate(thread.id);
+                              }}
+                              disabled={deleteThread.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Löschen
+                            </Button>
+                          </div>
+                        </button>
                       );
                     })
                   ) : (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-7 text-slate-500">
-                      Noch keine Threads vorhanden. Lege rechts deinen ersten redaktionellen Beitrag an.
+                      Keine Threads für die aktuelle Suche bzw. den Filter gefunden.
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm">
-                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-slate-200">
                   <div>
                     <CardTitle className="text-2xl font-black tracking-tight text-slate-950">
                       {threadForm?.id ? "Thread bearbeiten" : "Neuen Thread anlegen"}
                     </CardTitle>
                     <CardDescription className="mt-2 text-sm leading-7 text-slate-500">
-                      Das Feld <strong>raw_html_content</strong> wird über Tiptap redaktionell gepflegt. Bilder landen im forum-assets Bucket und laufen über die Render-API.
+                      WordPress-Stil: Titel und Inhalt groß im Fokus, rechts die Meta-Boxen. Zusätzlich kannst du den Inhalt direkt als HTML-Quelle pflegen.
                     </CardDescription>
                   </div>
-                  <Button variant="outline" className="rounded-xl" onClick={resetThreadForm}>
-                    <RefreshCw className="h-4 w-4" />
-                    Reset
-                  </Button>
+
+                  <div className="flex flex-wrap gap-2">
+                    {threadForm?.id ? (
+                      <Button variant="outline" className="rounded-xl" asChild>
+                        <Link to={`/forum/${threadForm.slug}`} target="_blank" rel="noreferrer">
+                          <Eye className="h-4 w-4" />
+                          Live öffnen
+                        </Link>
+                      </Button>
+                    ) : null}
+                    {threadForm?.id ? (
+                      <Button
+                        variant="outline"
+                        className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => threadForm.id && deleteThread.mutate(threadForm.id)}
+                        disabled={deleteThread.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Löschen
+                      </Button>
+                    ) : null}
+                    <Button variant="outline" className="rounded-xl" onClick={resetThreadForm}>
+                      <RefreshCw className="h-4 w-4" />
+                      Reset
+                    </Button>
+                  </div>
                 </CardHeader>
 
-                <CardContent className="space-y-8">
+                <CardContent className="space-y-8 p-6">
                   {!threadForm ? (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-7 text-slate-500">
                       Wähle links einen Thread oder starte einen neuen Entwurf.
                     </div>
                   ) : (
-                    <>
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="thread-title">Titel</Label>
-                          <Input
-                            id="thread-title"
-                            value={threadForm.title}
-                            onChange={(event) =>
-                              setThreadForm((prev) =>
-                                prev
-                                  ? {
-                                      ...prev,
-                                      title: event.target.value,
-                                      slug: !isThreadSlugManual ? slugify(event.target.value) : prev.slug,
-                                    }
-                                  : prev,
-                              )
-                            }
-                            className="rounded-2xl"
-                            placeholder="z. B. Webdesign Relaunch: Was bringt wirklich Anfragen?"
-                          />
-                        </div>
+                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_340px] xl:items-start">
+                      <div className="space-y-6">
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-title">Titel</Label>
+                              <Input
+                                id="thread-title"
+                                value={threadForm.title}
+                                onChange={(event) =>
+                                  setThreadForm((prev) =>
+                                    prev
+                                      ? {
+                                          ...prev,
+                                          title: event.target.value,
+                                          slug: !isThreadSlugManual ? slugify(event.target.value) : prev.slug,
+                                        }
+                                      : prev,
+                                  )
+                                }
+                                className="rounded-2xl bg-white"
+                                placeholder="z. B. Webdesign Relaunch: Was bringt wirklich Anfragen?"
+                              />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="thread-slug">Slug</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="thread-slug"
-                              value={threadForm.slug}
-                              onChange={(event) => {
-                                setIsThreadSlugManual(true);
-                                setThreadForm((prev) => (prev ? { ...prev, slug: slugify(event.target.value) } : prev));
-                              }}
-                              className="rounded-2xl"
-                              placeholder="thread-slug"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="rounded-2xl"
-                              onClick={() => {
-                                setIsThreadSlugManual(false);
-                                setThreadForm((prev) => (prev ? { ...prev, slug: slugify(prev.title) } : prev));
-                              }}
-                            >
-                              Neu
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Kategorie</Label>
-                          <Select
-                            value={threadForm.category_id}
-                            onValueChange={(value) =>
-                              setThreadForm((prev) => (prev ? { ...prev, category_id: value } : prev))
-                            }
-                          >
-                            <SelectTrigger className="rounded-2xl">
-                              <SelectValue placeholder="Kategorie wählen" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Ohne Kategorie</SelectItem>
-                              {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Status</Label>
-                          <Select
-                            value={threadForm.status}
-                            onValueChange={(value) =>
-                              setThreadForm((prev) => (prev ? { ...prev, status: value } : prev))
-                            }
-                          >
-                            <SelectTrigger className="rounded-2xl">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="published">published</SelectItem>
-                              <SelectItem value="draft">draft</SelectItem>
-                              <SelectItem value="archived">archived</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="thread-author">Autorenname</Label>
-                          <Input
-                            id="thread-author"
-                            value={threadForm.author_name}
-                            onChange={(event) =>
-                              setThreadForm((prev) => (prev ? { ...prev, author_name: event.target.value } : prev))
-                            }
-                            className="rounded-2xl"
-                            placeholder="Digital-Perfect Redaktion"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        {([
-                          { key: "is_active", label: "Aktiv" },
-                          { key: "is_pinned", label: "Angepinnt" },
-                          { key: "is_locked", label: "Gesperrt" },
-                          { key: "is_answered", label: "Beantwortet" },
-                        ] as Array<{ key: ThreadBooleanKey; label: string }>).map((item) => (
-                          <div key={item.key} className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                            <Label htmlFor={item.key} className="text-sm font-semibold text-slate-800">
-                              {item.label}
-                            </Label>
-                            <Switch
-                              id={item.key}
-                              checked={Boolean(threadForm[item.key as keyof ThreadFormState])}
-                              onCheckedChange={(checked) => setThreadBooleanField(item.key, checked)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="grid gap-5 lg:grid-cols-[1.25fr_0.95fr]">
-                        <div className="space-y-3">
-                          <Label>Redaktioneller Inhalt</Label>
-                          <RichTextEditor
-                            value={threadForm.raw_html_content}
-                            onChange={(html) =>
-                              setThreadForm((prev) => (prev ? { ...prev, raw_html_content: html } : prev))
-                            }
-                            onImageUpload={(file) => uploadForumAsset(file, "editor")}
-                          />
-                        </div>
-
-                        <div className="space-y-5">
-                          <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-4">
-                            <Label htmlFor="featured-upload" className="text-sm font-semibold text-slate-800">
-                              Beitragsbild / Hero
-                            </Label>
-                            <div className="mt-3 flex flex-wrap gap-3">
-                              <label htmlFor="featured-upload">
-                                <Button
-                                  type="button"
-                                  asChild
-                                  className="rounded-2xl bg-[#FF4B2C] text-white hover:bg-[#e64124]"
-                                >
-                                  <span>
-                                    <Upload className="h-4 w-4" />
-                                    {isUploadingFeatured ? "Upload läuft…" : "Bild hochladen"}
-                                  </span>
-                                </Button>
-                              </label>
-                              {threadForm.featured_image_url && (
+                            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+                              <div className="space-y-2">
+                                <Label htmlFor="thread-slug">Slug</Label>
+                                <Input
+                                  id="thread-slug"
+                                  value={threadForm.slug}
+                                  onChange={(event) => {
+                                    setIsThreadSlugManual(true);
+                                    setThreadForm((prev) => (prev ? { ...prev, slug: slugify(event.target.value) } : prev));
+                                  }}
+                                  className="rounded-2xl bg-white"
+                                  placeholder="thread-slug"
+                                />
+                              </div>
+                              <div className="flex items-end">
                                 <Button
                                   type="button"
                                   variant="outline"
                                   className="rounded-2xl"
-                                  onClick={() =>
-                                    setThreadForm((prev) =>
-                                      prev ? { ...prev, featured_image_url: "", featured_image_alt: "" } : prev,
-                                    )
-                                  }
+                                  onClick={() => {
+                                    setIsThreadSlugManual(false);
+                                    setThreadForm((prev) => (prev ? { ...prev, slug: slugify(prev.title) } : prev));
+                                  }}
                                 >
-                                  <Trash2 className="h-4 w-4" />
-                                  Entfernen
+                                  Slug neu
                                 </Button>
-                              )}
-                            </div>
-                            <input
-                              id="featured-upload"
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp"
-                              className="hidden"
-                              onChange={handleFeaturedUpload}
-                            />
-                            <div className="mt-4 space-y-3">
-                              <div className="space-y-2">
-                                <Label htmlFor="featured-url">Gespeicherte Bild-URL</Label>
-                                <Input
-                                  id="featured-url"
-                                  value={threadForm.featured_image_url}
-                                  onChange={(event) =>
-                                    setThreadForm((prev) =>
-                                      prev ? { ...prev, featured_image_url: event.target.value } : prev,
-                                    )
-                                  }
-                                  className="rounded-2xl"
-                                  placeholder="/render/image/public/..."
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="featured-alt">Alt-Text</Label>
-                                <Input
-                                  id="featured-alt"
-                                  value={threadForm.featured_image_alt}
-                                  onChange={(event) =>
-                                    setThreadForm((prev) =>
-                                      prev ? { ...prev, featured_image_alt: event.target.value } : prev,
-                                    )
-                                  }
-                                  className="rounded-2xl"
-                                  placeholder="Beschreibender Alt-Text"
-                                />
                               </div>
                             </div>
 
-                            {featuredPreview ? (
-                              <div className="mt-4 overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-                                <img
-                                  src={featuredPreview}
-                                  alt={threadForm.featured_image_alt || threadForm.title || "Forum Preview"}
-                                  className="h-52 w-full object-cover"
-                                  loading="lazy"
-                                  decoding="async"
-                                />
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-3">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">URL</p>
+                                <p className="mt-2 truncate text-sm font-semibold text-slate-900">/forum/{threadForm.slug || "thread-slug"}</p>
                               </div>
-                            ) : (
-                              <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-white p-5 text-sm leading-7 text-slate-500">
-                                Noch kein Beitragsbild hinterlegt.
+                              <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-3">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Plaintext</p>
+                                <p className="mt-2 text-sm font-semibold text-slate-900">{stripHtml(threadForm.raw_html_content || "").length} Zeichen</p>
                               </div>
-                            )}
+                              <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-3">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Editor</p>
+                                <p className="mt-2 text-sm font-semibold text-slate-900">{contentMode === "visual" ? "Visuell" : contentMode === "html" ? "HTML" : "Split"}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[28px] border border-slate-200 bg-white shadow-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">Inhalt</p>
+                              <p className="mt-1 text-sm text-slate-500">Visueller Editor und HTML-Quelltext greifen auf dasselbe Feld <code>raw_html_content</code> zu.</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={`rounded-xl ${contentMode === "visual" ? "border-[#0E1F53] bg-[#0E1F53] text-white hover:bg-[#16306d] hover:text-white" : ""}`}
+                                onClick={() => setContentMode("visual")}
+                              >
+                                Visual
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={`rounded-xl ${contentMode === "html" ? "border-[#0E1F53] bg-[#0E1F53] text-white hover:bg-[#16306d] hover:text-white" : ""}`}
+                                onClick={() => setContentMode("html")}
+                              >
+                                HTML
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={`rounded-xl ${contentMode === "split" ? "border-[#0E1F53] bg-[#0E1F53] text-white hover:bg-[#16306d] hover:text-white" : ""}`}
+                                onClick={() => setContentMode("split")}
+                              >
+                                Split
+                              </Button>
+                            </div>
                           </div>
 
-                          <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-4">
-                            <p className="text-sm font-semibold text-slate-800">Content-Quickcheck</p>
-                            <p className="mt-3 text-sm leading-7 text-slate-600">
-                              Plaintext-Excerpt für <code>content</code>:
-                            </p>
-                            <p className="mt-3 rounded-[20px] bg-white p-4 text-sm leading-7 text-slate-700">
+                          <div className="space-y-4 p-5">
+                            {contentMode === "visual" ? (
+                              <RichTextEditor
+                                value={threadForm.raw_html_content}
+                                onChange={(html) => setThreadForm((prev) => (prev ? { ...prev, raw_html_content: html } : prev))}
+                                onImageUpload={(file) => uploadForumAsset(file, "editor")}
+                              />
+                            ) : null}
+
+                            {contentMode === "html" ? (
+                              <div className="space-y-2">
+                                <Label htmlFor="thread-html-source">HTML-Quelle</Label>
+                                <Textarea
+                                  id="thread-html-source"
+                                  value={threadForm.raw_html_content}
+                                  onChange={(event) =>
+                                    setThreadForm((prev) => (prev ? { ...prev, raw_html_content: event.target.value } : prev))
+                                  }
+                                  className="min-h-[520px] rounded-[24px] font-mono text-sm leading-7"
+                                  placeholder="<h2>Headline</h2>
+<p>Dein HTML-Inhalt …</p>"
+                                />
+                              </div>
+                            ) : null}
+
+                            {contentMode === "split" ? (
+                              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
+                                <RichTextEditor
+                                  value={threadForm.raw_html_content}
+                                  onChange={(html) => setThreadForm((prev) => (prev ? { ...prev, raw_html_content: html } : prev))}
+                                  onImageUpload={(file) => uploadForumAsset(file, "editor")}
+                                />
+                                <div className="space-y-2">
+                                  <Label htmlFor="thread-html-split">HTML-Quelle</Label>
+                                  <Textarea
+                                    id="thread-html-split"
+                                    value={threadForm.raw_html_content}
+                                    onChange={(event) =>
+                                      setThreadForm((prev) => (prev ? { ...prev, raw_html_content: event.target.value } : prev))
+                                    }
+                                    className="min-h-[470px] rounded-[24px] font-mono text-sm leading-7"
+                                    placeholder="<h2>Headline</h2>
+<p>Dein HTML-Inhalt …</p>"
+                                  />
+                                </div>
+                              </div>
+                            ) : null}
+
+                            <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-600">
+                              Der Frontend-Render läuft weiter über die Sanitizer-Logik. Du kannst also HTML direkt pflegen, ohne die Public-Ausgabe unsauber zu machen.
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">Content-Quickcheck</p>
+                              <p className="mt-1 text-sm text-slate-500">Vorschau des Klartexts für <code>content</code> und interne Redaktionsnotizen.</p>
+                            </div>
+                            <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                              {excerptPreview.length} Zeichen Excerpt
+                            </Badge>
+                          </div>
+
+                          <div className="mt-4 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+                            <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-700">
                               {excerptPreview}
-                            </p>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-admin-notes">Admin Notes</Label>
+                              <Textarea
+                                id="thread-admin-notes"
+                                value={threadForm.admin_notes}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, admin_notes: event.target.value } : prev))}
+                                className="min-h-[180px] rounded-[24px] bg-white"
+                                placeholder="Interne Hinweise, Redaktionsstatus, Abstimmungen …"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="thread-seo-title">SEO Title</Label>
-                          <Input
-                            id="thread-seo-title"
-                            value={threadForm.seo_title}
-                            onChange={(event) =>
-                              setThreadForm((prev) => (prev ? { ...prev, seo_title: event.target.value } : prev))
-                            }
-                            className="rounded-2xl"
-                            placeholder="Max. ~60 Zeichen"
-                          />
+                      <div className="space-y-5 xl:sticky xl:top-6">
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <p className="text-sm font-semibold text-slate-900">Veröffentlichen & Meta</p>
+                          <div className="mt-4 space-y-4">
+                            <div className="space-y-2">
+                              <Label>Status</Label>
+                              <Select value={threadForm.status} onValueChange={(value) => setThreadForm((prev) => (prev ? { ...prev, status: value } : prev))}>
+                                <SelectTrigger className="rounded-2xl bg-white">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="published">published</SelectItem>
+                                  <SelectItem value="draft">draft</SelectItem>
+                                  <SelectItem value="archived">archived</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Kategorie</Label>
+                              <Select value={threadForm.category_id} onValueChange={(value) => setThreadForm((prev) => (prev ? { ...prev, category_id: value } : prev))}>
+                                <SelectTrigger className="rounded-2xl bg-white">
+                                  <SelectValue placeholder="Kategorie wählen" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Ohne Kategorie</SelectItem>
+                                  {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-author">Autorenname</Label>
+                              <Input
+                                id="thread-author"
+                                value={threadForm.author_name}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, author_name: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="Digital-Perfect Redaktion"
+                              />
+                            </div>
+
+                            <div className="grid gap-3">
+                              {([
+                                { key: "is_active", label: "Öffentlich aktiv" },
+                                { key: "is_pinned", label: "Angepinnt" },
+                                { key: "is_locked", label: "Gesperrt" },
+                                { key: "is_answered", label: "Beantwortet" },
+                              ] as Array<{ key: ThreadBooleanKey; label: string }>).map((item) => (
+                                <div key={item.key} className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-white px-4 py-3">
+                                  <Label htmlFor={item.key} className="text-sm font-semibold text-slate-800">
+                                    {item.label}
+                                  </Label>
+                                  <Switch
+                                    id={item.key}
+                                    checked={Boolean(threadForm[item.key as keyof ThreadFormState])}
+                                    onCheckedChange={(checked) => setThreadBooleanField(item.key, checked)}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                              <p><strong>Erstellt:</strong> {threadForm.id ? formatDateTime(threads.find((thread) => thread.id === threadForm.id)?.created_at) : "Neu"}</p>
+                              <p><strong>Zuletzt aktiv:</strong> {threadForm.id ? formatDateTime(threads.find((thread) => thread.id === threadForm.id)?.last_activity_at) : "–"}</p>
+                              <p><strong>Views:</strong> {threadForm.id ? threads.find((thread) => thread.id === threadForm.id)?.views ?? 0 : 0}</p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+                              <Button variant="outline" className="rounded-2xl" onClick={resetThreadForm}>
+                                Reset
+                              </Button>
+                              <Button
+                                onClick={() => threadForm && saveThread.mutate(threadForm)}
+                                disabled={saveThread.isPending}
+                                className="flex-1 rounded-2xl bg-[#0E1F53] px-6 text-white hover:bg-[#16306d]"
+                              >
+                                <Save className="h-4 w-4" />
+                                {saveThread.isPending ? "Speichert…" : "Thread speichern"}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="thread-seo-description">SEO Description</Label>
-                          <Textarea
-                            id="thread-seo-description"
-                            value={threadForm.seo_description}
-                            onChange={(event) =>
-                              setThreadForm((prev) =>
-                                prev ? { ...prev, seo_description: event.target.value } : prev,
-                              )
-                            }
-                            className="min-h-[110px] rounded-2xl"
-                            placeholder="Max. ~155 Zeichen"
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <Label htmlFor="featured-upload" className="text-sm font-semibold text-slate-900">
+                            Beitragsbild / Hero
+                          </Label>
+                          <div className="mt-3 flex flex-wrap gap-3">
+                            <label htmlFor="featured-upload">
+                              <Button type="button" asChild className="rounded-2xl bg-[#FF4B2C] text-white hover:bg-[#e64124]">
+                                <span>
+                                  <Upload className="h-4 w-4" />
+                                  {isUploadingFeatured ? "Upload läuft…" : "Bild hochladen"}
+                                </span>
+                              </Button>
+                            </label>
+                            {threadForm.featured_image_url ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="rounded-2xl"
+                                onClick={() => setThreadForm((prev) => (prev ? { ...prev, featured_image_url: "", featured_image_alt: "" } : prev))}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Entfernen
+                              </Button>
+                            ) : null}
+                          </div>
+                          <input
+                            id="featured-upload"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handleFeaturedUpload}
                           />
+                          <div className="mt-4 space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="featured-url">Gespeicherte Bild-URL</Label>
+                              <Input
+                                id="featured-url"
+                                value={threadForm.featured_image_url}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, featured_image_url: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="/render/image/public/..."
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="featured-alt">Alt-Text</Label>
+                              <Input
+                                id="featured-alt"
+                                value={threadForm.featured_image_alt}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, featured_image_alt: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="Beschreibender Alt-Text"
+                              />
+                            </div>
+                          </div>
+
+                          {featuredPreview ? (
+                            <div className="mt-4 overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+                              <img
+                                src={featuredPreview}
+                                alt={threadForm.featured_image_alt || threadForm.title || "Forum Preview"}
+                                className="h-52 w-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          ) : (
+                            <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-white p-5 text-sm leading-7 text-slate-500">
+                              Noch kein Beitragsbild hinterlegt.
+                            </div>
+                          )}
                         </div>
 
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="thread-admin-notes">Admin Notes</Label>
-                          <Textarea
-                            id="thread-admin-notes"
-                            value={threadForm.admin_notes}
-                            onChange={(event) =>
-                              setThreadForm((prev) => (prev ? { ...prev, admin_notes: event.target.value } : prev))
-                            }
-                            className="min-h-[120px] rounded-2xl"
-                            placeholder="Interne Hinweise, Redaktionsstatus, Abstimmungen …"
-                          />
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <p className="text-sm font-semibold text-slate-900">SEO</p>
+                          <div className="mt-4 space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <Label htmlFor="thread-seo-title">SEO Title</Label>
+                                <span className="text-xs text-slate-500">{threadForm.seo_title.length}/60</span>
+                              </div>
+                              <Input
+                                id="thread-seo-title"
+                                value={threadForm.seo_title}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, seo_title: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="Max. ~60 Zeichen"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <Label htmlFor="thread-seo-description">SEO Description</Label>
+                                <span className="text-xs text-slate-500">{threadForm.seo_description.length}/155</span>
+                              </div>
+                              <Textarea
+                                id="thread-seo-description"
+                                value={threadForm.seo_description}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, seo_description: event.target.value } : prev))}
+                                className="min-h-[140px] rounded-2xl bg-white"
+                                placeholder="Max. ~155 Zeichen"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold text-slate-900">Thread-CTA / Werbung</p>
+                            <Switch
+                              id="thread-show-ad"
+                              checked={threadForm.show_ad}
+                              onCheckedChange={(checked) => setThreadForm((prev) => (prev ? { ...prev, show_ad: checked } : prev))}
+                            />
+                          </div>
+                          <div className="mt-4 space-y-4">
+                            <div className="space-y-2">
+                              <Label>CTA-Typ</Label>
+                              <Select value={threadForm.ad_type} onValueChange={(value) => setThreadForm((prev) => (prev ? { ...prev, ad_type: value } : prev))}>
+                                <SelectTrigger className="rounded-2xl bg-white">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="image">image</SelectItem>
+                                  <SelectItem value="html">html</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-ad-link">CTA-Link</Label>
+                              <Input
+                                id="thread-ad-link"
+                                value={threadForm.ad_link_url}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, ad_link_url: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="/kontakt oder https://..."
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-ad-cta">CTA-Text</Label>
+                              <Input
+                                id="thread-ad-cta"
+                                value={threadForm.ad_cta_text}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, ad_cta_text: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="Jetzt anfragen"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-ad-image">CTA-Bild</Label>
+                              <Input
+                                id="thread-ad-image"
+                                value={threadForm.ad_image_url}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, ad_image_url: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="/render/image/public/..."
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-ad-image-alt">CTA Alt-Text</Label>
+                              <Input
+                                id="thread-ad-image-alt"
+                                value={threadForm.ad_image_alt}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, ad_image_alt: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="Alt-Text für CTA-Bild"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="thread-ad-html">Custom HTML</Label>
+                              <Textarea
+                                id="thread-ad-html"
+                                value={threadForm.ad_html_code}
+                                onChange={(event) => setThreadForm((prev) => (prev ? { ...prev, ad_html_code: event.target.value } : prev))}
+                                className="min-h-[140px] rounded-2xl bg-white font-mono text-sm"
+                                placeholder="<div>Custom CTA-HTML …</div>"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-6">
-                        <Button variant="outline" className="rounded-2xl" onClick={resetThreadForm}>
-                          Reset
-                        </Button>
-                        <Button
-                          onClick={() => threadForm && saveThread.mutate(threadForm)}
-                          disabled={saveThread.isPending}
-                          className="rounded-2xl bg-[#0E1F53] px-6 text-white hover:bg-[#16306d]"
-                        >
-                          <Save className="h-4 w-4" />
-                          {saveThread.isPending ? "Speichert…" : "Thread speichern"}
-                        </Button>
-                      </div>
-                    </>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -1229,245 +1513,354 @@ const AdminForum = () => {
           </TabsContent>
 
           <TabsContent value="categories" className="mt-0">
-            <div className="grid gap-6 xl:grid-cols-[1.05fr_1.05fr]">
-              <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm">
-                <CardHeader className="flex flex-row items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-black tracking-tight text-slate-950">Kategorien</CardTitle>
-                    <CardDescription className="mt-2 text-sm leading-7 text-slate-500">
-                      Basis-Struktur für das Public-Forum inklusive Sortierung, Aktivstatus und SEO-Felder.
-                    </CardDescription>
+            <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+              <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm xl:sticky xl:top-6 xl:h-[calc(100vh-140px)] xl:overflow-hidden">
+                <CardHeader className="space-y-4 border-b border-slate-200">
+                  <div className="flex flex-row items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-2xl font-black tracking-tight text-slate-950">Kategorien</CardTitle>
+                      <CardDescription className="mt-2 text-sm leading-7 text-slate-500">
+                        Forum-Struktur im kompakten Listenstil mit schneller Suche, Sortierung und CTA-/Promo-Feldern.
+                      </CardDescription>
+                    </div>
+                    <Button variant="outline" className="rounded-xl" onClick={openNewCategoryForm}>
+                      <RefreshCw className="h-4 w-4" />
+                      Neu
+                    </Button>
                   </div>
-                  <Button variant="outline" className="rounded-xl" onClick={openNewCategoryForm}>
-                    <RefreshCw className="h-4 w-4" />
-                    Neu
-                  </Button>
+
+                  <div className="space-y-2">
+                    <Label>Suche</Label>
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        value={categorySearch}
+                        onChange={(event) => setCategorySearch(event.target.value)}
+                        placeholder="Kategorie, Slug oder Beschreibung suchen"
+                        className="rounded-2xl pl-10"
+                      />
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+
+                <CardContent className="max-h-[calc(100vh-300px)] space-y-3 overflow-y-auto p-6">
                   {categoriesLoading ? (
                     <p className="text-sm text-slate-500">Kategorien werden geladen…</p>
-                  ) : categories.length ? (
-                    categories.map((category) => (
-                      <div key={category.id} className="rounded-[24px] border border-slate-200 p-5">
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                                Sort {category.sort_order}
+                  ) : filteredCategories.length ? (
+                    filteredCategories.map((category) => {
+                      const isSelected = categoryForm?.id === category.id;
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => openCategoryEditor(category)}
+                          className={`w-full rounded-[24px] border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-[#FF4B2C] bg-[#FF4B2C]/5 shadow-sm"
+                              : "border-slate-200 bg-white hover:border-[#FF4B2C]/30 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                              Sort {category.sort_order}
+                            </span>
+                            {category.is_active ? (
+                              <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                                Aktiv
                               </span>
-                              {category.is_active ? (
-                                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
-                                  Aktiv
-                                </span>
-                              ) : (
-                                <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-700">
-                                  Inaktiv
-                                </span>
-                              )}
-                            </div>
-                            <h3 className="mt-3 text-xl font-black tracking-tight text-slate-950">{category.name}</h3>
-                            <p className="mt-2 text-sm text-slate-500">/{category.slug}</p>
-                            <p className="mt-3 text-sm leading-7 text-slate-600">
-                              {category.description || "Keine Beschreibung hinterlegt."}
-                            </p>
-                            <p className="mt-3 text-xs uppercase tracking-wider text-slate-400">
-                              Threads: {categoryThreadCounts.get(category.id) || 0}
-                            </p>
+                            ) : (
+                              <span className="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                                Inaktiv
+                              </span>
+                            )}
+                            {category.ad_enabled ? (
+                              <span className="rounded-full bg-[#0E1F53]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0E1F53]">
+                                Promo aktiv
+                              </span>
+                            ) : null}
                           </div>
-
-                          <div className="flex shrink-0 flex-wrap gap-2">
-                            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => openCategoryEditor(category)}>
-                              <PencilLine className="h-4 w-4" />
-                              Bearbeiten
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              onClick={() => deleteCategory.mutate(category.id)}
-                              disabled={deleteCategory.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Löschen
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
+                          <h3 className="mt-3 text-lg font-black tracking-tight text-slate-950">{category.name}</h3>
+                          <p className="mt-1 text-sm text-slate-500">/{category.slug}</p>
+                          <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">
+                            {category.description || "Keine Beschreibung hinterlegt."}
+                          </p>
+                          <p className="mt-4 text-xs uppercase tracking-[0.18em] text-slate-400">
+                            Threads: {categoryThreadCounts.get(category.id) || 0}
+                          </p>
+                        </button>
+                      );
+                    })
                   ) : (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-7 text-slate-500">
-                      Noch keine Kategorien vorhanden. Lege rechts die erste Struktur für dein Forum an.
+                      Keine Kategorien für die aktuelle Suche gefunden.
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               <Card className="rounded-[32px] border-slate-200 bg-white shadow-sm">
-                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-slate-200">
                   <div>
                     <CardTitle className="text-2xl font-black tracking-tight text-slate-950">
                       {categoryForm?.id ? "Kategorie bearbeiten" : "Neue Kategorie"}
                     </CardTitle>
                     <CardDescription className="mt-2 text-sm leading-7 text-slate-500">
-                      Nur aktive Kategorien erscheinen später öffentlich im Forum.
+                      Struktur, SEO und optionales Promo-/Werbeelement pro Kategorie in einer sauberen Redaktionsmaske.
                     </CardDescription>
                   </div>
-                  <Button variant="outline" className="rounded-xl" onClick={resetCategoryForm}>
-                    <RefreshCw className="h-4 w-4" />
-                    Reset
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    {categoryForm?.id ? (
+                      <Button
+                        variant="outline"
+                        className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => categoryForm.id && deleteCategory.mutate(categoryForm.id)}
+                        disabled={deleteCategory.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Löschen
+                      </Button>
+                    ) : null}
+                    <Button variant="outline" className="rounded-xl" onClick={resetCategoryForm}>
+                      <RefreshCw className="h-4 w-4" />
+                      Reset
+                    </Button>
+                  </div>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 p-6">
                   {!categoryForm ? (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-7 text-slate-500">
                       Wähle links eine Kategorie oder starte einen neuen Eintrag.
                     </div>
                   ) : (
-                    <>
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="category-name">Name</Label>
-                          <Input
-                            id="category-name"
-                            value={categoryForm.name}
-                            onChange={(event) =>
-                              setCategoryForm((prev) =>
-                                prev
-                                  ? {
-                                      ...prev,
-                                      name: event.target.value,
-                                      slug: !isCategorySlugManual ? slugify(event.target.value) : prev.slug,
-                                    }
-                                  : prev,
-                              )
-                            }
-                            className="rounded-2xl"
-                            placeholder="z. B. SEO Strategie"
-                          />
-                        </div>
+                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+                      <div className="space-y-6">
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <div className="grid gap-5 md:grid-cols-2">
+                            <div className="space-y-2">
+                              <Label htmlFor="category-name">Name</Label>
+                              <Input
+                                id="category-name"
+                                value={categoryForm.name}
+                                onChange={(event) =>
+                                  setCategoryForm((prev) =>
+                                    prev
+                                      ? {
+                                          ...prev,
+                                          name: event.target.value,
+                                          slug: !isCategorySlugManual ? slugify(event.target.value) : prev.slug,
+                                        }
+                                      : prev,
+                                  )
+                                }
+                                className="rounded-2xl bg-white"
+                                placeholder="z. B. SEO Strategie"
+                              />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="category-slug">Slug</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="category-slug"
-                              value={categoryForm.slug}
-                              onChange={(event) => {
-                                setIsCategorySlugManual(true);
-                                setCategoryForm((prev) =>
-                                  prev ? { ...prev, slug: slugify(event.target.value) } : prev,
-                                );
-                              }}
-                              className="rounded-2xl"
-                              placeholder="seo-strategie"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="rounded-2xl"
-                              onClick={() => {
-                                setIsCategorySlugManual(false);
-                                setCategoryForm((prev) =>
-                                  prev ? { ...prev, slug: slugify(prev.name) } : prev,
-                                );
-                              }}
-                            >
-                              Neu
-                            </Button>
+                            <div className="space-y-2">
+                              <Label htmlFor="category-slug">Slug</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  id="category-slug"
+                                  value={categoryForm.slug}
+                                  onChange={(event) => {
+                                    setIsCategorySlugManual(true);
+                                    setCategoryForm((prev) => (prev ? { ...prev, slug: slugify(event.target.value) } : prev));
+                                  }}
+                                  className="rounded-2xl bg-white"
+                                  placeholder="seo-strategie"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="rounded-2xl"
+                                  onClick={() => {
+                                    setIsCategorySlugManual(false);
+                                    setCategoryForm((prev) => (prev ? { ...prev, slug: slugify(prev.name) } : prev));
+                                  }}
+                                >
+                                  Neu
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                              <Label htmlFor="category-description">Beschreibung</Label>
+                              <Textarea
+                                id="category-description"
+                                value={categoryForm.description}
+                                onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, description: event.target.value } : prev))}
+                                className="min-h-[160px] rounded-[24px] bg-white"
+                                placeholder="Kurzer Kategorietext für Übersicht und Sidebar."
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="category-description">Beschreibung</Label>
-                          <Textarea
-                            id="category-description"
-                            value={categoryForm.description}
-                            onChange={(event) =>
-                              setCategoryForm((prev) =>
-                                prev ? { ...prev, description: event.target.value } : prev,
-                              )
-                            }
-                            className="min-h-[120px] rounded-2xl"
-                            placeholder="Kurzer Kategorietext für Übersicht und Sidebar."
-                          />
-                        </div>
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <p className="text-sm font-semibold text-slate-900">Kategorie-Promo / Sidebar-Element</p>
+                          <div className="mt-4 space-y-4">
+                            <div className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-white px-4 py-3">
+                              <Label htmlFor="category-ad-enabled" className="text-sm font-semibold text-slate-800">
+                                Promo aktivieren
+                              </Label>
+                              <Switch
+                                id="category-ad-enabled"
+                                checked={categoryForm.ad_enabled}
+                                onCheckedChange={(checked) => setCategoryForm((prev) => (prev ? { ...prev, ad_enabled: checked } : prev))}
+                              />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="category-sort-order">Sortierung</Label>
-                          <Input
-                            id="category-sort-order"
-                            type="number"
-                            value={categoryForm.sort_order}
-                            onChange={(event) =>
-                              setCategoryForm((prev) =>
-                                prev
-                                  ? { ...prev, sort_order: Number(event.target.value || 0) }
-                                  : prev,
-                              )
-                            }
-                            className="rounded-2xl"
-                          />
-                        </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <Label htmlFor="category-ad-headline">Headline</Label>
+                                <Input
+                                  id="category-ad-headline"
+                                  value={categoryForm.ad_headline}
+                                  onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, ad_headline: event.target.value } : prev))}
+                                  className="rounded-2xl bg-white"
+                                  placeholder="Kostenlose Beratung"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="category-ad-subheadline">Subheadline</Label>
+                                <Input
+                                  id="category-ad-subheadline"
+                                  value={categoryForm.ad_subheadline}
+                                  onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, ad_subheadline: event.target.value } : prev))}
+                                  className="rounded-2xl bg-white"
+                                  placeholder="Kurzer Nutzen / Hook"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="category-ad-cta">CTA-Text</Label>
+                                <Input
+                                  id="category-ad-cta"
+                                  value={categoryForm.ad_cta_text}
+                                  onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, ad_cta_text: event.target.value } : prev))}
+                                  className="rounded-2xl bg-white"
+                                  placeholder="Mehr erfahren"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="category-ad-link">CTA-Link</Label>
+                                <Input
+                                  id="category-ad-link"
+                                  value={categoryForm.ad_link_url}
+                                  onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, ad_link_url: event.target.value } : prev))}
+                                  className="rounded-2xl bg-white"
+                                  placeholder="/kontakt oder https://..."
+                                />
+                              </div>
+                            </div>
 
-                        <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                          <Label htmlFor="category-active" className="text-sm font-semibold text-slate-800">
-                            Öffentlich aktiv
-                          </Label>
-                          <Switch
-                            id="category-active"
-                            checked={categoryForm.is_active}
-                            onCheckedChange={(checked) =>
-                              setCategoryForm((prev) => (prev ? { ...prev, is_active: checked } : prev))
-                            }
-                          />
-                        </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="category-ad-image">Bild-URL</Label>
+                              <Input
+                                id="category-ad-image"
+                                value={categoryForm.ad_image_url}
+                                onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, ad_image_url: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="/render/image/public/..."
+                              />
+                            </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="category-seo-title">SEO Title</Label>
-                          <Input
-                            id="category-seo-title"
-                            value={categoryForm.seo_title}
-                            onChange={(event) =>
-                              setCategoryForm((prev) =>
-                                prev ? { ...prev, seo_title: event.target.value } : prev,
-                              )
-                            }
-                            className="rounded-2xl"
-                            placeholder="Max. ~60 Zeichen"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="category-seo-description">SEO Description</Label>
-                          <Textarea
-                            id="category-seo-description"
-                            value={categoryForm.seo_description}
-                            onChange={(event) =>
-                              setCategoryForm((prev) =>
-                                prev ? { ...prev, seo_description: event.target.value } : prev,
-                              )
-                            }
-                            className="min-h-[110px] rounded-2xl"
-                            placeholder="Max. ~155 Zeichen"
-                          />
+                            <div className="space-y-2">
+                              <Label htmlFor="category-ad-html">Custom HTML</Label>
+                              <Textarea
+                                id="category-ad-html"
+                                value={categoryForm.ad_html_code}
+                                onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, ad_html_code: event.target.value } : prev))}
+                                className="min-h-[160px] rounded-[24px] bg-white font-mono text-sm"
+                                placeholder="<div>Optionales HTML für Kategorie-CTA …</div>"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-6">
-                        <Button variant="outline" className="rounded-2xl" onClick={resetCategoryForm}>
-                          Reset
-                        </Button>
-                        <Button
-                          onClick={() => categoryForm && saveCategory.mutate(categoryForm)}
-                          disabled={saveCategory.isPending}
-                          className="rounded-2xl bg-[#FF4B2C] px-6 text-white hover:bg-[#e64124]"
-                        >
-                          <Save className="h-4 w-4" />
-                          {saveCategory.isPending ? "Speichert…" : "Kategorie speichern"}
-                        </Button>
+                      <div className="space-y-5 xl:sticky xl:top-6">
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <p className="text-sm font-semibold text-slate-900">Status & Struktur</p>
+                          <div className="mt-4 space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="category-sort-order">Sortierung</Label>
+                              <Input
+                                id="category-sort-order"
+                                type="number"
+                                value={categoryForm.sort_order}
+                                onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, sort_order: Number(event.target.value || 0) } : prev))}
+                                className="rounded-2xl bg-white"
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-white px-4 py-3">
+                              <Label htmlFor="category-active" className="text-sm font-semibold text-slate-800">
+                                Öffentlich aktiv
+                              </Label>
+                              <Switch
+                                id="category-active"
+                                checked={categoryForm.is_active}
+                                onCheckedChange={(checked) => setCategoryForm((prev) => (prev ? { ...prev, is_active: checked } : prev))}
+                              />
+                            </div>
+
+                            <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                              <p><strong>URL:</strong> /forum/kategorie/{categoryForm.slug || "slug"}</p>
+                              <p><strong>Threads:</strong> {categoryForm.id ? categoryThreadCounts.get(categoryForm.id) || 0 : 0}</p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+                              <Button variant="outline" className="rounded-2xl" onClick={resetCategoryForm}>
+                                Reset
+                              </Button>
+                              <Button
+                                onClick={() => categoryForm && saveCategory.mutate(categoryForm)}
+                                disabled={saveCategory.isPending}
+                                className="flex-1 rounded-2xl bg-[#FF4B2C] px-6 text-white hover:bg-[#e64124]"
+                              >
+                                <Save className="h-4 w-4" />
+                                {saveCategory.isPending ? "Speichert…" : "Kategorie speichern"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                          <p className="text-sm font-semibold text-slate-900">SEO</p>
+                          <div className="mt-4 space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <Label htmlFor="category-seo-title">SEO Title</Label>
+                                <span className="text-xs text-slate-500">{categoryForm.seo_title.length}/60</span>
+                              </div>
+                              <Input
+                                id="category-seo-title"
+                                value={categoryForm.seo_title}
+                                onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, seo_title: event.target.value } : prev))}
+                                className="rounded-2xl bg-white"
+                                placeholder="Max. ~60 Zeichen"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <Label htmlFor="category-seo-description">SEO Description</Label>
+                                <span className="text-xs text-slate-500">{categoryForm.seo_description.length}/155</span>
+                              </div>
+                              <Textarea
+                                id="category-seo-description"
+                                value={categoryForm.seo_description}
+                                onChange={(event) => setCategoryForm((prev) => (prev ? { ...prev, seo_description: event.target.value } : prev))}
+                                className="min-h-[140px] rounded-[24px] bg-white"
+                                placeholder="Max. ~155 Zeichen"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </>
+                    </div>
                   )}
                 </CardContent>
               </Card>

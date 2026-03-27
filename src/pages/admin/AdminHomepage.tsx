@@ -1,6 +1,6 @@
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Plus, Save, Trash2 } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "sonner";
@@ -355,6 +355,10 @@ const AdminHomepage = () => {
   const [sectionOrder, setSectionOrder] = useState<HomepageSectionId[]>(DEFAULT_HOMEPAGE_SECTION_ORDER);
   const [sectionVisibility, setSectionVisibility] = useState<HomepageSectionVisibility>(createDefaultHomepageSectionVisibility());
   const [activeSection, setActiveSection] = useState<string>(textFieldGroups[0]?.id || "intro");
+  const [canSlideLeft, setCanSlideLeft] = useState(false);
+  const [canSlideRight, setCanSlideRight] = useState(true);
+  const sectionSliderRef = useRef<HTMLDivElement | null>(null);
+  const sectionCardRefs = useRef<Partial<Record<HomepageSectionId, HTMLDivElement | null>>>({});
 
   useEffect(() => {
     if (isLoading) return;
@@ -534,6 +538,59 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
   const orderedSectionGroups = sectionOrder
     .map((sectionId) => groupMap[sectionId])
     .filter(Boolean) as typeof textFieldGroups;
+
+  const syncSectionSliderState = () => {
+    const slider = sectionSliderRef.current;
+    if (!slider) {
+      setCanSlideLeft(false);
+      setCanSlideRight(false);
+      return;
+    }
+
+    const maxScrollLeft = Math.max(0, slider.scrollWidth - slider.clientWidth - 4);
+    setCanSlideLeft(slider.scrollLeft > 8);
+    setCanSlideRight(slider.scrollLeft < maxScrollLeft);
+  };
+
+  const slideSectionCards = (direction: "left" | "right") => {
+    const slider = sectionSliderRef.current;
+    if (!slider) return;
+
+    const slideAmount = Math.max(slider.clientWidth * 0.82, 320);
+    slider.scrollBy({
+      left: direction === "left" ? -slideAmount : slideAmount,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    syncSectionSliderState();
+
+    const slider = sectionSliderRef.current;
+    if (!slider) return;
+
+    const handleScroll = () => syncSectionSliderState();
+    const handleResize = () => syncSectionSliderState();
+
+    slider.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      slider.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [orderedSectionGroups.length]);
+
+  useEffect(() => {
+    const activeCard = sectionCardRefs.current[activeSectionId];
+    if (!activeCard) return;
+
+    activeCard.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [activeSectionId]);
 
   const stripHtmlForPreview = (value: string) =>
     value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -1467,81 +1524,115 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Bereiche</p>
               <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">Sektionen steuern</h2>
               <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-500">
-                Reihenfolge, Sichtbarkeit und Fokus der Homepage-Sektionen jetzt oben in voller Breite. Darunter arbeiten Editor und Live-Preview ruhiger in einer klaren 2-Spalten-Struktur.
+                Reihenfolge, Sichtbarkeit und Fokus der Homepage-Sektionen jetzt oben in voller Breite. Die Karten laufen horizontal als Slider, damit oben alles kompakt bleibt und unten der Editor sofort sichtbar ist.
               </p>
             </div>
-            <div className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-              {orderedSectionGroups.length} Sektionen
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <div className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                {orderedSectionGroups.length} Sektionen
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1">
+                <button
+                  type="button"
+                  aria-label="Sektionen nach links schieben"
+                  onClick={() => slideSectionCards("left")}
+                  disabled={!canSlideLeft}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Sektionen nach rechts schieben"
+                  onClick={() => slideSectionCards("right")}
+                  disabled={!canSlideRight}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-3">
-            {orderedSectionGroups.map((group, index) => {
-              const active = group.id === activeSectionId;
-              const isFirst = index === 0;
-              const isLast = index === orderedSectionGroups.length - 1;
-              const isVisible = sectionVisibility[group.id as HomepageSectionId] !== false;
-              return (
-                <div
-                  key={group.id}
-                  className={`min-w-0 rounded-[1.35rem] border p-4 transition-all ${
-                    active
-                      ? "border-[#FF4B2C]/35 bg-[#FF4B2C]/5 shadow-[0_16px_35px_-24px_rgba(255,75,44,0.55)]"
-                      : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
-                  }`}
-                >
-                  <button type="button" onClick={() => setActiveSection(group.id)} className="block w-full min-w-0 text-left">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <span className={`block truncate text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
-                        <p className="mt-1.5 min-h-[2.5rem] break-words text-[11px] leading-4 text-slate-500">{group.description}</p>
-                      </div>
-                      <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
-                        {group.fields.length}
-                      </span>
-                    </div>
-                  </button>
-
-                  <div className="mt-3 flex min-w-0 flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1">
-                        <span className={`inline-flex h-2 w-2 shrink-0 rounded-full ${isVisible ? "bg-emerald-500" : "bg-amber-500"}`} />
-                        <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                          {isVisible ? "Sichtbar" : "Ausgeblendet"}
-                        </span>
-                      </div>
-                      <Switch
-                        checked={isVisible}
-                        onCheckedChange={(checked) => toggleSectionVisibility(group.id as HomepageSectionId, checked)}
-                        className="data-[state=checked]:bg-[#FF4B2C]"
-                        aria-label={`${group.title} sichtbar schalten`}
-                      />
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
-                      <button
-                        type="button"
-                        aria-label={`${group.title} nach oben verschieben`}
-                        onClick={() => moveSection(group.id as HomepageSectionId, "up")}
-                        disabled={isFirst}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
-                      >
-                        <ArrowUp size={14} />
+          <div className="mt-4 min-w-0">
+            <div
+              ref={sectionSliderRef}
+              className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {orderedSectionGroups.map((group, index) => {
+                const active = group.id === activeSectionId;
+                const isFirst = index === 0;
+                const isLast = index === orderedSectionGroups.length - 1;
+                const isVisible = sectionVisibility[group.id as HomepageSectionId] !== false;
+                return (
+                  <div
+                    key={group.id}
+                    ref={(node) => {
+                      sectionCardRefs.current[group.id as HomepageSectionId] = node;
+                    }}
+                    className="min-w-0 shrink-0 snap-start basis-[300px] sm:basis-[340px] xl:basis-[360px]"
+                  >
+                    <div
+                      className={`h-full min-w-0 rounded-[1.35rem] border p-4 transition-all ${
+                        active
+                          ? "border-[#FF4B2C]/35 bg-[#FF4B2C]/5 shadow-[0_16px_35px_-24px_rgba(255,75,44,0.55)]"
+                          : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
+                      }`}
+                    >
+                      <button type="button" onClick={() => setActiveSection(group.id)} className="block w-full min-w-0 text-left">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <span className={`block truncate text-sm font-bold ${active ? "text-[#FF4B2C]" : "text-slate-900"}`}>{group.title}</span>
+                            <p className="mt-1.5 min-h-[2.5rem] break-words text-[11px] leading-4 text-slate-500">{group.description}</p>
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${active ? "bg-[#FF4B2C] text-white" : "bg-slate-200 text-slate-600"}`}>
+                            {group.fields.length}
+                          </span>
+                        </div>
                       </button>
-                      <button
-                        type="button"
-                        aria-label={`${group.title} nach unten verschieben`}
-                        onClick={() => moveSection(group.id as HomepageSectionId, "down")}
-                        disabled={isLast}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
-                      >
-                        <ArrowDown size={14} />
-                      </button>
+
+                      <div className="mt-3 flex min-w-0 flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1">
+                            <span className={`inline-flex h-2 w-2 shrink-0 rounded-full ${isVisible ? "bg-emerald-500" : "bg-amber-500"}`} />
+                            <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                              {isVisible ? "Sichtbar" : "Ausgeblendet"}
+                            </span>
+                          </div>
+                          <Switch
+                            checked={isVisible}
+                            onCheckedChange={(checked) => toggleSectionVisibility(group.id as HomepageSectionId, checked)}
+                            className="data-[state=checked]:bg-[#FF4B2C]"
+                            aria-label={`${group.title} sichtbar schalten`}
+                          />
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
+                          <button
+                            type="button"
+                            aria-label={`${group.title} nach oben verschieben`}
+                            onClick={() => moveSection(group.id as HomepageSectionId, "up")}
+                            disabled={isFirst}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${group.title} nach unten verschieben`}
+                            onClick={() => moveSection(group.id as HomepageSectionId, "down")}
+                            disabled={isLast}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-[#FF4B2C] hover:text-[#FF4B2C] disabled:cursor-not-allowed disabled:opacity-35"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </section>
 
