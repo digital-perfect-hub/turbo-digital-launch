@@ -60,16 +60,16 @@ const AdminHero = () => {
   const { data: hero, isLoading } = useQuery({
     queryKey: ["hero_content", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hero_content").select("*").eq("site_id", siteId).limit(1).single();
+      const { data, error } = await supabase.from("hero_content").select("*").eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
-      return data;
+      return data ?? null;
     },
   });
 
   const [form, setForm] = useState<HeroForm>({});
 
   useEffect(() => {
-    if (hero) setForm(hero);
+    setForm(hero || {});
   }, [hero]);
 
   const supportsExtendedHero = useMemo(
@@ -78,7 +78,7 @@ const AdminHero = () => {
   );
 
   const supportedColumns = useMemo(() => {
-    if (!hero) return [...LEGACY_HERO_COLUMNS];
+    if (!hero) return [...HERO_EDITABLE_COLUMNS];
 
     const liveColumns = HERO_EDITABLE_COLUMNS.filter((key) => Object.prototype.hasOwnProperty.call(hero, key));
     return liveColumns.length ? liveColumns : [...LEGACY_HERO_COLUMNS];
@@ -86,8 +86,6 @@ const AdminHero = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: HeroForm) => {
-      if (!hero?.id) throw new Error("Hero content not loaded");
-
       const { id, created_at, updated_at, ...rawData } = values || {};
       void id;
       void created_at;
@@ -103,8 +101,37 @@ const AdminHero = () => {
         return acc;
       }, {});
 
-      const { error } = await supabase.from("hero_content").update(payload).eq("site_id", siteId).eq("id", hero.id);
-      if (error) throw error;
+      if (hero?.id) {
+        const { error } = await supabase
+          .from("hero_content")
+          .update(payload)
+          .eq("site_id", siteId)
+          .eq("id", hero.id);
+
+        if (error) throw error;
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from("hero_content")
+        .insert({ site_id: siteId, ...payload })
+        .select("id")
+        .limit(1);
+
+      if (!insertError) return;
+
+      const fallbackPayload = LEGACY_HERO_COLUMNS.reduce<Record<string, any>>((acc, key) => {
+        acc[key] = payload[key] ?? null;
+        return acc;
+      }, {});
+
+      const { error: legacyInsertError } = await supabase
+        .from("hero_content")
+        .insert({ site_id: siteId, ...fallbackPayload })
+        .select("id")
+        .limit(1);
+
+      if (legacyInsertError) throw legacyInsertError;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hero_content"] });

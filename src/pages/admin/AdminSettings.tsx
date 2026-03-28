@@ -44,7 +44,6 @@ const AdminSettings = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: any) => {
-      const rowId = settings?.id || "default";
       const payload = {
         website_title: values.website_title,
         company_name: values.company_name,
@@ -58,8 +57,22 @@ const AdminSettings = () => {
         enable_tab_retention: values.enable_tab_retention,
         tab_retention_texts: values.tab_retention_texts,
       };
-      const { error } = await supabase.from("global_settings").upsert({ id: rowId, site_id: siteId, ...payload }, { onConflict: "site_id" });
-      if (error) throw error;
+
+      const { data: updatedRows, error: updateError } = await supabase
+        .from("global_settings")
+        .update(payload)
+        .eq("site_id", siteId)
+        .select("site_id");
+
+      if (updateError) throw updateError;
+
+      if (!updatedRows?.length) {
+        const { error: insertError } = await supabase
+          .from("global_settings")
+          .insert({ site_id: siteId, ...payload });
+
+        if (insertError) throw insertError;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["global_settings"] });

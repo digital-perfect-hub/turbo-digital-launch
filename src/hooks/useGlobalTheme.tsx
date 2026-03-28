@@ -48,7 +48,7 @@ export type GlobalThemeSettings = BaseThemeSettings & {
 
 const defaultTheme: GlobalThemeSettings = {
   ...mergeThemeSettings({
-    id: "default",
+    id: "",
     cta_hover_hex: "#FF4D00",
     company_name: "Digital-Perfect",
   }),

@@ -1,1 +1,4 @@
-project_id = "davybkrokbtbljfnqpsm"
+project_id = "wevlxnlaxyzsobkaeoyi"
+
+[functions.track-view]
+verify_jwt = false

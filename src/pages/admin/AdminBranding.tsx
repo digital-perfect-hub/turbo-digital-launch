@@ -163,6 +163,26 @@ const THEME_PRESETS: ThemePreset[] = [
 
 const toUpperHex = (value?: string | null) => (value || "").trim().toUpperCase();
 
+const normalizeColorInputValue = (value: string | null | undefined, fallback: string) => {
+  const raw = (value || "").trim();
+
+  if (/^#([0-9a-fA-F]{6})$/.test(raw)) return raw.toUpperCase();
+
+  if (/^#([0-9a-fA-F]{3})$/.test(raw)) {
+    const short = raw.slice(1).split("").map((char) => `${char}${char}`).join("");
+    return `#${short}`.toUpperCase();
+  }
+
+  const rgbaMatch = raw.match(/^rgba?\((\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[0-9.]+)?\)$/i);
+  if (rgbaMatch) {
+    const [, r, g, b] = rgbaMatch;
+    const toHex = (channel: string) => Math.max(0, Math.min(255, Number(channel))).toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+  }
+
+  return fallback.toUpperCase();
+};
+
 const getReadableButtonText = (hex?: string | null) => {
   const safe = (hex || "").trim();
   const fallback = "#FFFFFF";
@@ -259,7 +279,6 @@ const AdminBranding = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: any) => {
-      const rowId = values?.id?.trim() ? values.id : "default";
       const payload = GLOBAL_SETTINGS_EDITABLE_COLUMNS.reduce<Record<string, any>>((acc, key) => {
         acc[key] = values[key] ?? null;
         return acc;
@@ -281,7 +300,7 @@ const AdminBranding = () => {
       if (!updatedRows?.length) {
         const { error: upsertError } = await supabase
           .from("global_settings")
-          .upsert({ id: rowId, site_id: siteId, ...payload }, { onConflict: "site_id" });
+          .insert({ site_id: siteId, ...payload });
         if (upsertError) throw upsertError;
       }
 
@@ -486,7 +505,7 @@ const AdminBranding = () => {
                   <Input
                     type="color"
                     className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                    value={form.primary_color_hex || "#FF4B2C"}
+                      value={normalizeColorInputValue(form.primary_color_hex, "#FF4B2C")}
                     onChange={(e) => updateField("primary_color_hex", e.target.value.toUpperCase())}
                   />
                 </div>
@@ -495,7 +514,7 @@ const AdminBranding = () => {
                   <Input
                     type="color"
                     className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                    value={form.secondary_color_hex || "#0E1F53"}
+                      value={normalizeColorInputValue(form.secondary_color_hex, "#0E1F53")}
                     onChange={(e) => updateField("secondary_color_hex", e.target.value.toUpperCase())}
                   />
                 </div>
@@ -504,7 +523,7 @@ const AdminBranding = () => {
                   <Input
                     type="color"
                     className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                    value={form.accent_color_hex || form.primary_color_hex || "#FF4B2C"}
+                      value={normalizeColorInputValue(form.accent_color_hex || form.primary_color_hex, "#FF4B2C")}
                     onChange={(e) => updateField("accent_color_hex", e.target.value.toUpperCase())}
                   />
                 </div>
@@ -513,7 +532,7 @@ const AdminBranding = () => {
                   <Input
                     type="color"
                     className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                    value={form.cta_hover_hex || "#E03A1E"}
+                      value={normalizeColorInputValue(form.cta_hover_hex, "#E03A1E")}
                     onChange={(e) => updateField("cta_hover_hex", e.target.value.toUpperCase())}
                   />
                 </div>
@@ -531,7 +550,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={form.button_theme?.primary_background_color || form.primary_color_hex || "#FF4B2C"}
+                      value={normalizeColorInputValue(form.button_theme?.primary_background_color || form.primary_color_hex, "#FF4B2C")}
                       onChange={(e) => updateButtonThemeField("primary_background_color", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -592,7 +611,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-slate-50 border-slate-200 px-3 cursor-pointer w-full"
-                      value={form.footer_bg_hex || "#020617"}
+                      value={normalizeColorInputValue(form.footer_bg_hex, "#020617")}
                       onChange={(e) => updateField("footer_bg_hex", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -711,7 +730,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={loadingScreenConfig.background_color}
+                      value={normalizeColorInputValue(loadingScreenConfig.background_color, "#0B1020")}
                       onChange={(e) => updateLoadingScreenConfigField("background_color", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -720,7 +739,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={loadingScreenConfig.text_color}
+                      value={normalizeColorInputValue(loadingScreenConfig.text_color, "#FFFFFF")}
                       onChange={(e) => updateLoadingScreenConfigField("text_color", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -729,7 +748,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={loadingScreenConfig.accent_color}
+                      value={normalizeColorInputValue(loadingScreenConfig.accent_color, "#FF6B2C")}
                       onChange={(e) => updateLoadingScreenConfigField("accent_color", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -738,7 +757,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={loadingScreenConfig.spinner_color}
+                      value={normalizeColorInputValue(loadingScreenConfig.spinner_color, "#FF6B2C")}
                       onChange={(e) => updateLoadingScreenConfigField("spinner_color", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -747,7 +766,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={loadingScreenConfig.track_color}
+                      value={normalizeColorInputValue(loadingScreenConfig.track_color, "#1E293B")}
                       onChange={(e) => updateLoadingScreenConfigField("track_color", e.target.value)}
                     />
                   </div>
@@ -756,7 +775,7 @@ const AdminBranding = () => {
                     <Input
                       type="color"
                       className="h-12 rounded-xl bg-white border-slate-200 px-3 cursor-pointer w-full"
-                      value={loadingScreenConfig.fill_color}
+                      value={normalizeColorInputValue(loadingScreenConfig.fill_color, "#FF6B2C")}
                       onChange={(e) => updateLoadingScreenConfigField("fill_color", e.target.value.toUpperCase())}
                     />
                   </div>
@@ -882,7 +901,7 @@ const AdminBranding = () => {
                       <Input
                         type="color"
                         className="h-12 w-full rounded-xl border border-slate-200 bg-white p-1.5 cursor-pointer"
-                        value={form.surface_theme?.title_color_hex || "#0F172A"}
+                        value={normalizeColorInputValue(form.surface_theme?.title_color_hex, "#0F172A")}
                         onChange={(e) =>
                           setForm((prev: any) => ({
                             ...prev,
@@ -898,7 +917,7 @@ const AdminBranding = () => {
                       <Input
                         type="color"
                         className="h-12 w-full rounded-xl border border-slate-200 bg-white p-1.5 cursor-pointer"
-                        value={form.surface_theme?.page_foreground_color || "#0F172A"}
+                        value={normalizeColorInputValue(form.surface_theme?.page_foreground_color, "#0F172A")}
                         onChange={(e) =>
                           setForm((prev: any) => ({
                             ...prev,
@@ -919,7 +938,7 @@ const AdminBranding = () => {
                     {form.show_logo_dot !== false && (
                       <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
                         <Label className="text-slate-600 text-xs uppercase tracking-wider w-24">Farbe für Punkt</Label>
-                        <Input type="color" className="h-10 w-full rounded-xl bg-white border-slate-200 px-3 cursor-pointer" value={form.logo_dot_color_hex || form.primary_color_hex || "#FF4B2C"} onChange={(e) => updateField("logo_dot_color_hex", e.target.value.toUpperCase())} />
+                        <Input type="color" className="h-10 w-full rounded-xl bg-white border-slate-200 px-3 cursor-pointer" value={normalizeColorInputValue(form.logo_dot_color_hex || form.primary_color_hex, "#FF4B2C")} onChange={(e) => updateField("logo_dot_color_hex", e.target.value.toUpperCase())} />
                       </div>
                     )}
                   </div>

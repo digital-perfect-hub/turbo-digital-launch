@@ -169,7 +169,7 @@ export const defaultButtonTheme: ButtonTheme = {
 };
 
 export const defaultTheme: GlobalThemeSettings = {
-  id: "default",
+  id: "",
   primary_color_hex: FALLBACK_PRIMARY_HEX,
   secondary_color_hex: FALLBACK_SECONDARY_HEX,
   accent_color_hex: FALLBACK_ACCENT_HEX,

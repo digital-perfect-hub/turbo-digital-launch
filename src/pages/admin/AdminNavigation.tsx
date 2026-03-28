@@ -195,10 +195,7 @@ const AdminNavigation = () => {
 
   const saveStyling = useMutation({
     mutationFn: async (values: StylingState) => {
-      const rowId = themeSettings?.id || "default";
       const payload = {
-        id: rowId,
-        site_id: siteId,
         navigation_theme: previewTheme,
         nav_text_color_hex: values.nav_text_color_hex,
         nav_hover_color_hex: values.nav_hover_color_hex,
@@ -210,8 +207,21 @@ const AdminNavigation = () => {
         nav_animate_underline: values.nav_animate_underline,
       };
 
-      const { error } = await supabase.from("global_settings").upsert(payload, { onConflict: "site_id" });
-      if (error) throw error;
+      const { data: updatedRows, error: updateError } = await supabase
+        .from("global_settings")
+        .update(payload)
+        .eq("site_id", siteId)
+        .select("site_id");
+
+      if (updateError) throw updateError;
+
+      if (!updatedRows?.length) {
+        const { error: insertError } = await supabase
+          .from("global_settings")
+          .insert({ site_id: siteId, ...payload });
+
+        if (insertError) throw insertError;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["global_settings"] });
