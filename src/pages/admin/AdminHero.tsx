@@ -73,7 +73,7 @@ const AdminHero = () => {
   }, [hero]);
 
   const supportsExtendedHero = useMemo(
-    () => Boolean(hero && Object.prototype.hasOwnProperty.call(hero, "background_image_path")),
+    () => Boolean(!hero || Object.prototype.hasOwnProperty.call(hero, "background_image_path")),
     [hero],
   );
 

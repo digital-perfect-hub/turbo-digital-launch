@@ -45,10 +45,54 @@ const mapSiteRecord = (value: any): SiteRecord => ({
   user_role: value.user_role ?? null,
 });
 
+const getBrowserPathname = () => {
+  if (typeof window === "undefined") return "/";
+  return window.location.pathname || "/";
+};
+
+const isAdminPath = (pathname: string) => /^\/admin(?:\/|$)/.test(pathname);
+
 export const SiteProvider = ({ children }: { children: ReactNode }) => {
   const { user, isGlobalAdmin } = useAuth();
   const [hostname] = useState(() => getBrowserHostname());
+  const [pathname, setPathname] = useState(() => getBrowserPathname());
   const [selectedSiteId, setSelectedSiteIdState] = useState<string | null>(() => getStoredAdminSiteId());
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updatePathname = () => setPathname(getBrowserPathname());
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    const dispatchLocationChange = () => {
+      window.dispatchEvent(new Event("dp:locationchange"));
+    };
+
+    window.history.pushState = function (...args: Parameters<History["pushState"]>) {
+      const result = originalPushState.apply(window.history, args);
+      dispatchLocationChange();
+      return result;
+    };
+
+    window.history.replaceState = function (...args: Parameters<History["replaceState"]>) {
+      const result = originalReplaceState.apply(window.history, args);
+      dispatchLocationChange();
+      return result;
+    };
+
+    window.addEventListener("popstate", updatePathname);
+    window.addEventListener("hashchange", updatePathname);
+    window.addEventListener("dp:locationchange", updatePathname);
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", updatePathname);
+      window.removeEventListener("hashchange", updatePathname);
+      window.removeEventListener("dp:locationchange", updatePathname);
+    };
+  }, []);
 
   const resolveSiteQuery = useQuery({
     queryKey: ["site-resolve", hostname],
@@ -85,30 +129,39 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
 
   const resolvedSite = resolveSiteQuery.data ?? null;
   const availableSites = availableSitesQuery.data ?? [];
+  const adminRoute = isAdminPath(pathname);
 
-  const activeSite = useMemo(() => {
-    if (!availableSites.length) {
-      return resolvedSite;
+  const publicSite = useMemo(() => {
+    if (resolvedSite) {
+      const matchingResolved = availableSites.find((site) => site.id === resolvedSite.id);
+      return matchingResolved ?? resolvedSite;
     }
 
+    return availableSites.find((site) => site.is_default) || availableSites[0] || null;
+  }, [availableSites, resolvedSite]);
+
+  const adminSite = useMemo(() => {
     if (selectedSiteId) {
       const selected = availableSites.find((site) => site.id === selectedSiteId);
       if (selected) return selected;
     }
 
-    if (resolvedSite) {
-      const matchingResolved = availableSites.find((site) => site.id === resolvedSite.id);
-      if (matchingResolved) return matchingResolved;
+    if (publicSite) {
+      const matchingPublic = availableSites.find((site) => site.id === publicSite.id);
+      return matchingPublic ?? publicSite;
     }
 
-    return availableSites.find((site) => site.is_default) || availableSites[0] || resolvedSite;
-  }, [availableSites, resolvedSite, selectedSiteId]);
+    return availableSites.find((site) => site.is_default) || availableSites[0] || null;
+  }, [availableSites, publicSite, selectedSiteId]);
+
+  const activeSite = adminRoute ? adminSite : publicSite;
 
   useEffect(() => {
     if (!user) return;
-    if (!activeSite?.id) return;
-    setStoredAdminSiteId(activeSite.id);
-  }, [activeSite?.id, user]);
+    if (!adminRoute) return;
+    if (!adminSite?.id) return;
+    setStoredAdminSiteId(adminSite.id);
+  }, [adminRoute, adminSite?.id, user]);
 
   const setActiveSiteId = useCallback((siteId: string) => {
     setSelectedSiteIdState(siteId);
@@ -116,7 +169,7 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const isLoading = resolveSiteQuery.isLoading || (Boolean(user) && availableSitesQuery.isLoading);
-  const activeSiteId = activeSite?.id || resolvedSite?.id || DEFAULT_SITE_ID;
+  const activeSiteId = activeSite?.id || publicSite?.id || DEFAULT_SITE_ID;
 
   const value = useMemo<SiteContextValue>(
     () => ({
