@@ -35,15 +35,18 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminDomains from "./pages/admin/AdminDomains";
 import AdminForum from "./pages/admin/AdminForum";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminTeam from "./pages/admin/AdminTeam";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminLegal from "./pages/admin/AdminLegal";
 import AdminSites from "./pages/admin/AdminSites";
 import AdminPages from "./pages/admin/AdminPages";
 import AdminBilling from "./pages/admin/AdminBilling";
 import AdminTickets from "./pages/admin/AdminTickets";
+import AdminOnboarding from "./pages/admin/AdminOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -95,13 +98,16 @@ const App = () => (
                   <Route path="pages" element={<AdminPages />} />
                   <Route path="billing" element={<AdminBilling />} />
                   <Route path="tickets" element={<AdminTickets />} />
+                  <Route path="onboarding" element={<AdminOnboarding />} />
                   <Route path="team" element={<AdminTeam />} />
+                  <Route path="team/users" element={<AdminUsers />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="legal" element={<AdminLegal />} />
                   <Route path="sites" element={<AdminSites />} />
                   <Route path="faq" element={<AdminFAQ />} />
                   <Route path="leads" element={<AdminLeads />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="settings/domains" element={<AdminDomains />} />
                 </Route>
 
                 <Route path="/:slug" element={<DynamicPage />} />

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Building2,
   CreditCard,
   FileText,
   Files,
+  Globe,
   HelpCircle,
   ImageIcon,
   LayoutDashboard,
@@ -18,16 +19,21 @@ import {
   Palette,
   PanelBottom,
   Quote,
+  Rocket,
   Settings,
   ShieldCheck,
   Type,
   Users,
   X,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteContext } from "@/context/SiteContext";
 import { useSiteModules } from "@/hooks/useSiteModules";
 import "@/assets/styles/admin.css";
+
+type TenantSiteRole = "owner" | "admin" | "editor" | "viewer";
 
 type AdminNavItem = {
   to: string;
@@ -35,10 +41,13 @@ type AdminNavItem = {
   label: string;
   end?: boolean;
   moduleKey?: "hasForum" | "hasShop" | "hasSupportDesk";
+  requiresGlobalAdmin?: boolean;
+  requiresTenantManager?: boolean;
 };
 
 const navItems: AdminNavItem[] = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
+  { to: "/admin/onboarding", icon: Rocket, label: "Tenant Setup", requiresGlobalAdmin: true },
   { to: "/admin/branding", icon: Palette, label: "Branding & Theme" },
   { to: "/admin/navigation", icon: Menu, label: "Navigation" },
   { to: "/admin/footer", icon: PanelBottom, label: "Footer" },
@@ -53,21 +62,53 @@ const navItems: AdminNavItem[] = [
   { to: "/admin/billing", icon: CreditCard, label: "Billing & Abos" },
   { to: "/admin/tickets", icon: LifeBuoy, label: "Tickets", moduleKey: "hasSupportDesk" },
   { to: "/admin/team", icon: Users, label: "Team" },
+  { to: "/admin/team/users", icon: Users, label: "Benutzer & Rollen", requiresTenantManager: true },
   { to: "/admin/testimonials", icon: Quote, label: "Testimonials" },
   { to: "/admin/legal", icon: ShieldCheck, label: "Recht & SEO" },
   { to: "/admin/sites", icon: Building2, label: "Sites & White-Label" },
   { to: "/admin/faq", icon: HelpCircle, label: "FAQ" },
   { to: "/admin/leads", icon: MessageSquare, label: "Anfragen" },
   { to: "/admin/settings", icon: Settings, label: "Einstellungen" },
+  { to: "/admin/settings/domains", icon: Globe, label: "Domains", requiresTenantManager: true },
 ] as const;
 
 const AdminLayout = () => {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, isGlobalAdmin, loading, signOut } = useAuth();
   const { activeSiteId, availableSites, setActiveSiteId } = useSiteContext();
   const { hasForum, hasShop, hasSupportDesk, isLoading: modulesLoading } = useSiteModules();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const isPlatformContextRoute = isGlobalAdmin && location.pathname.startsWith("/admin/onboarding");
+
+  const myRoleQuery = useQuery({
+    queryKey: ["admin-layout-my-role", activeSiteId, user?.id],
+    enabled: Boolean(user?.id && activeSiteId && !isGlobalAdmin),
+    queryFn: async (): Promise<TenantSiteRole | null> => {
+      const { data, error } = await supabase
+        .from("user_site_roles" as never)
+        .select("role")
+        .eq("site_id", activeSiteId)
+        .eq("user_id", user?.id)
+        .maybeSingle();
+      if (error) throw error;
+      return ((data as { role?: TenantSiteRole } | null)?.role ?? null) as TenantSiteRole | null;
+    },
+  });
+
+  const activeTenantRole = isGlobalAdmin ? "owner" : myRoleQuery.data ?? null;
+  const canManageTenantUsers = isGlobalAdmin || activeTenantRole === "owner" || activeTenantRole === "admin";
+
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter((item) => {
+        if (item.requiresGlobalAdmin && !isGlobalAdmin) return false;
+        if (item.requiresTenantManager && !canManageTenantUsers) return false;
+        return true;
+      }),
+    [canManageTenantUsers, isGlobalAdmin],
+  );
 
   useEffect(() => {
     document.body.classList.add("admin-ui-portal-scope");
@@ -82,6 +123,18 @@ const AdminLayout = () => {
       navigate("/login");
     }
   }, [user, isAdmin, loading, navigate]);
+
+  useEffect(() => {
+    if (!loading && !isGlobalAdmin && location.pathname.startsWith("/admin/onboarding")) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isGlobalAdmin, loading, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!loading && !canManageTenantUsers && (location.pathname.startsWith("/admin/team/users") || location.pathname.startsWith("/admin/settings/domains"))) {
+      navigate("/admin", { replace: true });
+    }
+  }, [canManageTenantUsers, loading, location.pathname, navigate]);
 
   useEffect(() => {
     setIsMobileSidebarOpen(false);
@@ -154,29 +207,45 @@ const AdminLayout = () => {
           <p className="mt-1 truncate text-xs font-medium text-[hsl(var(--admin-sidebar-muted))]">{user.email}</p>
           {availableSites.length ? (
             <div className="mt-4">
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--admin-sidebar-muted))]">
-                Aktive Site
-              </label>
-              <select
-                className="admin-native-select--inverse px-3 py-2 text-sm"
-                value={activeSiteId}
-                onChange={(event) => {
-                  setActiveSiteId(event.target.value);
-                  closeMobileSidebar();
-                }}
-              >
-                {availableSites.map((site) => (
-                  <option key={site.id} value={site.id}>
-                    {site.name}
-                  </option>
-                ))}
-              </select>
+              {isPlatformContextRoute ? (
+                <>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--admin-sidebar-muted))]">
+                    Platform-Kontext
+                  </label>
+                  <div className="rounded-2xl border border-[hsl(var(--admin-sidebar-border))] bg-white/5 px-4 py-3 text-sm text-[hsl(var(--admin-sidebar-fg))]">
+                    <div className="font-semibold text-white">Tenant Setup läuft plattformweit</div>
+                    <p className="mt-1 text-xs leading-5 text-[hsl(var(--admin-sidebar-muted))]">
+                      Die aktive Tenant-Site wird hier bewusst nicht als Vorlage verwendet. Die Quelle bestimmst du ausschließlich über das ausgewählte Template.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--admin-sidebar-muted))]">
+                    Aktive Site
+                  </label>
+                  <select
+                    className="admin-native-select--inverse px-3 py-2 text-sm"
+                    value={activeSiteId}
+                    onChange={(event) => {
+                      setActiveSiteId(event.target.value);
+                      closeMobileSidebar();
+                    }}
+                  >
+                    {availableSites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.name}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           ) : null}
         </div>
 
         <nav className="flex-1 space-y-1.5 overflow-auto p-4">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

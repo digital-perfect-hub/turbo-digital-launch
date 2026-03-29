@@ -1,4 +1,17 @@
-project_id = "wevlxnlaxyzsobkaeoyi"
-
 [functions.track-view]
+verify_jwt = false
+
+[functions.bootstrap-tenant]
+verify_jwt = false
+
+[functions.invite-tenant-user]
+verify_jwt = false
+
+[functions.update-tenant-user]
+verify_jwt = false
+
+[functions.manage-site-domain]
+verify_jwt = false
+
+[functions.verify-site-domain]
 verify_jwt = false

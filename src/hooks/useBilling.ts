@@ -17,6 +17,12 @@ export type BillingProfile = {
   stripe_price_id: string | null;
 };
 
+export type BillingUsage = {
+  teamMembers: number;
+  customDomains: number;
+  pages: number;
+};
+
 const EMPTY_PROFILE: BillingProfile = {
   id: "",
   site_id: DEFAULT_SITE_ID,
@@ -27,6 +33,12 @@ const EMPTY_PROFILE: BillingProfile = {
   stripe_customer_id: null,
   stripe_subscription_id: null,
   stripe_price_id: null,
+};
+
+const EMPTY_USAGE: BillingUsage = {
+  teamMembers: 0,
+  customDomains: 0,
+  pages: 0,
 };
 
 export const useBilling = () => {
@@ -56,6 +68,33 @@ export const useBilling = () => {
     },
   });
 
+  const usageQuery = useQuery({
+    queryKey: ["site-billing-usage", siteId],
+    enabled: Boolean(siteId),
+    queryFn: async (): Promise<BillingUsage> => {
+      const [teamResult, domainsResult, pagesResult] = await Promise.all([
+        supabase.from("user_site_roles" as never).select("id", { count: "exact", head: true }).eq("site_id", siteId),
+        supabase.from("site_domains" as never).select("id", { count: "exact", head: true }).eq("site_id", siteId),
+        supabase.from("pages" as never).select("id", { count: "exact", head: true }).eq("site_id", siteId),
+      ]);
+
+      const ignoreMissing = (error: any) => {
+        const code = typeof error?.code === "string" ? error.code : "";
+        return code === "42P01" || code === "PGRST205";
+      };
+
+      if (teamResult.error && !ignoreMissing(teamResult.error)) throw teamResult.error;
+      if (domainsResult.error && !ignoreMissing(domainsResult.error)) throw domainsResult.error;
+      if (pagesResult.error && !ignoreMissing(pagesResult.error)) throw pagesResult.error;
+
+      return {
+        teamMembers: teamResult.count ?? 0,
+        customDomains: domainsResult.count ?? 0,
+        pages: pagesResult.count ?? 0,
+      };
+    },
+  });
+
   const checkoutMutation = useMutation({
     mutationFn: async (planKey: BillingPlanKey) => {
       const returnUrl = `${window.location.origin}/admin/billing`;
@@ -63,8 +102,8 @@ export const useBilling = () => {
         body: { planKey, siteId, returnUrl },
       });
       if (error) throw error;
-      if (!data?.url) throw new Error("Stripe Checkout URL fehlt.");
-      window.location.href = data.url;
+      if (!(data as any)?.url) throw new Error("Stripe Checkout URL fehlt.");
+      window.location.href = (data as any).url;
     },
   });
 
@@ -75,20 +114,24 @@ export const useBilling = () => {
         body: { siteId, returnUrl },
       });
       if (error) throw error;
-      if (!data?.url) throw new Error("Customer Portal URL fehlt.");
-      window.location.href = data.url;
+      if (!(data as any)?.url) throw new Error("Customer Portal URL fehlt.");
+      window.location.href = (data as any).url;
     },
   });
 
   const profile = billingQuery.data ?? { ...EMPTY_PROFILE, site_id: siteId };
+  const usage = usageQuery.data ?? EMPTY_USAGE;
   const plan = useMemo(() => getBillingPlan(profile.plan_key), [profile.plan_key]);
-  const statusLabel = BILLING_STATUS_LABELS[profile.status || ""] || (profile.status || "Inaktiv");
+  const statusLabel = BILLING_STATUS_LABELS[profile.status || ""] || profile.status || "Inaktiv";
 
   return {
     ...billingQuery,
+    usageQuery,
     siteId,
     profile,
     plan,
+    entitlements: plan.entitlements,
+    usage,
     statusLabel,
     checkoutMutation,
     portalMutation,
