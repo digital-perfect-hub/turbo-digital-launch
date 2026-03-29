@@ -41,6 +41,11 @@ type InviteResponse = {
   seats_used?: number;
 };
 
+type PasswordResetResponse = {
+  email?: string;
+  message?: string;
+};
+
 const roleWeight: Record<TenantSiteRole, number> = {
   owner: 4,
   admin: 3,
@@ -121,7 +126,8 @@ const AdminUsers = () => {
           email,
           role: inviteRole,
           site_id: activeSiteId,
-          redirectTo: `${window.location.origin}/login`,
+          // Wichtig: Live-only. Kein localhost.
+          redirectTo: `https://dev.digital-perfect.com/set-password`,
         },
       });
 
@@ -141,6 +147,32 @@ const AdminUsers = () => {
     onError: (error) => {
       setInviteSuccess(null);
       setFormError(error instanceof Error ? error.message : "Einladung fehlgeschlagen.");
+    },
+  });
+
+  const passwordResetMutation = useMutation({
+    mutationFn: async () => {
+      const email = inviteEmail.trim().toLowerCase();
+      if (!email) throw new Error("Bitte gib eine E-Mail-Adresse ein.");
+
+      const { data, error } = await supabase.functions.invoke("reset-tenant-user-password", {
+        body: {
+          email,
+          site_id: activeSiteId,
+          redirectTo: `https://dev.digital-perfect.com/set-password`,
+        },
+      });
+
+      if (error) throw new Error(error.message || "Passwort-Reset fehlgeschlagen.");
+      const response = (data ?? {}) as PasswordResetResponse & { error?: string };
+      if (response.error) throw new Error(response.error);
+      return response;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Passwort-Reset wurde gesendet.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Passwort-Reset fehlgeschlagen.");
     },
   });
 
@@ -360,6 +392,17 @@ const AdminUsers = () => {
               >
                 {inviteMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <MailPlus size={16} className="mr-2" />}
                 {seatsAtLimit ? "Seat-Limit erreicht" : "Einladung versenden"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => passwordResetMutation.mutate()}
+                disabled={passwordResetMutation.isPending || !inviteEmail.trim()}
+                className="w-full rounded-xl"
+              >
+                {passwordResetMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
+                Passwort-Reset senden
               </Button>
             </CardContent>
           </Card>

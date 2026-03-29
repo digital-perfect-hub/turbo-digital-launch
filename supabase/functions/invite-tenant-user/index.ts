@@ -50,6 +50,13 @@ const normalizeRedirectTo = (value: unknown) => {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : undefined;
 };
 
+const sanitizeRedirectTo = (redirectTo: string | undefined, appBaseUrl: string) => {
+  const fallback = `${appBaseUrl.replace(/\/$/, "")}/set-password`;
+  if (!redirectTo) return fallback;
+  if (redirectTo.includes("localhost")) return fallback;
+  return redirectTo;
+};
+
 const getBearerToken = (request: Request) => request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "")?.trim() ?? "";
 const getEntitlements = (planKey: string | null | undefined): Entitlements => PLAN_ENTITLEMENTS[planKey || ""] ?? PLAN_ENTITLEMENTS.starter;
 
@@ -75,6 +82,9 @@ Deno.serve(async (request) => {
       return json({ error: "Missing bearer token." }, 401);
     }
 
+    // Live-only: verhindert, dass Invite-Mails jemals auf localhost zeigen.
+    const appBaseUrl = Deno.env.get("APP_BASE_URL") || "https://dev.digital-perfect.com";
+
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -92,7 +102,7 @@ Deno.serve(async (request) => {
     const email = normalizeEmail(body.email);
     const role = normalizeTenantRole(body.role);
     const siteId = typeof body.site_id === "string" ? body.site_id.trim() : "";
-    const redirectTo = normalizeRedirectTo(body.redirectTo);
+    const redirectTo = sanitizeRedirectTo(normalizeRedirectTo(body.redirectTo), appBaseUrl);
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return json({ error: "A valid email is required." }, 400);
