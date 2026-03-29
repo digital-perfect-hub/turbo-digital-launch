@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, MailPlus, MoreHorizontal, Shield, Trash2, UserCog, Users } from "lucide-react";
+import { CheckCircle2, Loader2, MailPlus, MoreHorizontal, Shield, Skull, Trash2, UserCog, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteContext } from "@/context/SiteContext";
@@ -41,11 +41,6 @@ type InviteResponse = {
   seats_used?: number;
 };
 
-type PasswordResetResponse = {
-  email?: string;
-  message?: string;
-};
-
 const roleWeight: Record<TenantSiteRole, number> = {
   owner: 4,
   admin: 3,
@@ -78,6 +73,7 @@ const AdminUsers = () => {
   const [inviteRole, setInviteRole] = useState<TenantSiteRole>("viewer");
   const [formError, setFormError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<InviteResponse | null>(null);
+  const [pendingHardDeleteUserId, setPendingHardDeleteUserId] = useState<string | null>(null);
 
   const myRoleQuery = useQuery({
     queryKey: ["tenant-user-my-role", activeSiteId, user?.id],
@@ -126,8 +122,7 @@ const AdminUsers = () => {
           email,
           role: inviteRole,
           site_id: activeSiteId,
-          // Wichtig: Live-only. Kein localhost.
-          redirectTo: `https://dev.digital-perfect.com/set-password`,
+          redirectTo: `${window.location.origin}/login`,
         },
       });
 
@@ -147,32 +142,6 @@ const AdminUsers = () => {
     onError: (error) => {
       setInviteSuccess(null);
       setFormError(error instanceof Error ? error.message : "Einladung fehlgeschlagen.");
-    },
-  });
-
-  const passwordResetMutation = useMutation({
-    mutationFn: async () => {
-      const email = inviteEmail.trim().toLowerCase();
-      if (!email) throw new Error("Bitte gib eine E-Mail-Adresse ein.");
-
-      const { data, error } = await supabase.functions.invoke("reset-tenant-user-password", {
-        body: {
-          email,
-          site_id: activeSiteId,
-          redirectTo: `https://dev.digital-perfect.com/set-password`,
-        },
-      });
-
-      if (error) throw new Error(error.message || "Passwort-Reset fehlgeschlagen.");
-      const response = (data ?? {}) as PasswordResetResponse & { error?: string };
-      if (response.error) throw new Error(response.error);
-      return response;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message || "Passwort-Reset wurde gesendet.");
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Passwort-Reset fehlgeschlagen.");
     },
   });
 
@@ -197,6 +166,26 @@ const AdminUsers = () => {
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Benutzer-Aktion fehlgeschlagen.");
+    },
+  });
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { data, error } = await supabase.functions.invoke("hard-delete-auth-user", {
+        body: { target_user_id: targetUserId },
+      });
+      if (error) throw new Error(error.message || "Hard Delete fehlgeschlagen.");
+      const response = (data ?? {}) as { error?: string; message?: string };
+      if (response.error) throw new Error(response.error);
+      return response;
+    },
+    onSuccess: (response) => {
+      setPendingHardDeleteUserId(null);
+      void rolesQuery.refetch();
+      toast.success(response.message || "Auth-User wurde vollständig gelöscht.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Hard Delete fehlgeschlagen.");
     },
   });
 
@@ -284,20 +273,6 @@ const AdminUsers = () => {
                             <DropdownMenuContent align="end" className="w-56 rounded-xl">
                               <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              {roleTargets.map((role) => (
-                                <DropdownMenuItem
-                                  key={`${assignment.id}-${role}`}
-                                  disabled={assignment.role === role || updateMutation.isPending}
-                                  onClick={() => updateMutation.mutate({
-                                    target_user_id: assignment.user_id,
-                                    action: "update_role",
-                                    new_role: role,
-                                  })}
-                                >
-                                  <UserCog size={14} className="mr-2" /> Rolle ändern zu {readableRole[role]}
-                                </DropdownMenuItem>
-                              ))}
-                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="text-red-600 focus:text-red-600"
                                 disabled={updateMutation.isPending}
@@ -306,8 +281,26 @@ const AdminUsers = () => {
                                   action: "remove",
                                 })}
                               >
-                                <Trash2 size={14} className="mr-2" /> Benutzer entfernen
+                                <Trash2 size={14} className="mr-2" /> Benutzer aus Tenant entfernen
                               </DropdownMenuItem>
+                              {isGlobalAdmin && !isCurrentUser ? (
+                                <DropdownMenuItem
+                                  className="text-red-700 focus:text-red-700"
+                                  disabled={hardDeleteMutation.isPending}
+                                  onClick={() => {
+                                    const confirmed = window.confirm(
+                                      `Diesen Auth-User vollständig löschen?
+
+Er wird komplett aus Supabase Auth entfernt und kann danach mit derselben E-Mail frisch neu eingeladen werden.`
+                                    );
+                                    if (!confirmed) return;
+                                    setPendingHardDeleteUserId(assignment.user_id);
+                                    hardDeleteMutation.mutate(assignment.user_id);
+                                  }}
+                                >
+                                  <Skull size={14} className="mr-2" /> Komplett löschen (Debug)
+                                </DropdownMenuItem>
+                              ) : null}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -333,6 +326,18 @@ const AdminUsers = () => {
             <CardContent className="space-y-5">
               {formError ? (
                 <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div>
+              ) : null}
+
+              {hardDeleteMutation.isPending && pendingHardDeleteUserId ? (
+                <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  <div className="flex items-start gap-2">
+                    <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin" />
+                    <div className="space-y-1">
+                      <p className="font-semibold">Auth-User wird vollständig gelöscht</p>
+                      <p>Der Benutzer wird gerade komplett aus Supabase Auth entfernt, damit dieselbe E-Mail wieder frisch eingeladen werden kann.</p>
+                    </div>
+                  </div>
+                </div>
               ) : null}
 
               {inviteSuccess ? (
@@ -382,7 +387,7 @@ const AdminUsers = () => {
               </div>
 
               <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-600">
-                Eingeladene Benutzer erhalten ihre Site-Rolle serverseitig. Das Frontend schreibt niemals direkt in sicherheitskritische Auth-Tabellen und niemals direkt für Rollen-Entzug/-Änderung in <code>user_site_roles</code>.
+                Eingeladene Benutzer erhalten ihre Site-Rolle serverseitig. Das Frontend schreibt niemals direkt in sicherheitskritische Auth-Tabellen und niemals direkt für Rollen-Entzug/-Änderung in <code>user_site_roles</code>. Global Admins können für Testzwecke zusätzlich einen Auth-User komplett löschen, damit dieselbe E-Mail frisch neu eingeladen werden kann. Ein Global Admin kann für Testzwecke zusätzlich einen Benutzer komplett aus Supabase Auth löschen, damit dieselbe E-Mail frisch neu eingeladen werden kann.
               </div>
 
               <Button
@@ -392,17 +397,6 @@ const AdminUsers = () => {
               >
                 {inviteMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <MailPlus size={16} className="mr-2" />}
                 {seatsAtLimit ? "Seat-Limit erreicht" : "Einladung versenden"}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => passwordResetMutation.mutate()}
-                disabled={passwordResetMutation.isPending || !inviteEmail.trim()}
-                className="w-full rounded-xl"
-              >
-                {passwordResetMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
-                Passwort-Reset senden
               </Button>
             </CardContent>
           </Card>

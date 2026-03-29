@@ -50,11 +50,10 @@ const normalizeRedirectTo = (value: unknown) => {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : undefined;
 };
 
-const sanitizeRedirectTo = (redirectTo: string | undefined, appBaseUrl: string) => {
-  const fallback = `${appBaseUrl.replace(/\/$/, "")}/set-password`;
-  if (!redirectTo) return fallback;
-  if (redirectTo.includes("localhost")) return fallback;
-  return redirectTo;
+const normalizeBaseUrl = (value: string | undefined) => {
+  if (!value) return undefined;
+  const trimmed = value.trim().replace(/\/$/, "");
+  return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : undefined;
 };
 
 const getBearerToken = (request: Request) => request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "")?.trim() ?? "";
@@ -73,6 +72,7 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const token = getBearerToken(request);
+    const appBaseUrl = normalizeBaseUrl(Deno.env.get("APP_BASE_URL")) ?? undefined;
 
     if (!supabaseUrl || !serviceRoleKey) {
       return json({ error: "Missing function secrets." }, 500);
@@ -81,9 +81,6 @@ Deno.serve(async (request) => {
     if (!token) {
       return json({ error: "Missing bearer token." }, 401);
     }
-
-    // Live-only: verhindert, dass Invite-Mails jemals auf localhost zeigen.
-    const appBaseUrl = Deno.env.get("APP_BASE_URL") || "https://dev.digital-perfect.com";
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -102,7 +99,7 @@ Deno.serve(async (request) => {
     const email = normalizeEmail(body.email);
     const role = normalizeTenantRole(body.role);
     const siteId = typeof body.site_id === "string" ? body.site_id.trim() : "";
-    const redirectTo = sanitizeRedirectTo(normalizeRedirectTo(body.redirectTo), appBaseUrl);
+    const redirectTo = normalizeRedirectTo(body.redirectTo) ?? (appBaseUrl ? `${appBaseUrl}/set-password` : undefined);
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return json({ error: "A valid email is required." }, 400);
@@ -200,7 +197,12 @@ Deno.serve(async (request) => {
         return json({ error: "Supabase invite did not return a user id." }, 500);
       }
     } else {
-      message = "Benutzer existiert bereits und wurde dem Tenant zugeordnet.";
+      const { error: resetError } = await admin.auth.resetPasswordForEmail(email, redirectTo ? { redirectTo } : undefined);
+      if (resetError) {
+        message = "Benutzer existiert bereits und wurde dem Tenant zugeordnet. Für eine neue E-Mail bitte den Passwort-Reset oder den Hard-Delete-Testflow nutzen.";
+      } else {
+        message = "Benutzer existiert bereits, wurde dem Tenant erneut zugeordnet und hat zusätzlich eine neue Passwort-/Zugangs-Mail erhalten.";
+      }
     }
 
     await admin.from("user_site_roles" as never).delete().eq("user_id", createdUserId).eq("site_id", siteId);
