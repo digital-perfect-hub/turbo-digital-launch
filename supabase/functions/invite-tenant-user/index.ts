@@ -44,10 +44,9 @@ const normalizeTenantRole = (value: unknown): TenantRole | null => {
   return null;
 };
 
-const normalizeRedirectTo = (value: unknown) => {
-  if (typeof value !== "string") return undefined;
-  const trimmed = value.trim();
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : undefined;
+const buildSetPasswordRedirect = (appBaseUrl: string | undefined) => {
+  const fallbackBase = normalizeBaseUrl(appBaseUrl) ?? "https://dev.digital-perfect.com";
+  return `${fallbackBase}/set-password`;
 };
 
 const normalizeBaseUrl = (value: string | undefined) => {
@@ -99,7 +98,7 @@ Deno.serve(async (request) => {
     const email = normalizeEmail(body.email);
     const role = normalizeTenantRole(body.role);
     const siteId = typeof body.site_id === "string" ? body.site_id.trim() : "";
-    const redirectTo = normalizeRedirectTo(body.redirectTo) ?? (appBaseUrl ? `${appBaseUrl}/set-password` : undefined);
+    const redirectTo = buildSetPasswordRedirect(appBaseUrl);
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return json({ error: "A valid email is required." }, 400);

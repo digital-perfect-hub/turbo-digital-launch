@@ -28,19 +28,11 @@ const normalizeEmail = (value: unknown) => {
   return value.trim().toLowerCase();
 };
 
-const normalizeRedirectTo = (value: unknown) => {
-  if (typeof value !== "string") return undefined;
-  const trimmed = value.trim();
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : undefined;
-};
-
 const getBearerToken = (request: Request) => request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "")?.trim() ?? "";
 
-const sanitizeRedirectTo = (redirectTo: string | undefined, appBaseUrl: string) => {
-  const fallback = `${appBaseUrl.replace(/\/$/, "")}/set-password`;
-  if (!redirectTo) return fallback;
-  if (redirectTo.includes("localhost")) return fallback;
-  return redirectTo;
+const sanitizeRedirectTo = (appBaseUrl: string) => {
+  const fallbackBase = appBaseUrl.replace(/\/$/, "");
+  return `${fallbackBase}/set-password`;
 };
 
 Deno.serve(async (request) => {
@@ -83,7 +75,7 @@ Deno.serve(async (request) => {
     const body = (await request.json()) as ResetTenantUserPasswordRequest;
     const email = normalizeEmail(body.email);
     const siteId = typeof body.site_id === "string" ? body.site_id.trim() : "";
-    const redirectTo = sanitizeRedirectTo(normalizeRedirectTo(body.redirectTo), appBaseUrl);
+    const redirectTo = sanitizeRedirectTo(appBaseUrl);
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return json({ error: "A valid email is required." }, 400);

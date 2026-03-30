@@ -55,6 +55,13 @@ const readableRole: Record<TenantSiteRole, string> = {
   viewer: "Viewer",
 };
 
+const roleActionLabel: Record<TenantSiteRole, string> = {
+  owner: "Zu Owner hochstufen",
+  admin: "Zu Admin hochstufen",
+  editor: "Zu Editor setzen",
+  viewer: "Zu User / Viewer herabstufen",
+};
+
 const roleBadgeVariant: Record<TenantSiteRole, string> = {
   owner: "bg-purple-50 text-purple-700 hover:bg-purple-50",
   admin: "bg-[#FFF2EE] text-[#FF4B2C] hover:bg-[#FFF2EE]",
@@ -122,7 +129,6 @@ const AdminUsers = () => {
           email,
           role: inviteRole,
           site_id: activeSiteId,
-          redirectTo: `${window.location.origin}/login`,
         },
       });
 
@@ -270,8 +276,28 @@ const AdminUsers = () => {
                                 <MoreHorizontal size={16} />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                            <DropdownMenuContent align="end" className="w-64 rounded-xl">
                               <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
+                              {roleTargets.filter((targetRole) => targetRole !== assignment.role).length ? (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  {roleTargets
+                                    .filter((targetRole) => targetRole !== assignment.role)
+                                    .map((targetRole) => (
+                                      <DropdownMenuItem
+                                        key={targetRole}
+                                        disabled={updateMutation.isPending}
+                                        onClick={() => updateMutation.mutate({
+                                          target_user_id: assignment.user_id,
+                                          action: "update_role",
+                                          new_role: targetRole,
+                                        })}
+                                      >
+                                        <UserCog size={14} className="mr-2" /> {roleActionLabel[targetRole]}
+                                      </DropdownMenuItem>
+                                    ))}
+                                </>
+                              ) : null}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="text-red-600 focus:text-red-600"
@@ -347,7 +373,8 @@ Er wird komplett aus Supabase Auth entfernt und kann danach mit derselben E-Mail
                     <div className="space-y-1">
                       <p className="font-semibold">Einladung erfolgreich verarbeitet</p>
                       <p>{inviteSuccess.message || "Der Benutzer wurde dem Tenant zugeordnet."}</p>
-                      {inviteSuccess.login_url ? <p>Login-Link: <span className="font-medium">{inviteSuccess.login_url}</span></p> : null}
+                      <p>Nach dem Passwort-Setzen wird der Benutzer automatisch in sein eigenes Tenant-Adminpanel weitergeleitet.</p>
+                      {inviteSuccess.login_url ? <p>Set-Passwort-Link: <span className="font-medium">{inviteSuccess.login_url}</span></p> : null}
                     </div>
                   </div>
                 </div>
