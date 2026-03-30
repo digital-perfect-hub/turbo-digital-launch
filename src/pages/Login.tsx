@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const { signIn, signUp } = useAuth();
-  const navigate = useNavigate();
   const { logoUrl, settings } = useGlobalTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +36,7 @@ const Login = () => {
       if (error) {
         setError("Ungültige Anmeldedaten");
       } else {
-        navigate("/admin");
+        window.location.href = "/admin";
       }
     }
   };
@@ -61,7 +59,7 @@ const Login = () => {
           </div>
           <div>
             <Label htmlFor="password">Passwort</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}
           {info && <p className="text-sm theme-link-accent">{info}</p>}
