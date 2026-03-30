@@ -47,7 +47,8 @@ const statusClasses: Record<string, string> = {
 };
 
 const AdminDomains = () => {
-  const { user, isGlobalAdmin, loading } = useAuth();
+  const { isGlobalAdmin, loading } = useAuth();
+  const { canManageDomains, hasSaasAccess } = useAdminAccess();
   const { activeSiteId, activeSite } = useSiteContext();
   const { plan, entitlements, usage } = useBilling();
   const [newDomain, setNewDomain] = useState("");

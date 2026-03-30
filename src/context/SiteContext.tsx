@@ -150,11 +150,15 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
 
     if (publicSite) {
       const matchingPublic = availableSites.find((site) => site.id === publicSite.id);
-      return matchingPublic ?? publicSite;
+      if (matchingPublic) return matchingPublic;
+
+      if (!adminRoute || !user) {
+        return publicSite;
+      }
     }
 
-    return availableSites.find((site) => site.is_default) || availableSites[0] || null;
-  }, [availableSites, publicSite, selectedSiteId]);
+    return availableSites.find((site) => site.is_default) || availableSites[0] || publicSite || null;
+  }, [adminRoute, availableSites, publicSite, selectedSiteId, user]);
 
   const activeSite = adminRoute ? adminSite : publicSite;
   const activeSiteRole = (activeSite?.user_role ?? null) as SiteRole | null;
