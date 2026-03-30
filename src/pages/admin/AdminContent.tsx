@@ -19,12 +19,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useSiteContext } from "@/context/SiteContext";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { upsertSiteSetting } from "@/lib/site-settings";
 
 const AdminContent = () => {
   const qc = useQueryClient();
   const { activeSiteId } = useSiteContext();
+  const { canEditContent } = useAdminAccess();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const { getJsonSetting, isLoading } = useSiteSettings();
   const [forumTeaser, setForumTeaser] = useState<ForumTeaserContent>(defaultForumTeaserContent);
@@ -64,11 +66,17 @@ const AdminContent = () => {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Content-Blöcke</h1>
           <p className="mt-2 text-sm text-slate-500">Forum-Teaser, Forum-Sidebar und ContactSection zentral für White-Label pflegen.</p>
         </div>
-        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="rounded-xl bg-[#FF4B2C] px-6 py-5 text-white shadow-md shadow-[#FF4B2C]/20 hover:bg-[#E03A1E]">
+        <Button onClick={() => mutation.mutate()} disabled={!canEditContent || mutation.isPending} className="rounded-xl bg-[#FF4B2C] px-6 py-5 text-white shadow-md shadow-[#FF4B2C]/20 hover:bg-[#E03A1E]">
           <Save size={18} className="mr-2" />
           {mutation.isPending ? "Speichere..." : "Inhalte speichern"}
         </Button>
       </div>
+
+      {!canEditContent ? (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Diese Rolle hat nur Lesezugriff. Speichern ist erst ab Editor freigeschaltet.
+        </div>
+      ) : null}
 
       <Tabs defaultValue="teaser" className="w-full">
         <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-slate-100 p-1">
@@ -82,6 +90,7 @@ const AdminContent = () => {
             <Send size={15} className="mr-2" /> Kontaktformular
           </TabsTrigger>
         </TabsList>
+        <fieldset disabled={!canEditContent}>
 
         <TabsContent value="teaser" className="mt-6">
           <Card className="rounded-[2rem] border-slate-200">
@@ -313,6 +322,7 @@ const AdminContent = () => {
             </Card>
           </div>
         </TabsContent>
+        </fieldset>
       </Tabs>
     </div>
   );

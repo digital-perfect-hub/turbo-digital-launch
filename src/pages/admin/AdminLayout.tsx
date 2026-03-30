@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Building2,
   CreditCard,
@@ -26,21 +26,18 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteContext } from "@/context/SiteContext";
 import { useSiteModules } from "@/hooks/useSiteModules";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import "@/assets/styles/admin.css";
-
-type TenantSiteRole = "owner" | "admin" | "editor" | "viewer";
 
 type AdminNavItem = {
   to: string;
   icon: any;
   label: string;
   end?: boolean;
-  moduleKey?: "hasForum" | "hasShop" | "hasSupportDesk";
+  moduleKey?: "hasForum" | "hasShop" | "hasSupportDesk" | "hasSaas";
   requiresGlobalAdmin?: boolean;
   requiresTenantManager?: boolean;
 };
@@ -62,53 +59,47 @@ const navItems: AdminNavItem[] = [
   { to: "/admin/billing", icon: CreditCard, label: "Billing & Abos" },
   { to: "/admin/tickets", icon: LifeBuoy, label: "Tickets", moduleKey: "hasSupportDesk" },
   { to: "/admin/team", icon: Users, label: "Team" },
-  { to: "/admin/team/users", icon: Users, label: "Benutzer & Rollen", requiresTenantManager: true },
+  { to: "/admin/team/users", icon: Users, label: "Benutzer & Rollen", requiresTenantManager: true, moduleKey: "hasSaas" },
   { to: "/admin/testimonials", icon: Quote, label: "Testimonials" },
   { to: "/admin/legal", icon: ShieldCheck, label: "Recht & SEO" },
-  { to: "/admin/sites", icon: Building2, label: "Sites & White-Label" },
+  { to: "/admin/sites", icon: Building2, label: "Sites & White-Label", requiresGlobalAdmin: true },
   { to: "/admin/faq", icon: HelpCircle, label: "FAQ" },
   { to: "/admin/leads", icon: MessageSquare, label: "Anfragen" },
   { to: "/admin/settings", icon: Settings, label: "Einstellungen" },
-  { to: "/admin/settings/domains", icon: Globe, label: "Domains", requiresTenantManager: true },
+  { to: "/admin/settings/domains", icon: Globe, label: "Domains", requiresTenantManager: true, moduleKey: "hasSaas" },
 ] as const;
 
 const AdminLayout = () => {
-  const { user, isAdmin, isGlobalAdmin, loading, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { activeSiteId, availableSites, setActiveSiteId } = useSiteContext();
-  const { hasForum, hasShop, hasSupportDesk, isLoading: modulesLoading } = useSiteModules();
+  const { hasForum, hasShop, hasSupportDesk, hasSaas, isLoading: modulesLoading } = useSiteModules();
+  const { canAccessAdmin, canManageUsers, isGlobalAdmin } = useAdminAccess();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const isPlatformContextRoute = isGlobalAdmin && location.pathname.startsWith("/admin/onboarding");
 
-  const myRoleQuery = useQuery({
-    queryKey: ["admin-layout-my-role", activeSiteId, user?.id],
-    enabled: Boolean(user?.id && activeSiteId && !isGlobalAdmin),
-    queryFn: async (): Promise<TenantSiteRole | null> => {
-      const { data, error } = await supabase
-        .from("user_site_roles" as never)
-        .select("role")
-        .eq("site_id", activeSiteId)
-        .eq("user_id", user?.id)
-        .maybeSingle();
-      if (error) throw error;
-      return ((data as { role?: TenantSiteRole } | null)?.role ?? null) as TenantSiteRole | null;
-    },
-  });
-
-  const activeTenantRole = isGlobalAdmin ? "owner" : myRoleQuery.data ?? null;
-  const canManageTenantUsers = isGlobalAdmin || activeTenantRole === "owner" || activeTenantRole === "admin";
-
   const visibleNavItems = useMemo(
     () =>
       navItems.filter((item) => {
         if (item.requiresGlobalAdmin && !isGlobalAdmin) return false;
-        if (item.requiresTenantManager && !canManageTenantUsers) return false;
+        if (item.requiresTenantManager && !canManageUsers) return false;
         return true;
       }),
-    [canManageTenantUsers, isGlobalAdmin],
+    [canManageUsers, isGlobalAdmin],
   );
+
+  const activeNavItemTo = useMemo(() => {
+    const pathname = location.pathname;
+    const matches = visibleNavItems.filter((item) => {
+      if (item.end) return pathname === item.to;
+      return pathname === item.to || pathname.startsWith(`${item.to}/`);
+    });
+
+    matches.sort((left, right) => right.to.length - left.to.length);
+    return matches[0]?.to ?? null;
+  }, [location.pathname, visibleNavItems]);
 
   useEffect(() => {
     document.body.classList.add("admin-ui-portal-scope");
@@ -119,22 +110,16 @@ const AdminLayout = () => {
   }, []);
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      navigate("/login");
+    if (!loading && (!user || !canAccessAdmin)) {
+      navigate("/login", { replace: true });
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, canAccessAdmin, loading, navigate]);
 
   useEffect(() => {
     if (!loading && !isGlobalAdmin && location.pathname.startsWith("/admin/onboarding")) {
       navigate("/admin", { replace: true });
     }
   }, [isGlobalAdmin, loading, location.pathname, navigate]);
-
-  useEffect(() => {
-    if (!loading && !canManageTenantUsers && (location.pathname.startsWith("/admin/team/users") || location.pathname.startsWith("/admin/settings/domains"))) {
-      navigate("/admin", { replace: true });
-    }
-  }, [canManageTenantUsers, loading, location.pathname, navigate]);
 
   useEffect(() => {
     setIsMobileSidebarOpen(false);
@@ -172,7 +157,7 @@ const AdminLayout = () => {
     );
   }
 
-  if (!user || !isAdmin) return null;
+  if (!user || !canAccessAdmin) return null;
 
   return (
     <div className="admin-ui-scope flex min-h-screen bg-background text-foreground">
@@ -245,35 +230,29 @@ const AdminLayout = () => {
         </div>
 
         <nav className="flex-1 space-y-1.5 overflow-auto p-4">
-          {visibleNavItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={closeMobileSidebar}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-300 ${
+          {visibleNavItems.map((item) => {
+            const isActive = activeNavItemTo === item.to;
+            const isLocked = !modulesLoading && item.moduleKey ? !({ hasForum, hasShop, hasSupportDesk, hasSaas }[item.moduleKey]) : false;
+
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={closeMobileSidebar}
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-300 ${
                   isActive
                     ? "bg-[#FF4B2C] text-white shadow-lg shadow-[#FF4B2C]/20"
                     : "text-slate-400 hover:bg-[#FF4B2C]/10 hover:text-[#FF4B2C]"
-                }`
-              }
-            >
-              {({ isActive }) => {
-                const isLocked = !modulesLoading && item.moduleKey ? !({ hasForum, hasShop, hasSupportDesk }[item.moduleKey]) : false;
-
-                return (
-                  <>
-                    <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                    <span className="flex items-center gap-2">
-                      {item.label}
-                      {isLocked ? <Lock size={13} className="text-current opacity-80" /> : null}
-                    </span>
-                  </>
-                );
-              }}
-            </NavLink>
-          ))}
+                }`}
+              >
+                <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="flex items-center gap-2">
+                  {item.label}
+                  {isLocked ? <Lock size={13} className="text-current opacity-80" /> : null}
+                </span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="border-t border-[hsl(var(--admin-sidebar-border))] p-4">

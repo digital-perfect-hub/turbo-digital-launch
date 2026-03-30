@@ -11,12 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { buildRawImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { buildSiteAssetPath } from "@/lib/storage";
 
 const AdminSettings = () => {
   const qc = useQueryClient();
   const { activeSiteId } = useSiteContext();
+  const { canManageSettings } = useAdminAccess();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [form, setForm] = useState<any>({});
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -108,10 +110,16 @@ const AdminSettings = () => {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Einstellungen</h1>
           <p className="mt-2 text-sm text-slate-500">Website-Titel, Favicon, SEO-Daten und Tracking-Scripts.</p>
         </div>
-        <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending} className="rounded-xl bg-[#FF4B2C] hover:bg-[#E03A1E] text-white px-6 py-5 shadow-md shadow-[#FF4B2C]/20 transition-transform hover:scale-105">
+        <Button onClick={() => mutation.mutate(form)} disabled={!canManageSettings || mutation.isPending} className="rounded-xl bg-[#FF4B2C] hover:bg-[#E03A1E] text-white px-6 py-5 shadow-md shadow-[#FF4B2C]/20 transition-transform hover:scale-105">
           {mutation.isPending ? "Speichere..." : "Einstellungen speichern"}
         </Button>
       </div>
+
+      {!canManageSettings ? (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Diese Rolle darf Einstellungen nur lesen. Kritische Settings, Tracking, Domains und globale Metadaten bleiben ab Admin/Owner freigeschaltet.
+        </div>
+      ) : null}
 
       <div className="glass-card rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
         <Tabs defaultValue="general" className="w-full">
@@ -120,6 +128,7 @@ const AdminSettings = () => {
             <TabsTrigger value="seo" className="rounded-lg py-3 data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><Search size={16} className="mr-2" /> SEO & Meta</TabsTrigger>
             <TabsTrigger value="tracking" className="rounded-lg py-3 data-[state=active]:bg-white data-[state=active]:text-[#FF4B2C] data-[state=active]:shadow-sm transition-all"><Code size={16} className="mr-2" /> Tracking</TabsTrigger>
           </TabsList>
+          <fieldset disabled={!canManageSettings}>
 
           {/* TAB 1: ALLGEMEIN */}
           <TabsContent value="general" className="space-y-8 mt-0 outline-none">
@@ -198,7 +207,7 @@ const AdminSettings = () => {
                    <Label className="text-slate-800 font-bold text-lg">Tab-Retention (Komm-Zurück Feature)</Label>
                    <p className="text-xs text-slate-500 mt-1">Ändert den Titel im Browser-Tab, sobald der Nutzer den Tab verlässt.</p>
                  </div>
-                 <Switch checked={form.enable_tab_retention !== false} onCheckedChange={(c) => setForm({ ...form, enable_tab_retention: c })} className="data-[state=checked]:bg-[#FF4B2C]" />
+                 <Switch checked={form.enable_tab_retention !== false} onCheckedChange={(c) => setForm({ ...form, enable_tab_retention: c })} disabled={!canManageSettings} className="data-[state=checked]:bg-[#FF4B2C]" />
                </div>
 
                {form.enable_tab_retention !== false && (
@@ -218,10 +227,10 @@ const AdminSettings = () => {
                        <button onClick={() => {
                          const updated = form.tab_retention_texts.filter((_: any, idx: number) => idx !== i);
                          setForm({ ...form, tab_retention_texts: updated });
-                       }} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                       }} disabled={!canManageSettings} className="p-2 text-slate-400 hover:text-red-500 transition-colors disabled:cursor-not-allowed disabled:opacity-40"><Trash2 size={18} /></button>
                      </div>
                    ))}
-                   <Button variant="outline" size="sm" onClick={() => setForm({ ...form, tab_retention_texts: [...(form.tab_retention_texts || []), ""] })} className="mt-2 text-slate-600 border-slate-200 hover:text-[#FF4B2C] hover:border-[#FF4B2C] rounded-xl">
+                   <Button variant="outline" size="sm" onClick={() => setForm({ ...form, tab_retention_texts: [...(form.tab_retention_texts || []), ""] })} disabled={!canManageSettings} className="mt-2 text-slate-600 border-slate-200 hover:text-[#FF4B2C] hover:border-[#FF4B2C] rounded-xl">
                      <Plus size={16} className="mr-1" /> Weiteren Text hinzufügen
                    </Button>
                    <p className="text-xs text-slate-500 mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -247,6 +256,7 @@ const AdminSettings = () => {
              </div>
           </TabsContent>
 
+          </fieldset>
         </Tabs>
       </div>
     </div>

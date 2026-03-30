@@ -68,7 +68,7 @@ const AdminSites = () => {
     queryKey: ['site-modules-admin', isGlobalAdmin],
     enabled: isGlobalAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from('site_modules' as never).select('site_id, has_forum, has_shop, has_seo_pro, has_support_desk, updated_at');
+      const { data, error } = await supabase.from('site_modules' as never).select('site_id, has_forum, has_shop, has_seo_pro, has_support_desk, has_saas, updated_at');
       if (error) {
         const code = typeof (error as any)?.code === 'string' ? (error as any).code : '';
         const message = typeof (error as any)?.message === 'string' ? (error as any).message : '';
@@ -108,6 +108,7 @@ const AdminSites = () => {
         has_shop: Boolean(typeof patch.has_shop === 'boolean' ? patch.has_shop : current.has_shop),
         has_seo_pro: Boolean(typeof patch.has_seo_pro === 'boolean' ? patch.has_seo_pro : current.has_seo_pro),
         has_support_desk: Boolean(typeof patch.has_support_desk === 'boolean' ? patch.has_support_desk : current.has_support_desk),
+        has_saas: Boolean(typeof patch.has_saas === 'boolean' ? patch.has_saas : current.has_saas),
       };
       const { error } = await supabase.from('site_modules' as never).upsert(payload, { onConflict: 'site_id' });
       if (error) throw error;
@@ -294,7 +295,7 @@ const AdminSites = () => {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {sites.map((site: any) => {
-                const modules = moduleRowsBySiteId.get(site.id) || { has_forum: false, has_shop: false, has_seo_pro: false, has_support_desk: false };
+                const modules = moduleRowsBySiteId.get(site.id) || { has_forum: false, has_shop: false, has_seo_pro: false, has_support_desk: false, has_saas: false };
                 return (
                   <article key={`module-${site.id}`} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                     <div className="flex items-start justify-between gap-3">
@@ -310,6 +311,7 @@ const AdminSites = () => {
                         { key: 'has_forum', label: 'Forum' },
                         { key: 'has_seo_pro', label: 'SEO Pro' },
                         { key: 'has_support_desk', label: 'Support Desk' },
+                        { key: 'has_saas', label: 'SaaS Features freischalten' },
                       ].map((module) => (
                         <label key={module.key} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">
                           <span>{module.label}</span>

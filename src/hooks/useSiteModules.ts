@@ -9,6 +9,7 @@ export type SiteModulesRecord = {
   has_shop: boolean;
   has_seo_pro: boolean;
   has_support_desk: boolean;
+  has_saas: boolean;
   updated_at: string | null;
 };
 
@@ -18,6 +19,7 @@ const createDefaultModules = (siteId: string): SiteModulesRecord => ({
   has_shop: false,
   has_seo_pro: false,
   has_support_desk: false,
+  has_saas: false,
   updated_at: null,
 });
 
@@ -40,7 +42,7 @@ export const useSiteModules = () => {
     queryFn: async (): Promise<SiteModulesRecord> => {
       const { data, error } = await supabase
         .from('site_modules' as never)
-        .select('site_id, has_forum, has_shop, has_seo_pro, has_support_desk, updated_at')
+        .select('site_id, has_forum, has_shop, has_seo_pro, has_support_desk, has_saas, updated_at')
         .eq('site_id', siteId)
         .maybeSingle();
 
@@ -52,6 +54,7 @@ export const useSiteModules = () => {
             has_shop: true,
             has_seo_pro: true,
             has_support_desk: false,
+            has_saas: false,
             updated_at: null,
           };
         }
@@ -71,6 +74,7 @@ export const useSiteModules = () => {
         has_shop: Boolean(row.has_shop),
         has_seo_pro: Boolean(row.has_seo_pro),
         has_support_desk: Boolean(row.has_support_desk),
+        has_saas: Boolean(row.has_saas),
         updated_at: typeof row.updated_at === 'string' ? row.updated_at : null,
       };
     },
@@ -86,5 +90,6 @@ export const useSiteModules = () => {
     hasShop: modules.has_shop,
     hasSeoPro: modules.has_seo_pro,
     hasSupportDesk: modules.has_support_desk,
+    hasSaas: modules.has_saas,
   };
 };

@@ -17,6 +17,7 @@ import {
   normalizeHostname,
   setStoredAdminSiteId,
   type SiteRecord,
+  type SiteRole,
 } from "@/lib/site";
 
 type SiteContextValue = {
@@ -25,6 +26,7 @@ type SiteContextValue = {
   activeSiteId: string;
   activeSite: SiteRecord | null;
   availableSites: SiteRecord[];
+  activeSiteRole: SiteRole | null;
   isLoading: boolean;
   isReady: boolean;
   canManageMultipleSites: boolean;
@@ -155,6 +157,7 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
   }, [availableSites, publicSite, selectedSiteId]);
 
   const activeSite = adminRoute ? adminSite : publicSite;
+  const activeSiteRole = (activeSite?.user_role ?? null) as SiteRole | null;
 
   useEffect(() => {
     if (!user) return;
@@ -178,6 +181,7 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
       activeSiteId,
       activeSite,
       availableSites,
+      activeSiteRole,
       isLoading,
       isReady: Boolean(activeSiteId),
       canManageMultipleSites: isGlobalAdmin || availableSites.length > 1,
@@ -187,7 +191,7 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
         void availableSitesQuery.refetch();
       },
     }),
-    [hostname, resolvedSite, activeSiteId, activeSite, availableSites, isLoading, isGlobalAdmin, setActiveSiteId, resolveSiteQuery, availableSitesQuery],
+    [hostname, resolvedSite, activeSiteId, activeSite, availableSites, activeSiteRole, isLoading, isGlobalAdmin, setActiveSiteId, resolveSiteQuery, availableSitesQuery],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

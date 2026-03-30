@@ -9,7 +9,7 @@ type ModuleLockedStateProps = {
   canSelfActivate?: boolean;
 };
 
-export const ModuleLockedState = ({
+const ModuleLockedState = ({
   moduleName,
   title,
   description,
@@ -84,3 +84,6 @@ export const ModuleLockedState = ({
     </div>
   );
 };
+
+export { ModuleLockedState };
+export default ModuleLockedState;

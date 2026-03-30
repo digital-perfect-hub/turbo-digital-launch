@@ -57,16 +57,17 @@ const normalizeSiteRoles = (rows: Array<{ site_id: string; role: TenantSiteRole 
 };
 
 const buildCapabilities = (isGlobalAdmin: boolean, siteRoles: SiteRoleAssignment[]): AuthCapabilities => {
-  const hasTenantManagementRole = siteRoles.some(({ role }) => ["owner", "admin", "editor"].includes(role));
+  const hasTenantAccessRole = siteRoles.length > 0;
+  const hasTenantContentManagementRole = siteRoles.some(({ role }) => ["owner", "admin", "editor"].includes(role));
   const hasTenantUserManagementRole = siteRoles.some(({ role }) => ["owner", "admin"].includes(role));
 
   return {
-    canAccessAdmin: isGlobalAdmin || hasTenantManagementRole,
+    canAccessAdmin: isGlobalAdmin || hasTenantAccessRole,
     canAccessPlatformAdmin: isGlobalAdmin,
     canManageTemplates: isGlobalAdmin,
     canManageGlobalBilling: isGlobalAdmin,
     canManageSites: isGlobalAdmin,
-    canManageTenantContent: isGlobalAdmin || hasTenantManagementRole,
+    canManageTenantContent: isGlobalAdmin || hasTenantContentManagementRole,
     canManageTenantUsers: isGlobalAdmin || hasTenantUserManagementRole,
   };
 };
@@ -112,11 +113,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const hasGlobalAdmin = Boolean(globalAdminResult.data);
     const normalizedRoles = normalizeSiteRoles(((siteRoleResult.data as Array<{ site_id: string; role: TenantSiteRole }> | null) ?? []));
-    const hasTenantManagementRole = normalizedRoles.some(({ role }) => ["owner", "admin", "editor"].includes(role));
+    const hasTenantAccessRole = normalizedRoles.length > 0;
 
     setIsGlobalAdmin(hasGlobalAdmin);
     setSiteRoles(normalizedRoles);
-    setIsAdmin(hasGlobalAdmin || hasTenantManagementRole);
+    setIsAdmin(hasGlobalAdmin || hasTenantAccessRole);
   }, [user?.id]);
 
   useEffect(() => {

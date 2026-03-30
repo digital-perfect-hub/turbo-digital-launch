@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Globe, Loader2, Plus, RefreshCw, ShieldCheck, Star, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useSiteContext } from "@/context/SiteContext";
 import { useBilling } from "@/hooks/useBilling";
 import { formatUsageLabel } from "@/lib/billing";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import ModuleLockedState from "@/components/admin/ModuleLockedState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -50,24 +52,6 @@ const AdminDomains = () => {
   const { plan, entitlements, usage } = useBilling();
   const [newDomain, setNewDomain] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-
-  const myRoleQuery = useQuery({
-    queryKey: ["tenant-domains-my-role", activeSiteId, user?.id],
-    enabled: Boolean(user?.id && activeSiteId && !isGlobalAdmin),
-    queryFn: async (): Promise<TenantSiteRole | null> => {
-      const { data, error } = await supabase
-        .from("user_site_roles" as never)
-        .select("role")
-        .eq("site_id", activeSiteId)
-        .eq("user_id", user?.id)
-        .maybeSingle();
-      if (error) throw error;
-      return ((data as { role?: TenantSiteRole } | null)?.role ?? null) as TenantSiteRole | null;
-    },
-  });
-
-  const activeTenantRole = isGlobalAdmin ? "owner" : myRoleQuery.data ?? null;
-  const canManageDomains = isGlobalAdmin || activeTenantRole === "owner" || activeTenantRole === "admin";
 
   const domainsQuery = useQuery({
     queryKey: ["tenant-domains", activeSiteId],
@@ -183,6 +167,15 @@ const AdminDomains = () => {
 
   const rows = useMemo(() => domainsQuery.data ?? [], [domainsQuery.data]);
   const domainsAtLimit = usage.customDomains >= entitlements.maxCustomDomains;
+
+  if (!loading && !hasSaasAccess) {
+    return (
+      <ModuleLockedState
+        title="SaaS-Domain-Management ist gesperrt"
+        description="Eigene Domains, DNS-Self-Service und Tenant-White-Label-Domains sind für diesen Tenant aktuell nicht freigeschaltet."
+      />
+    );
+  }
 
   if (!loading && !canManageDomains) {
     return (

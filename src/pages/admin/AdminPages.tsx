@@ -13,6 +13,7 @@ import { Eye, FilePlus2, Globe2, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContext } from "@/context/SiteContext";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { uploadBrandingAsset } from "@/lib/storage";
 import {
@@ -102,6 +103,7 @@ const AdminPages = () => {
   const qc = useQueryClient();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const { activeSiteId } = useSiteContext();
+  const { canEditContent } = useAdminAccess();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PageDraft>(createEmptyDraft);
@@ -277,6 +279,11 @@ const AdminPages = () => {
 
   return (
     <div className="max-w-[1680px] p-6 md:p-8 lg:p-10">
+      {!canEditContent ? (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Diese Rolle hat im Page Builder nur Lesezugriff. Speichern ist erst ab Editor freigeschaltet.
+        </div>
+      ) : null}
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Page Builder</h1>
@@ -289,6 +296,7 @@ const AdminPages = () => {
           <Button
             variant="outline"
             className="rounded-xl border-slate-200"
+            disabled={!canEditContent}
             onClick={() => {
               setSelectedPageId(null);
               setDraft(createEmptyDraft());
@@ -301,13 +309,13 @@ const AdminPages = () => {
             <Button
               variant="outline"
               className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-              disabled={deleteMutation.isPending}
+              disabled={!canEditContent || deleteMutation.isPending}
               onClick={() => deleteMutation.mutate(draft.id)}
             >
               <Trash2 size={16} className="mr-2" /> Löschen
             </Button>
           ) : null}
-          <Button className="rounded-xl bg-[#FF4B2C] text-white hover:bg-[#E03A1E]" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate(draft)}>
+          <Button className="rounded-xl bg-[#FF4B2C] text-white hover:bg-[#E03A1E]" disabled={!canEditContent || saveMutation.isPending} onClick={() => saveMutation.mutate(draft)}>
             <Save size={16} className="mr-2" />
             {saveMutation.isPending ? "Speichere..." : "Seite speichern"}
           </Button>
@@ -358,7 +366,7 @@ const AdminPages = () => {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className={`space-y-6 ${!canEditContent ? "pointer-events-none opacity-60" : ""}`}>
           <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle className="text-slate-900">Metadaten & Routing</CardTitle>
@@ -394,7 +402,7 @@ const AdminPages = () => {
                   <p className="text-sm font-semibold text-slate-900">Seite veröffentlicht</p>
                   <p className="text-xs text-slate-500">Nur veröffentlichte Seiten dürfen öffentlich ausgeliefert werden.</p>
                 </div>
-                <Switch checked={draft.is_published} onCheckedChange={(checked) => setDraft((prev) => ({ ...prev, is_published: checked }))} />
+                <Switch checked={draft.is_published} disabled={!canEditContent} onCheckedChange={(checked) => setDraft((prev) => ({ ...prev, is_published: checked }))} />
               </div>
             </CardContent>
           </Card>
@@ -410,6 +418,7 @@ const AdminPages = () => {
                   key={option.type}
                   variant="outline"
                   className="rounded-xl border-slate-200"
+                  disabled={!canEditContent}
                   onClick={() => setDraft((prev) => ({ ...prev, content_blocks: [...prev.content_blocks, createDefaultBlock(option.type)] }))}
                 >
                   <Plus size={16} className="mr-2" />{option.label}

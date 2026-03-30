@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, MailPlus, MoreHorizontal, Shield, Skull, Trash2, UserCog, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useSiteContext } from "@/context/SiteContext";
 import { useBilling } from "@/hooks/useBilling";
 import { formatUsageLabel } from "@/lib/billing";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import ModuleLockedState from "@/components/admin/ModuleLockedState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -75,6 +77,7 @@ const sortRoles = (rows: UserSiteRoleRow[]) =>
 const AdminUsers = () => {
   const { isGlobalAdmin, loading, user } = useAuth();
   const { activeSiteId, activeSite } = useSiteContext();
+  const { canManageUsers, hasSaasAccess } = useAdminAccess();
   const { plan, entitlements, usage } = useBilling();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TenantSiteRole>("viewer");
@@ -82,23 +85,7 @@ const AdminUsers = () => {
   const [inviteSuccess, setInviteSuccess] = useState<InviteResponse | null>(null);
   const [pendingHardDeleteUserId, setPendingHardDeleteUserId] = useState<string | null>(null);
 
-  const myRoleQuery = useQuery({
-    queryKey: ["tenant-user-my-role", activeSiteId, user?.id],
-    enabled: Boolean(user?.id && activeSiteId && !isGlobalAdmin),
-    queryFn: async (): Promise<TenantSiteRole | null> => {
-      const { data, error } = await supabase
-        .from("user_site_roles" as never)
-        .select("role")
-        .eq("site_id", activeSiteId)
-        .eq("user_id", user?.id)
-        .maybeSingle();
-      if (error) throw error;
-      return ((data as { role?: TenantSiteRole } | null)?.role ?? null) as TenantSiteRole | null;
-    },
-  });
-
-  const activeTenantRole = isGlobalAdmin ? "owner" : myRoleQuery.data ?? null;
-  const canManageUsersForSite = isGlobalAdmin || activeTenantRole === "owner" || activeTenantRole === "admin";
+  const canManageUsersForSite = canManageUsers;
   const allowedInviteRoles = isGlobalAdmin
     ? (["owner", "admin", "editor", "viewer"] as TenantSiteRole[])
     : (["admin", "editor", "viewer"] as TenantSiteRole[]);
@@ -197,6 +184,15 @@ const AdminUsers = () => {
 
   const rows = useMemo(() => rolesQuery.data ?? [], [rolesQuery.data]);
   const seatsAtLimit = usage.teamMembers >= entitlements.maxTeamMembers;
+
+  if (!loading && !hasSaasAccess) {
+    return (
+      <ModuleLockedState
+        title="SaaS-Benutzerverwaltung ist gesperrt"
+        description="Benutzer, Rollen und Tenant-Selbstverwaltung sind für diesen Tenant aktuell nicht freigeschaltet."
+      />
+    );
+  }
 
   if (!loading && !canManageUsersForSite) {
     return (
