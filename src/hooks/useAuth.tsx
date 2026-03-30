@@ -123,32 +123,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const applySession = (nextSession: Session | null) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
+      setLoading(Boolean(nextSession));
     };
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       applySession(nextSession);
-      setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       applySession(initialSession);
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!user) {
       setIsAdmin(false);
       setIsGlobalAdmin(false);
       setSiteRoles([]);
-      return;
+      setLoading(false);
+      return () => {
+        isMounted = false;
+      };
     }
 
-    void refreshAccessContext();
+    setLoading(true);
+
+    void refreshAccessContext().finally(() => {
+      if (!isMounted) return;
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [user, refreshAccessContext]);
 
   const signIn = async (email: string, password: string) => {
