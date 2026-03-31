@@ -3,7 +3,7 @@ import { ArrowRight, BadgeCheck, BarChart3, Globe, ShieldCheck, Sparkles } from 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
-import { buildRawImageUrl } from "@/lib/image";
+import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import heroFallback from "@/assets/hero-bg.jpg";
@@ -61,7 +61,7 @@ const proofItems = [
 const resolveImage = (path?: string | null, fallback: string = heroFallback) => {
   const trimmed = String(path || "").trim();
   if (!trimmed) return fallback;
-  return buildRawImageUrl(trimmed);
+  return buildRenderImageUrl(trimmed, { width: 1600, quality: 82 });
 };
 
 const HeroSection = () => {

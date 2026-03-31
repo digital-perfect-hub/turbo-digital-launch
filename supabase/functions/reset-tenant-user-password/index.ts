@@ -57,7 +57,7 @@ Deno.serve(async (request) => {
       return json({ error: "Missing bearer token." }, 401);
     }
 
-    const appBaseUrl = Deno.env.get("APP_BASE_URL") || "https://dev.digital-perfect.com";
+    const appBaseUrl = Deno.env.get("APP_BASE_URL") || "https://digital-perfect.com";
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },

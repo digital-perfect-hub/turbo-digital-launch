@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import CookieBanner from "@/components/CookieBanner";
 import ConsentScriptGate from "@/components/ConsentScriptGate";
 import PageViewTracker from "@/components/PageViewTracker";
@@ -51,6 +51,9 @@ import AdminOnboarding from "./pages/admin/AdminOnboarding";
 
 const queryClient = new QueryClient();
 
+
+const LegacyShopifyNewsRedirect = () => <Navigate to="/magazin" replace />;
+
 const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
   useGlobalTheme();
 
@@ -84,6 +87,8 @@ const App = () => (
                 <Route path="/forum" element={<Forum />} />
                 <Route path="/forum/kategorie/:categorySlug" element={<Forum />} />
                 <Route path="/forum/:slug" element={<ForumThread />} />
+                <Route path="/blogs/news" element={<LegacyShopifyNewsRedirect />} />
+                <Route path="/blogs/news/" element={<LegacyShopifyNewsRedirect />} />
 
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />

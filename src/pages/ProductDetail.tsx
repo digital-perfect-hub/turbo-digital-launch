@@ -12,6 +12,7 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { buildAbsolutePublicUrl } from "@/lib/url";
 
 type ProductRecord = Database["public"]["Tables"]["products"]["Row"];
 
@@ -206,7 +207,7 @@ const ProductDetail = () => {
     upsertMeta({ property: "og:description" }, metaDescription);
     upsertMeta({ property: "og:type" }, "product");
     if (detailImage) upsertMeta({ property: "og:image" }, detailImage);
-    upsertLink("canonical", `${window.location.origin}/produkt/${product.slug}`);
+    upsertLink("canonical", buildAbsolutePublicUrl(`/produkt/${product.slug}`));
   }, [detailImage, product]);
 
   useEffect(() => {
@@ -241,8 +242,8 @@ const ProductDetail = () => {
 
     setIsCheckoutLoading(true);
     try {
-      const successUrl = `${window.location.origin}/produkt/${product.slug}?checkout=success`;
-      const cancelUrl = `${window.location.origin}/produkt/${product.slug}?checkout=cancel`;
+      const successUrl = buildAbsolutePublicUrl(`/produkt/${product.slug}?checkout=success`);
+      const cancelUrl = buildAbsolutePublicUrl(`/produkt/${product.slug}?checkout=cancel`);
 
       const { data, error } = await supabase.functions.invoke("create-stripe-checkout", {
         body: {

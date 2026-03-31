@@ -45,7 +45,7 @@ const normalizeTenantRole = (value: unknown): TenantRole | null => {
 };
 
 const buildSetPasswordRedirect = (appBaseUrl: string | undefined) => {
-  const fallbackBase = normalizeBaseUrl(appBaseUrl) ?? "https://dev.digital-perfect.com";
+  const fallbackBase = normalizeBaseUrl(appBaseUrl) ?? "https://digital-perfect.com";
   return `${fallbackBase}/set-password`;
 };
 

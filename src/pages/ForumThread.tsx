@@ -23,6 +23,7 @@ import {
   useToggleForumReplyLike,
 } from "@/hooks/useForum";
 import { getForumRenderImageUrl, sanitizeForumHtml } from "@/lib/forumHtml";
+import { buildAbsolutePublicUrl } from "@/lib/url";
 
 const formatDate = (value?: string | null) =>
   value
@@ -41,8 +42,7 @@ const formatAuthorInitials = (value?: string | null) =>
     .map((chunk) => chunk.charAt(0).toUpperCase())
     .join("");
 
-const buildAbsoluteUrl = (path: string) =>
-  typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
+const buildAbsoluteUrl = (path: string) => buildAbsolutePublicUrl(path);
 
 const stripHtml = (value?: string | null) =>
   (value || "")
@@ -187,7 +187,7 @@ const ForumThreadPage = () => {
         title={seoTitle}
         description={seoDescription}
         image={thread?.featured_image_url || undefined}
-        canonical={buildAbsoluteUrl(canonicalPath)}
+        canonical={canonicalPath}
         noIndex={notFound}
         structuredData={structuredData}
       />

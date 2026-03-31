@@ -87,7 +87,7 @@ export const buildRenderImageUrl = (
   storagePath: string | null | undefined,
   options: ImageRenderOptions = {},
 ): string => {
-  return buildRawImageUrl(storagePath, options);
+  return buildStrictRenderImageUrl(storagePath, options);
 };
 
 /**

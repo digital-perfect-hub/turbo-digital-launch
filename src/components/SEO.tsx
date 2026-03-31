@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { buildRenderImageUrl } from "@/lib/image";
+import { resolveCanonicalUrl } from "@/lib/url";
 
 type StructuredData = Record<string, unknown> | Array<Record<string, unknown>>;
 
@@ -102,7 +103,7 @@ const SEO = ({
   const ogImageRaw = useMemo(() => image || settings.og_image_path || settings.logo_path || "", [image, settings.logo_path, settings.og_image_path]);
   const ogImageUrl = useMemo(() => (ogImageRaw ? buildRenderImageUrl(ogImageRaw, { width: 1200, quality: 80 }) : ""), [ogImageRaw]);
 
-  const resolvedCanonical = canonical || (typeof window !== "undefined" ? window.location.href : "");
+  const resolvedCanonical = useMemo(() => resolveCanonicalUrl(canonical), [canonical]);
 
   useEffect(() => {
     if (resolvedTitle) document.title = resolvedTitle;
@@ -111,6 +112,7 @@ const SEO = ({
     upsertMeta({ property: "og:description" }, resolvedDescription);
     upsertMeta({ property: "og:image" }, ogImageUrl);
     upsertMeta({ property: "og:type" }, type);
+    upsertMeta({ property: "og:url" }, resolvedCanonical);
     upsertMeta({ name: "robots" }, noIndex ? "noindex,follow" : "index,follow");
     upsertLink("canonical", resolvedCanonical);
     upsertStructuredData(structuredData);

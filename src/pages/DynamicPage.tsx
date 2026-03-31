@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft, FileWarning } from "lucide-react";
 import Footer from "@/components/Footer";
 import SupportWidget from "@/components/support/SupportWidget";
@@ -11,11 +11,13 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { useSiteContext } from "@/context/SiteContext";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { resolveCanonicalUrl } from "@/lib/url";
 import { normalizePageBlocks, type PageRecord } from "@/lib/page-builder";
 import { supabase } from "@/integrations/supabase/client";
 
 const DynamicPage = () => {
   const { slug = "" } = useParams();
+  const location = useLocation();
   const normalizedSlug = slug.trim().toLowerCase();
   const { activeSiteId, isLoading: isSiteLoading } = useSiteContext();
   const { isLoading: isThemeLoading } = useGlobalTheme();
@@ -56,10 +58,7 @@ const DynamicPage = () => {
 
   const startsWithHero = data?.content_blocks?.[0]?.type === "hero";
 
-  const canonical = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    return window.location.href;
-  }, []);
+  const canonical = useMemo(() => resolveCanonicalUrl(location.pathname), [location.pathname]);
 
   if (isSiteLoading || isThemeLoading || isLoading) {
     return <LoadingScreen heading="Seite wird geladen" subtext="Mandant, Theme und Inhalte werden aufgebaut." />;
