@@ -29,6 +29,9 @@ type SiteContextValue = {
   activeSiteRole: SiteRole | null;
   isLoading: boolean;
   isReady: boolean;
+  isAdminRoute: boolean;
+  siteNotFound: boolean;
+  siteResolveError: boolean;
   canManageMultipleSites: boolean;
   setActiveSiteId: (siteId: string) => void;
   refetchSites: () => void;
@@ -53,6 +56,11 @@ const getBrowserPathname = () => {
 };
 
 const isAdminPath = (pathname: string) => /^\/admin(?:\/|$)/.test(pathname);
+
+const isLocalDevHostname = (hostname: string) => {
+  const normalizedHostname = normalizeHostname(hostname);
+  return normalizedHostname === "localhost" || normalizedHostname === "127.0.0.1" || normalizedHostname.endsWith(".local");
+};
 
 export const SiteProvider = ({ children }: { children: ReactNode }) => {
   const { user, isGlobalAdmin } = useAuth();
@@ -104,6 +112,23 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        if (isLocalDevHostname(hostname)) {
+          return {
+            id: DEFAULT_SITE_ID,
+            name: "Default Site",
+            slug: "default",
+            primary_domain: hostname,
+            is_default: true,
+            is_active: true,
+          };
+        }
+
+        throw error;
+      }
+
+      const record = Array.isArray(data) ? data[0] : data;
+
+      if (!record && isLocalDevHostname(hostname)) {
         return {
           id: DEFAULT_SITE_ID,
           name: "Default Site",
@@ -114,7 +139,6 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
         };
       }
 
-      const record = Array.isArray(data) ? data[0] : data;
       return record ? mapSiteRecord(record) : null;
     },
   });
@@ -139,8 +163,12 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
       return matchingResolved ?? resolvedSite;
     }
 
-    return availableSites.find((site) => site.is_default) || availableSites[0] || null;
-  }, [availableSites, resolvedSite]);
+    if (adminRoute) {
+      return availableSites.find((site) => site.is_default) || availableSites[0] || null;
+    }
+
+    return null;
+  }, [adminRoute, availableSites, resolvedSite]);
 
   const adminSite = useMemo(() => {
     if (selectedSiteId) {
@@ -175,8 +203,9 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
     setStoredAdminSiteId(siteId);
   }, []);
 
-  const isLoading = resolveSiteQuery.isLoading || (Boolean(user) && availableSitesQuery.isLoading);
-  const activeSiteId = activeSite?.id || publicSite?.id || DEFAULT_SITE_ID;
+  const siteNotFound = !adminRoute && !resolveSiteQuery.isLoading && !resolveSiteQuery.isError && !resolvedSite;
+  const isLoading = resolveSiteQuery.isLoading || (adminRoute && Boolean(user) && availableSitesQuery.isLoading);
+  const activeSiteId = activeSite?.id || publicSite?.id || (adminRoute ? DEFAULT_SITE_ID : "");
 
   const value = useMemo<SiteContextValue>(
     () => ({
@@ -187,7 +216,10 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
       availableSites,
       activeSiteRole,
       isLoading,
-      isReady: Boolean(activeSiteId),
+      isReady: adminRoute ? Boolean(activeSiteId) : Boolean(resolvedSite),
+      isAdminRoute: adminRoute,
+      siteNotFound,
+      siteResolveError: resolveSiteQuery.isError,
       canManageMultipleSites: isGlobalAdmin || availableSites.length > 1,
       setActiveSiteId,
       refetchSites: () => {
@@ -195,7 +227,7 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
         void availableSitesQuery.refetch();
       },
     }),
-    [hostname, resolvedSite, activeSiteId, activeSite, availableSites, activeSiteRole, isLoading, isGlobalAdmin, setActiveSiteId, resolveSiteQuery, availableSitesQuery],
+    [hostname, resolvedSite, activeSiteId, activeSite, availableSites, activeSiteRole, isLoading, adminRoute, siteNotFound, isGlobalAdmin, setActiveSiteId, resolveSiteQuery, availableSitesQuery],
   );
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;

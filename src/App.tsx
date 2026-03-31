@@ -7,9 +7,12 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import CookieBanner from "@/components/CookieBanner";
 import ConsentScriptGate from "@/components/ConsentScriptGate";
 import PageViewTracker from "@/components/PageViewTracker";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { createDefaultLoadingScreenConfig, parseLoadingScreenConfig } from "@/lib/site-ui-config";
 import { AuthProvider } from "./hooks/useAuth";
-import { SiteProvider } from "./context/SiteContext";
+import { SiteProvider, useSiteContext } from "./context/SiteContext";
 import { useGlobalTheme } from "./hooks/useGlobalTheme";
+import { useSiteSettings } from "./hooks/useSiteSettings";
 
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -54,8 +57,45 @@ const queryClient = new QueryClient();
 
 const LegacyShopifyNewsRedirect = () => <Navigate to="/magazin" replace />;
 
+const AppBootstrapGate = ({ children }: { children: ReactNode }) => {
+  const { isLoading, isAdminRoute, siteNotFound, siteResolveError } = useSiteContext();
+
+  if (isLoading) {
+    return <LoadingScreen heading="Mandant wird geladen" subtext="Domain, Routing und Datenquelle werden geprüft." />;
+  }
+
+  if (!isAdminRoute && (siteNotFound || siteResolveError)) {
+    return <NotFound />;
+  }
+
+  return <ThemeBootstrap>{children}</ThemeBootstrap>;
+};
+
 const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
-  useGlobalTheme();
+  const { settings: themeSettings, isLoading: isThemeLoading } = useGlobalTheme();
+  const { settings: siteSettings, isLoading: isSiteSettingsLoading } = useSiteSettings();
+
+  const loadingScreenConfig = parseLoadingScreenConfig(
+    siteSettings.loading_screen_config || createDefaultLoadingScreenConfig(),
+  );
+
+  if (isThemeLoading || isSiteSettingsLoading) {
+    return (
+      <LoadingScreen
+        heading={themeSettings.loader_heading || loadingScreenConfig.heading}
+        subtext={themeSettings.loader_subtext || loadingScreenConfig.subtext}
+        bgHex={themeSettings.loader_bg_hex ?? loadingScreenConfig.background_color}
+        textHex={themeSettings.loader_text_hex ?? loadingScreenConfig.text_color}
+        config={{
+          ...loadingScreenConfig,
+          heading: themeSettings.loader_heading || loadingScreenConfig.heading,
+          subtext: themeSettings.loader_subtext || loadingScreenConfig.subtext,
+          background_color: themeSettings.loader_bg_hex ?? loadingScreenConfig.background_color,
+          text_color: themeSettings.loader_text_hex ?? loadingScreenConfig.text_color,
+        }}
+      />
+    );
+  }
 
   return (
     <>
@@ -75,7 +115,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <ThemeBootstrap>
+            <AppBootstrapGate>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
@@ -120,7 +160,7 @@ const App = () => (
                 <Route path="/:slug" element={<DynamicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </ThemeBootstrap>
+            </AppBootstrapGate>
           </BrowserRouter>
         </TooltipProvider>
       </SiteProvider>

@@ -60,14 +60,14 @@ const Index = () => {
       <LoadingScreen
         heading={theme?.loader_heading || loadingScreenConfig.heading}
         subtext={theme?.loader_subtext || loadingScreenConfig.subtext}
-        bgHex={theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex ?? loadingScreenConfig.background_color}
-        textHex={theme?.loader_loader_text_hex ?? theme?.loader_text_hex ?? loadingScreenConfig.text_color}
+        bgHex={theme?.loader_bg_hex ?? loadingScreenConfig.background_color}
+        textHex={theme?.loader_text_hex ?? loadingScreenConfig.text_color}
         config={{
           ...loadingScreenConfig,
           heading: theme?.loader_heading || loadingScreenConfig.heading,
           subtext: theme?.loader_subtext || loadingScreenConfig.subtext,
-          background_color: theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex ?? loadingScreenConfig.background_color,
-          text_color: theme?.loader_loader_text_hex ?? theme?.loader_text_hex ?? loadingScreenConfig.text_color,
+          background_color: theme?.loader_bg_hex ?? loadingScreenConfig.background_color,
+          text_color: theme?.loader_text_hex ?? loadingScreenConfig.text_color,
         }}
       />
     );
