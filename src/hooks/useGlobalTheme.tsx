@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { useLocation } from "react-router-dom";
 import {
   applyThemeToRoot,
   defaultButtonTheme,
@@ -15,10 +16,6 @@ import {
 } from "@/lib/theme-settings";
 
 export type GlobalThemeSettings = BaseThemeSettings & {
-  loader_heading: string | null;
-  loader_subtext: string | null;
-  loader_bg_hex: string | null;
-  loader_text_hex: string | null;
   use_text_logo: boolean | null;
   text_logo_color_hex: string | null;
   show_logo_dot: boolean | null;
@@ -67,10 +64,6 @@ const defaultTheme: GlobalThemeSettings = {
   border_radius: "0.5rem",
   company_name: "Digital-Perfect",
   logo_path: null,
-  loader_heading: "Website wird geladen",
-  loader_subtext: "Wir bauen gerade deine Premium-Erfahrung auf.",
-  loader_bg_hex: "#0B1020",
-  loader_text_hex: "#F8FAFC",
   use_text_logo: true,
   text_logo_color_hex: "#FFFFFF",
   show_logo_dot: true,
@@ -113,7 +106,9 @@ const defaultTheme: GlobalThemeSettings = {
 
 export const useGlobalTheme = () => {
   const { activeSiteId } = useSiteContext();
-  const siteId = activeSiteId || DEFAULT_SITE_ID;
+  const location = useLocation();
+  const isAdminRoute = /^\/admin(?:\/|$)/.test(location.pathname);
+  const siteId = isAdminRoute ? activeSiteId || DEFAULT_SITE_ID : activeSiteId;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["global_settings", siteId],
@@ -139,6 +134,10 @@ export const useGlobalTheme = () => {
   }, [data]);
 
   useLayoutEffect(() => {
+    if (!siteId) {
+      return;
+    }
+
     const root = document.documentElement;
 
     applyThemeToRoot(settings as BaseThemeSettings);
@@ -206,15 +205,15 @@ export const useGlobalTheme = () => {
         timeoutIds.forEach(window.clearTimeout);
       };
     }
-  }, [settings]);
+  }, [settings, siteId]);
 
   const resolvedLogoUrl = settings.logo_path
     ? buildRenderImageUrl(settings.logo_path, { width: 320, quality: 80 })
     : "";
 
   return {
-    theme: settings,
     settings,
+    theme: settings,
     rawSettings: data ?? null,
     isLoading,
     error,

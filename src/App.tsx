@@ -1,14 +1,12 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import CookieBanner from "@/components/CookieBanner";
 import ConsentScriptGate from "@/components/ConsentScriptGate";
 import PageViewTracker from "@/components/PageViewTracker";
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import { createDefaultLoadingScreenConfig, parseLoadingScreenConfig } from "@/lib/site-ui-config";
 import { AuthProvider } from "./hooks/useAuth";
 import { SiteProvider, useSiteContext } from "./context/SiteContext";
 import { useGlobalTheme } from "./hooks/useGlobalTheme";
@@ -51,48 +49,57 @@ import AdminPages from "./pages/admin/AdminPages";
 import AdminBilling from "./pages/admin/AdminBilling";
 import AdminTickets from "./pages/admin/AdminTickets";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
+import { LoadingScreen } from "./components/ui/LoadingScreen";
 
 const queryClient = new QueryClient();
 
 
 const LegacyShopifyNewsRedirect = () => <Navigate to="/magazin" replace />;
 
-const AppBootstrapGate = ({ children }: { children: ReactNode }) => {
-  const { isLoading, isAdminRoute, siteNotFound, siteResolveError } = useSiteContext();
+const APP_BOOT_ID = "dp-app-boot";
 
-  if (isLoading) {
-    return <LoadingScreen heading="Mandant wird geladen" subtext="Domain, Routing und Datenquelle werden geprüft." />;
-  }
+const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
+  const location = useLocation();
+  const { activeSiteId, hostname, isLoading: isSiteLoading, resolvedSite } = useSiteContext();
+  const { theme, isLoading: isThemeLoading } = useGlobalTheme();
+  const { settings, isLoading: isSettingsLoading } = useSiteSettings();
 
-  if (!isAdminRoute && (siteNotFound || siteResolveError)) {
+  const isAdminRoute = /^\/admin(?:\/|$)/.test(location.pathname);
+  const isLocalDevelopmentHost = hostname === "localhost" || hostname === "127.0.0.1";
+  const loadingScreenConfig = settings.loading_screen_config;
+  const isPublicBootstrapLoading = !isAdminRoute && (isSiteLoading || !activeSiteId);
+  const shouldShowBootLoader = isAdminRoute
+    ? isSiteLoading || isThemeLoading || isSettingsLoading
+    : isPublicBootstrapLoading || (Boolean(activeSiteId) && (isThemeLoading || isSettingsLoading));
+  const shouldShowDomainNotFound = !isAdminRoute && !isSiteLoading && !activeSiteId && !isLocalDevelopmentHost && !resolvedSite;
+
+  useLayoutEffect(() => {
+    const bootNode = document.getElementById(APP_BOOT_ID);
+
+    if (shouldShowBootLoader) {
+      document.body.classList.remove("dp-app-ready");
+      return;
+    }
+
+    document.body.classList.add("dp-app-ready");
+    if (bootNode) {
+      bootNode.setAttribute("aria-hidden", "true");
+      window.setTimeout(() => bootNode.remove(), 220);
+    }
+  }, [shouldShowBootLoader]);
+
+  if (shouldShowDomainNotFound) {
     return <NotFound />;
   }
 
-  return <ThemeBootstrap>{children}</ThemeBootstrap>;
-};
-
-const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
-  const { settings: themeSettings, isLoading: isThemeLoading } = useGlobalTheme();
-  const { settings: siteSettings, isLoading: isSiteSettingsLoading } = useSiteSettings();
-
-  const loadingScreenConfig = parseLoadingScreenConfig(
-    siteSettings.loading_screen_config || createDefaultLoadingScreenConfig(),
-  );
-
-  if (isThemeLoading || isSiteSettingsLoading) {
+  if (shouldShowBootLoader) {
     return (
       <LoadingScreen
-        heading={themeSettings.loader_heading || loadingScreenConfig.heading}
-        subtext={themeSettings.loader_subtext || loadingScreenConfig.subtext}
-        bgHex={themeSettings.loader_bg_hex ?? loadingScreenConfig.background_color}
-        textHex={themeSettings.loader_text_hex ?? loadingScreenConfig.text_color}
-        config={{
-          ...loadingScreenConfig,
-          heading: themeSettings.loader_heading || loadingScreenConfig.heading,
-          subtext: themeSettings.loader_subtext || loadingScreenConfig.subtext,
-          background_color: themeSettings.loader_bg_hex ?? loadingScreenConfig.background_color,
-          text_color: themeSettings.loader_text_hex ?? loadingScreenConfig.text_color,
-        }}
+        heading={activeSiteId ? theme?.loader_heading || loadingScreenConfig?.heading : "Bitte kurz warten"}
+        subtext={activeSiteId ? theme?.loader_subtext || loadingScreenConfig?.subtext : "Mandant und Design werden aufgebaut."}
+        bgHex={activeSiteId ? theme?.loader_loader_bg_hex ?? theme?.loader_bg_hex ?? loadingScreenConfig?.background_color : "#0B1020"}
+        textHex={activeSiteId ? theme?.loader_loader_text_hex ?? theme?.loader_text_hex ?? loadingScreenConfig?.text_color : "#F8FAFC"}
+        config={activeSiteId ? loadingScreenConfig : undefined}
       />
     );
   }
@@ -115,7 +122,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppBootstrapGate>
+            <ThemeBootstrap>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
@@ -160,7 +167,7 @@ const App = () => (
                 <Route path="/:slug" element={<DynamicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </AppBootstrapGate>
+            </ThemeBootstrap>
           </BrowserRouter>
         </TooltipProvider>
       </SiteProvider>

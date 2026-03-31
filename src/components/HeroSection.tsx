@@ -1,42 +1,10 @@
 import { motion } from "framer-motion";
 import { ArrowRight, BadgeCheck, BarChart3, Globe, ShieldCheck, Sparkles } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { buildRenderImageUrl } from "@/lib/image";
-import { useSiteContext } from "@/context/SiteContext";
-import { DEFAULT_SITE_ID } from "@/lib/site";
+import { useHeroContent, type HeroRecord } from "@/hooks/useHeroContent";
 import heroFallback from "@/assets/hero-bg.jpg";
 
-type HeroRecord = {
-  badge_text?: string | null;
-  headline?: string | null;
-  subheadline?: string | null;
-  cta_text?: string | null;
-  stat1_label?: string | null;
-  stat1_value?: string | null;
-  stat2_label?: string | null;
-  stat2_value?: string | null;
-  stat3_label?: string | null;
-  stat3_value?: string | null;
-  image_url?: string | null;
-  image_path?: string | null;
-  image?: string | null;
-  background_image_path?: string | null;
-  background_mobile_image_path?: string | null;
-  overlay_opacity?: number | null;
-  visual_kicker?: string | null;
-  visual_title?: string | null;
-  visual_badge?: string | null;
-  layer_kicker?: string | null;
-  layer_title?: string | null;
-  show_bottom_box1?: boolean | null;
-  bottom_box1_kicker?: string | null;
-  bottom_box1_title?: string | null;
-  show_bottom_box2?: boolean | null;
-  bottom_box2_kicker?: string | null;
-  bottom_box2_title?: string | null;
-};
 
 const fallbackHero: Required<Pick<HeroRecord, "badge_text" | "headline" | "subheadline" | "cta_text">> = {
   badge_text: "Premium SaaS Look für Webdesign & SEO",
@@ -64,18 +32,18 @@ const resolveImage = (path?: string | null, fallback: string = heroFallback) => 
   return buildRenderImageUrl(trimmed, { width: 1600, quality: 82 });
 };
 
-const HeroSection = () => {
-  const { activeSiteId } = useSiteContext();
-  const siteId = activeSiteId || DEFAULT_SITE_ID;
+type HeroSectionProps = {
+  hero?: HeroRecord | null;
+};
+
+const HeroSection = ({ hero: prefetchedHero }: HeroSectionProps) => {
   const { settings } = useGlobalTheme();
-  const { data: hero, isLoading } = useQuery({
-    queryKey: ["hero_content", siteId],
-    queryFn: async (): Promise<HeroRecord | null> => {
-      const { data, error } = await supabase.from("hero_content").select("*").eq("site_id", siteId).limit(1).maybeSingle();
-      if (error) throw error;
-      return (data as HeroRecord | null) ?? null;
-    },
-  });
+  const { hero: queriedHero, isLoading } = useHeroContent();
+  const hero = prefetchedHero ?? queriedHero;
+
+  if (isLoading && !hero) {
+    return null;
+  }
 
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth", block: "start" });

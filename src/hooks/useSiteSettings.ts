@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
+import { useLocation } from "react-router-dom";
 
 export type WhyChoosePoint = {
   title: string;
@@ -537,7 +538,9 @@ const parseJsonSetting = <T,>(value: unknown, fallback: T): T => {
 
 export const useSiteSettings = () => {
   const { activeSiteId } = useSiteContext();
-  const siteId = activeSiteId || DEFAULT_SITE_ID;
+  const location = useLocation();
+  const isAdminRoute = /^\/admin(?:\/|$)/.test(location.pathname);
+  const siteId = isAdminRoute ? activeSiteId || DEFAULT_SITE_ID : activeSiteId;
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["site_settings", siteId],
