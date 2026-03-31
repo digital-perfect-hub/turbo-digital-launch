@@ -24,15 +24,6 @@ const encodeObjectPath = (objectPath: string) =>
 
 const toStorageBase = () => (SUPABASE_BASE_URL ? `${SUPABASE_BASE_URL}/storage/v1` : "/storage/v1");
 
-const toRenderPath = (bucket: string, objectPath: string, options: ImageRenderOptions) => {
-  const width = options.width ?? 600;
-  const quality = options.quality ?? 80;
-  const encodedBucket = encodeURIComponent(bucket);
-  const encodedObjectPath = encodeObjectPath(objectPath);
-
-  return `${toStorageBase()}/render/image/public/${encodedBucket}/${encodedObjectPath}?width=${width}&quality=${quality}`;
-};
-
 const toRawPath = (bucket: string, objectPath: string) => {
   const encodedBucket = encodeURIComponent(bucket);
   const encodedObjectPath = encodeObjectPath(objectPath);
@@ -80,48 +71,30 @@ const resolveStorageLocation = (value: string): StorageLocation | null => {
 };
 
 /**
- * Builds a URL for the Supabase Render-API:
- * https://<project>.supabase.co/storage/v1/render/image/public/<BUCKET>/<OBJECT_PATH>?width=600&quality=80
+ * FIX: Umgeht die kostenpflichtige Supabase Render-API und lädt die Bilder 
+ * direkt und sicher über die kostenlose Public URL.
  */
 export const buildRenderImageUrl = (
   storagePath: string | null | undefined,
   options: ImageRenderOptions = {},
 ): string => {
-  return buildStrictRenderImageUrl(storagePath, options);
+  // Leitet Anfragen direkt auf die Raw-Funktion um
+  return buildRawImageUrl(storagePath, options);
 };
 
 /**
- * Erzwingt für den Page-Builder die Render-API-Ausgabe.
- * Fallbackt nur dann auf den Originalwert, wenn kein bekannter Storage-Pfad vorliegt.
+ * FIX: Umgeht ebenfalls die kostenpflichtige Supabase Render-API für den Page-Builder.
  */
 export const buildStrictRenderImageUrl = (
   storagePath: string | null | undefined,
   options: ImageRenderOptions = {},
 ): string => {
-  if (!storagePath) return "";
-
-  const trimmed = storagePath.trim();
-  if (!trimmed) return "";
-
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    try {
-      const url = new URL(trimmed);
-      const normalized = resolveStorageLocation(`${url.pathname}${url.search}`);
-      return normalized ? toRenderPath(normalized.bucket, normalized.objectPath, options) : trimmed;
-    } catch {
-      return trimmed;
-    }
-  }
-
-  const normalizedStoragePath = resolveStorageLocation(trimmed);
-  if (!normalizedStoragePath) return trimmed;
-
-  return toRenderPath(normalizedStoragePath.bucket, normalizedStoragePath.objectPath, options);
+  // Leitet Anfragen direkt auf die Raw-Funktion um
+  return buildRawImageUrl(storagePath, options);
 };
 
 /**
  * Lädt rohe öffentliche Dateien direkt aus dem Bucket.
- * Nur für Admin-Previews / Upload-Vorschauen gedacht.
  */
 export const buildRawImageUrl = (
   storagePath: string | null | undefined,
