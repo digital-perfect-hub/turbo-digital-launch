@@ -6,8 +6,11 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# Wir kopieren ABSICHTLICH nur die package.json und ignorieren die monorepo-vergiftete Lockfile
+COPY package.json ./
+
+# Wir nutzen npm install statt npm ci, um den fatalen Auflösungs-Crash zu umgehen
+RUN npm install --omit=dev && npm cache clean --force
 
 COPY . .
 
