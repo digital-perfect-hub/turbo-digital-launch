@@ -15,7 +15,8 @@ const shouldBypassRouting = (request, env) => {
   const secret = normalizeSecret(getEnv(env, "PRERENDER_SECRET_TOKEN"));
 
   if (!bypassHeader) return false;
-  if (!secret) return bypassHeader === "1";
+  if (!secret) return false;
+
   return bypassHeader === "1" && token === secret;
 };
 
@@ -74,17 +75,18 @@ const fetchPrerenderedResponse = async (request, env) => {
   const prerenderUrl = buildPrerenderUrl(requestUrl, env);
   const secret = normalizeSecret(getEnv(env, "PRERENDER_SECRET_TOKEN"));
 
+  if (!secret) {
+    return new Response("Missing PRERENDER_SECRET_TOKEN", { status: 500 });
+  }
+
   const headers = new Headers({
     "x-prerender-original-url": requestUrl.toString(),
     "x-forwarded-host": requestUrl.host,
     "x-forwarded-proto": requestUrl.protocol.replace(":", ""),
-    "user-agent": request.headers.get("user-agent") || "", 
+    "user-agent": request.headers.get("user-agent") || "",
     "accept-language": request.headers.get("accept-language") || "en-US,en;q=0.9",
+    "x-prerender-token": secret,
   });
-
-  if (secret) {
-    headers.set("x-prerender-token", secret);
-  }
 
   return fetch(prerenderUrl.toString(), {
     method: request.method,
