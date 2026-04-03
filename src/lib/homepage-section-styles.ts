@@ -203,6 +203,23 @@ const addCssVar = (styles: CSSProperties, key: string, value: string) => {
   styles[key as never] = value.trim();
 };
 
+const deriveReadableButtonText = (backgroundColor: string) => {
+  const value = backgroundColor.trim();
+  const match = value.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+  if (!match) return "";
+
+  const hex = match[1].length === 3
+    ? match[1].split("").map((char) => char + char).join("")
+    : match[1];
+
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
+  return yiq >= 160 ? "#0F172A" : "#FFFFFF";
+};
+
 const svgToDataUri = (svg: string) =>
   `url("data:image/svg+xml,${svg
     .replace(/\s+/g, " ")
@@ -393,8 +410,9 @@ export const resolveHomepageSectionStyleVars = (
   addCssVar(vars, "--hero-badge-bg", sectionStyle.badge_background_color);
   addCssVar(vars, "--hero-badge-text", sectionStyle.badge_text_color);
 
-  addCssVar(vars, "--button-primary-bg", sectionStyle.button_background_color || sectionStyle.accent_color);
-  addCssVar(vars, "--button-primary-text", sectionStyle.button_text_color);
+  const resolvedButtonBg = sectionStyle.button_background_color || sectionStyle.accent_color;
+  addCssVar(vars, "--button-primary-bg", resolvedButtonBg);
+  addCssVar(vars, "--button-primary-text", sectionStyle.button_text_color || deriveReadableButtonText(resolvedButtonBg));
   addCssVar(vars, "--theme-primary-hex", sectionStyle.accent_color || sectionStyle.button_background_color);
 
   return vars;

@@ -47,7 +47,21 @@ const ProcessSection = () => {
           transition={{ duration: 0.6 }}
           className="mb-16 max-w-3xl md:mb-20"
         >
-          <p className="section-label">{kicker}</p>
+          <div
+            className="mb-4 inline-flex max-w-max items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]"
+            style={{
+              background: "var(--button-primary-bg)",
+              color: "var(--button-primary-text)",
+              border: "1px solid color-mix(in srgb, var(--button-primary-bg) 72%, black 28%)",
+              boxShadow:
+                "0 18px 42px -26px color-mix(in srgb, var(--button-primary-bg) 72%, transparent)",
+            }}
+          >
+            <span aria-hidden="true" className="text-sm leading-none">
+              🚧
+            </span>
+            <span>{kicker}</span>
+          </div>
           <h2 className="section-title mt-4 max-w-4xl">{title}</h2>
         </motion.div>
 

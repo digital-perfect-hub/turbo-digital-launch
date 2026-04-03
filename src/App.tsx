@@ -1,4 +1,4 @@
-import { useLayoutEffect, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +23,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Forum from "./pages/Forum";
 import ForumThread from "./pages/ForumThread";
 import DynamicPage from "./pages/DynamicPage";
+import MaintenanceScreen from "./pages/MaintenanceScreen";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -57,6 +58,18 @@ const queryClient = new QueryClient();
 const LegacyShopifyNewsRedirect = () => <Navigate to="/magazin" replace />;
 
 const APP_BOOT_ID = "dp-app-boot";
+const ADMIN_ROUTE_REGEX = /^\/admin(?:\/|$)/;
+const MAINTENANCE_BYPASS_ROUTE_REGEX = /^(?:\/admin(?:\/|$)|\/login(?:\/|$)|\/set-password(?:\/|$))/;
+
+const parseBooleanSetting = (value: unknown) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on";
+  }
+  return false;
+};
 
 const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -64,9 +77,11 @@ const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
   const { theme, isLoading: isThemeLoading } = useGlobalTheme();
   const { settings, isLoading: isSettingsLoading } = useSiteSettings();
 
-  const isAdminRoute = /^\/admin(?:\/|$)/.test(location.pathname);
+  const isAdminRoute = ADMIN_ROUTE_REGEX.test(location.pathname);
   const isLocalDevelopmentHost = hostname === "localhost" || hostname === "127.0.0.1";
   const loadingScreenConfig = settings.loading_screen_config;
+  const isMaintenanceBypassRoute = MAINTENANCE_BYPASS_ROUTE_REGEX.test(location.pathname);
+  const isMaintenanceMode = useMemo(() => parseBooleanSetting(settings.is_maintenance_mode), [settings.is_maintenance_mode]);
   const isPublicBootstrapLoading = !isAdminRoute && (isSiteLoading || !activeSiteId);
   const shouldShowBootLoader = isAdminRoute
     ? isSiteLoading || isThemeLoading || isSettingsLoading
@@ -101,6 +116,17 @@ const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
         textHex={activeSiteId ? theme?.loader_loader_text_hex ?? theme?.loader_text_hex ?? loadingScreenConfig?.text_color : "#F8FAFC"}
         config={activeSiteId ? loadingScreenConfig : undefined}
       />
+    );
+  }
+
+  if (isMaintenanceMode && !isMaintenanceBypassRoute) {
+    return (
+      <>
+        <ConsentScriptGate />
+        <PageViewTracker />
+        <MaintenanceScreen />
+        <CookieBanner />
+      </>
     );
   }
 

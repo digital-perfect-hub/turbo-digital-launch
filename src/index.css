@@ -176,6 +176,178 @@
     }
   }
 
+  .process-section {
+    isolation: isolate;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--homepage-section-bg, var(--surface-section)) 96%, transparent),
+        color-mix(in srgb, var(--homepage-section-bg, var(--surface-page, var(--surface-section))) 92%, transparent)
+      );
+    color: var(--homepage-section-text, var(--surface-page-foreground));
+  }
+
+  .process-section-glow {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(80px);
+    opacity: 1;
+    will-change: transform;
+  }
+
+  .process-section-glow-primary {
+    left: -12%;
+    top: -14%;
+    height: 28rem;
+    width: 28rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--theme-primary-hex) 5%, transparent) 0%,
+      color-mix(in srgb, var(--theme-primary-hex) 3%, transparent) 38%,
+      transparent 74%
+    );
+  }
+
+  .process-section-glow-secondary {
+    right: -10%;
+    bottom: -16%;
+    height: 24rem;
+    width: 24rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--theme-primary-hex) 4%, transparent) 0%,
+      color-mix(in srgb, var(--theme-primary-hex) 2%, transparent) 42%,
+      transparent 76%
+    );
+  }
+
+  .process-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--homepage-badge-text, var(--surface-card-text)) 14%, transparent);
+    background: var(--homepage-badge-bg, color-mix(in srgb, var(--surface-card) 72%, transparent));
+    padding: 0.5rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--homepage-badge-text, var(--surface-card-text));
+    box-shadow: 0 18px 42px -30px color-mix(in srgb, var(--theme-primary-hex) 32%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  .process-card {
+    position: relative;
+    border-radius: calc(var(--theme-radius) * 4);
+    border: 1px solid color-mix(in srgb, var(--surface-card-border) 76%, var(--theme-primary-hex) 24%);
+    background: color-mix(in srgb, var(--surface-card) 68%, transparent);
+    color: var(--homepage-card-text, var(--surface-card-text));
+    box-shadow:
+      0 28px 80px -56px color-mix(in srgb, var(--theme-primary-hex) 18%, transparent),
+      0 22px 55px -42px color-mix(in srgb, var(--surface-card-border) 72%, transparent);
+    backdrop-filter: blur(24px);
+    transition: transform 0.35s ease, border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .process-card:hover {
+    transform: translateY(-6px);
+    border-color: color-mix(in srgb, var(--surface-card-border) 52%, var(--theme-primary-hex) 48%);
+    background: color-mix(in srgb, var(--surface-card) 82%, var(--theme-primary-hex) 6%);
+    box-shadow:
+      0 34px 96px -54px color-mix(in srgb, var(--theme-primary-hex) 24%, transparent),
+      0 24px 70px -44px color-mix(in srgb, var(--surface-card-border) 82%, transparent);
+  }
+
+  .process-card-accent {
+    position: absolute;
+    inset: 0 auto auto 0;
+    height: 10rem;
+    width: 10rem;
+    border-radius: 999px;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--theme-primary-hex) 14%, transparent) 0%,
+      transparent 72%
+    );
+    opacity: 0.9;
+    transform: translate3d(-28%, -38%, 0);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .process-card:hover .process-card-accent {
+    opacity: 1;
+    transform: translate3d(-22%, -34%, 0) scale(1.04);
+  }
+
+  .process-card-title {
+    color: var(--homepage-card-title, var(--surface-card-title, var(--surface-card-text)));
+  }
+
+  .process-card-copy {
+    color: var(--homepage-card-muted, var(--surface-card-muted));
+  }
+
+  .process-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--homepage-badge-text, var(--surface-card-text)) 14%, transparent);
+    background: var(--homepage-badge-bg, color-mix(in srgb, var(--surface-card) 78%, transparent));
+    padding: 0.45rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--homepage-badge-text, var(--surface-card-text));
+    backdrop-filter: blur(14px);
+  }
+
+  .process-ghost-number {
+    color: color-mix(in srgb, var(--theme-primary-hex) 10%, transparent);
+    transition: color 0.35s ease, transform 0.35s ease;
+  }
+
+  .process-card:hover .process-ghost-number {
+    color: color-mix(in srgb, var(--theme-primary-hex) 16%, transparent);
+    transform: translate3d(0, -4px, 0);
+  }
+
+  .process-cta {
+    display: inline-flex;
+    min-height: 44px;
+    min-width: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--button-primary-bg) 72%, transparent);
+    background: var(--button-primary-bg);
+    padding: 1rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--button-primary-text);
+    box-shadow: 0 26px 62px -28px color-mix(in srgb, var(--button-primary-bg) 60%, transparent);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .process-cta:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--button-primary-bg) 82%, transparent);
+    background: color-mix(in srgb, var(--button-primary-bg) 88%, var(--theme-secondary-hex) 12%);
+    box-shadow: 0 30px 72px -28px color-mix(in srgb, var(--button-primary-bg) 68%, transparent);
+  }
+
+  .process-cta:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--button-primary-bg) 18%, transparent),
+      0 30px 72px -28px color-mix(in srgb, var(--button-primary-bg) 68%, transparent);
+  }
+
   .glass-card {
     position: relative;
     border-radius: calc(var(--theme-radius) * 2.5);

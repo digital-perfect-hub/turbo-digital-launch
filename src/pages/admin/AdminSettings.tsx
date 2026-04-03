@@ -14,6 +14,17 @@ import { useSiteContext } from "@/context/SiteContext";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { buildSiteAssetPath } from "@/lib/storage";
+import { upsertSiteSetting } from "@/lib/site-settings";
+
+const parseBooleanSiteSetting = (value: unknown) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on";
+  }
+  return false;
+};
 
 const AdminSettings = () => {
   const qc = useQueryClient();
@@ -23,6 +34,23 @@ const AdminSettings = () => {
   const [form, setForm] = useState<any>({});
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+
+  const { data: maintenanceSettingValue, isLoading: isMaintenanceSettingLoading } = useQuery({
+    queryKey: ["site_settings", siteId, "is_maintenance_mode"],
+    enabled: Boolean(siteId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("site_id", siteId)
+        .eq("key", "is_maintenance_mode")
+        .maybeSingle();
+
+      if (error) throw error;
+      return data?.value ?? "false";
+    },
+  });
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["global_settings_all", siteId],
@@ -43,6 +71,10 @@ const AdminSettings = () => {
       });
     }
   }, [settings]);
+
+  useEffect(() => {
+    setIsMaintenanceMode(parseBooleanSiteSetting(maintenanceSettingValue));
+  }, [maintenanceSettingValue]);
 
   const mutation = useMutation({
     mutationFn: async (values: any) => {
@@ -83,6 +115,29 @@ const AdminSettings = () => {
     },
     onError: (err: any) => toast.error(err.message),
   });
+
+  const maintenanceModeMutation = useMutation({
+    mutationFn: async ({ nextValue }: { nextValue: boolean; previousValue: boolean }) => {
+      await upsertSiteSetting(siteId, "is_maintenance_mode", nextValue ? "true" : "false");
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["site_settings", siteId] });
+      qc.invalidateQueries({ queryKey: ["site_settings", siteId, "is_maintenance_mode"] });
+      toast.success(variables.nextValue ? "Wartungsmodus aktiviert" : "Frontend ist wieder live");
+    },
+    onError: (err: any, variables) => {
+      setIsMaintenanceMode(variables.previousValue);
+      toast.error(err?.message || "Wartungsmodus konnte nicht gespeichert werden.");
+    },
+  });
+
+  const handleMaintenanceModeToggle = (checked: boolean) => {
+    if (!canManageSettings || maintenanceModeMutation.isPending) return;
+
+    const previousValue = isMaintenanceMode;
+    setIsMaintenanceMode(checked);
+    maintenanceModeMutation.mutate({ nextValue: checked, previousValue });
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "logo_path" | "favicon_path", setLoader: (val: boolean) => void) => {
     const file = e.target.files?.[0];
@@ -132,6 +187,37 @@ const AdminSettings = () => {
 
           {/* TAB 1: ALLGEMEIN */}
           <TabsContent value="general" className="space-y-8 mt-0 outline-none">
+            <div className="rounded-[1.75rem] border border-[#FF4B2C]/15 bg-gradient-to-br from-white via-white to-[#FFF3EF] p-5 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1.5">
+                  <div className="inline-flex items-center rounded-full border border-[#FF4B2C]/15 bg-[#FF4B2C]/8 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF4B2C]">
+                    Global Blackout
+                  </div>
+                  <div>
+                    <Label htmlFor="maintenance-mode-toggle" className="text-base font-bold text-slate-900">
+                      Wartungsmodus (Global Blackout)
+                    </Label>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Sperrt das öffentliche Frontend und sammelt Leads über die Warteliste. Der Admin-Bereich bleibt weiterhin erreichbar.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 self-start md:self-center">
+                  <span className={`text-sm font-semibold ${isMaintenanceMode ? "text-[#FF4B2C]" : "text-slate-500"}`}>
+                    {isMaintenanceMode ? "Aktiv" : "Live"}
+                  </span>
+                  <Switch
+                    id="maintenance-mode-toggle"
+                    checked={isMaintenanceMode}
+                    onCheckedChange={handleMaintenanceModeToggle}
+                    disabled={!canManageSettings || isMaintenanceSettingLoading || maintenanceModeMutation.isPending}
+                    className="data-[state=checked]:bg-[#FF4B2C]"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label className="text-slate-700">Website-Titel (Fallback)</Label>
