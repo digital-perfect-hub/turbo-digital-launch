@@ -1027,9 +1027,14 @@
   }
 
   .header-solid-shell {
-    background: color-mix(in srgb, var(--nav-bg) 18%, var(--theme-secondary-hex) 82%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--theme-secondary-hex) 92%, black 8%) 0%,
+      color-mix(in srgb, var(--nav-bg) 84%, var(--theme-secondary-hex) 16%) 100%
+    );
     border-color: color-mix(in srgb, var(--hero-headline) 12%, transparent);
     box-shadow: 0 18px 44px -30px rgba(2, 6, 23, 0.35);
+    backdrop-filter: none;
   }
 
   .header-dropdown-shell {
@@ -1039,9 +1044,18 @@
   }
 
   .header-mobile-shell {
-    background: color-mix(in srgb, var(--hero-panel-bg) 78%, var(--nav-bg) 22%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--nav-bg) 88%, var(--theme-secondary-hex) 12%) 0%,
+      color-mix(in srgb, var(--surface-page) 16%, var(--nav-bg) 84%) 100%
+    );
     border-color: color-mix(in srgb, var(--hero-headline) 10%, transparent);
     color: var(--hero-headline);
+    box-shadow:
+      0 32px 80px -40px rgba(2, 6, 23, 0.55),
+      inset 0 1px 0 color-mix(in srgb, var(--hero-headline) 8%, transparent);
+    backdrop-filter: none;
+    opacity: 1;
   }
 
   .header-solid-text {
