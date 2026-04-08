@@ -74,8 +74,19 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const dropdownShellClass = forceSolid ? "header-dropdown-shell" : "shadow-xl";
   const dropdownShellStyle = forceSolid ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
   const dropdownHoverBg = forceSolid ? "color-mix(in srgb, var(--hero-headline) 8%, transparent)" : "var(--nav-hover-bg, rgba(255,75,44,0.05))";
-  const mobileOverlayClass = forceSolid ? "header-mobile-shell" : "text-foreground";
-  const mobileOverlayStyle = forceSolid ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
+  const mobileOverlayClass = forceSolid ? "header-mobile-shell" : "";
+  const mobileOverlayStyle = forceSolid
+    ? { zIndex: 60 }
+    : {
+        background: "var(--nav-bg, rgba(255,255,255,0.98))",
+        borderColor: "var(--nav-border, rgba(15,23,42,0.08))",
+        backdropFilter: "blur(20px)",
+        color: "var(--nav-text, var(--surface-page-foreground))",
+        zIndex: 60,
+      };
+  const mobilePrimaryTextColor = forceSolid ? "var(--hero-headline)" : "var(--nav-text, var(--surface-page-foreground))";
+  const mobileSecondaryTextColor = forceSolid ? "color-mix(in srgb, var(--hero-headline) 82%, transparent)" : "var(--surface-page-muted)";
+  const mobileIconColor = forceSolid ? "var(--theme-primary-hex)" : "var(--nav-text, var(--surface-page-foreground))";
   const logoColor = forceSolid ? "var(--hero-headline)" : settings.text_logo_color_hex || desktopNavColor;
   const navigationThemeSettings = ((settings.navigation_theme && typeof settings.navigation_theme === "object" && !Array.isArray(settings.navigation_theme))
     ? (settings.navigation_theme as Record<string, unknown>)
@@ -189,55 +200,59 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`fixed inset-0 overflow-y-auto border-b px-6 pb-10 pt-32 shadow-2xl lg:hidden ${mobileOverlayClass}`}
+            className={`fixed inset-0 z-[60] flex flex-col border-b px-6 pb-8 pt-24 shadow-2xl lg:hidden ${mobileOverlayClass}`}
             style={mobileOverlayStyle}
           >
-            <div className="flex flex-col gap-4">
-              {topLevelLinks.map((item) => {
-                const children = getChildren(item.id);
-                const hasChildren = children.length > 0;
-                const isOpen = openMobileDropdowns[item.id];
+            <div className="flex-1 overflow-y-auto pr-1">
+              <div className="flex flex-col gap-4 pb-4">
+                {topLevelLinks.map((item) => {
+                  const children = getChildren(item.id);
+                  const hasChildren = children.length > 0;
+                  const isOpen = openMobileDropdowns[item.id];
 
-                return (
-                  <div key={item.id} className={`flex flex-col border-b pb-4 ${forceSolid ? "header-solid-border" : "border-border/50"}`}>
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => !hasChildren ? handleLinkClick(item.url) : toggleMobileDropdown(item.id)}
-                        className={`flex-1 text-left text-xl outline-none ${forceSolid ? "header-solid-text" : "text-foreground"} ${navTypographyClasses}`}
-                      >
-                        {item.label}
-                      </button>
-                      {hasChildren && (
-                        <button onClick={() => toggleMobileDropdown(item.id)} className={`p-2 ${forceSolid ? "header-solid-icon" : "text-primary"}`}>
-                          <ChevronDown size={20} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  return (
+                    <div key={item.id} className={`flex flex-col border-b pb-4 ${forceSolid ? "header-solid-border" : "border-border/50"}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          onClick={() => !hasChildren ? handleLinkClick(item.url) : toggleMobileDropdown(item.id)}
+                          className={`flex-1 text-left text-xl outline-none ${forceSolid ? "header-solid-text" : ""} ${navTypographyClasses}`}
+                          style={{ color: mobilePrimaryTextColor }}
+                        >
+                          {item.label}
                         </button>
+                        {hasChildren && (
+                          <button onClick={() => toggleMobileDropdown(item.id)} className={`p-2 ${forceSolid ? "header-solid-icon" : ""}`} style={{ color: mobileIconColor }}>
+                            <ChevronDown size={20} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                          </button>
+                        )}
+                      </div>
+
+                      {hasChildren && isOpen && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className={`mt-4 flex flex-col gap-3 pl-4 ${forceSolid ? "header-solid-border border-l-2" : "border-l-2 border-border/60"}`}>
+                          {children.map((child) => (
+                            <button
+                              key={child.id}
+                              onClick={() => handleLinkClick(child.url)}
+                              className={`text-left text-base outline-none ${forceSolid ? "header-solid-muted" : "hover:text-primary"} ${navTypographyClasses}`}
+                              style={{ color: mobileSecondaryTextColor }}
+                            >
+                              {child.label}
+                            </button>
+                          ))}
+                        </motion.div>
                       )}
                     </div>
-
-                    {hasChildren && isOpen && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className={`mt-4 flex flex-col gap-3 pl-4 ${forceSolid ? "header-solid-border border-l-2" : "border-l-2 border-primary/20"}`}>
-                        {children.map((child) => (
-                          <button
-                            key={child.id}
-                            onClick={() => handleLinkClick(child.url)}
-                            className={`text-left text-base outline-none ${forceSolid ? "header-solid-muted" : "text-muted-foreground hover:text-primary"} ${navTypographyClasses}`}
-                          >
-                            {child.label}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                );
-              })}
-              {navCtaLabel ? (
-                <button
-                  onClick={() => handleLinkClick(navCtaLink)}
-                  className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
-                >
-                  {navCtaLabel}
-                </button>
-              ) : null}
+                  );
+                })}
+                {navCtaLabel ? (
+                  <button
+                    onClick={() => handleLinkClick(navCtaLink)}
+                    className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
+                  >
+                    {navCtaLabel}
+                  </button>
+                ) : null}
+              </div>
             </div>
           </motion.div>
         )}
