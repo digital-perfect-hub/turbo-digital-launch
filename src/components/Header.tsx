@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -24,8 +24,10 @@ type HeaderProps = {
 const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
+  const headerRef = useRef<HTMLElement | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOffset, setMobileMenuOffset] = useState(0);
   const [openMobileDropdowns, setOpenMobileDropdowns] = useState<Record<string, boolean>>({});
 
   const { logoUrl, settings } = useGlobalTheme();
@@ -33,7 +35,12 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const { data: links = [] } = useQuery({
     queryKey: ["navigation_links_frontend", siteId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("navigation_links").select("*").eq("site_id", siteId).order("sort_order", { ascending: true }).order("created_at", { ascending: true });
+      const { data, error } = await supabase
+        .from("navigation_links")
+        .select("*")
+        .eq("site_id", siteId)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return data as NavLink[];
     },
@@ -45,6 +52,63 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const overflow = isMobileOpen ? "hidden" : "";
+    document.body.style.overflow = overflow;
+    document.documentElement.style.overflow = overflow;
+
+    if (!isMobileOpen) {
+      setOpenMobileDropdowns({});
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [isMobileOpen]);
+
+  useEffect(() => {
+    const closeOnDesktop = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", closeOnDesktop);
+    return () => window.removeEventListener("resize", closeOnDesktop);
+  }, []);
+
+  useEffect(() => {
+    const updateOffset = () => {
+      setMobileMenuOffset(headerRef.current?.offsetHeight ?? 0);
+    };
+
+    updateOffset();
+
+    const resizeObserver = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => updateOffset())
+      : null;
+
+    if (headerRef.current && resizeObserver) {
+      resizeObserver.observe(headerRef.current);
+    }
+
+    window.addEventListener("resize", updateOffset);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", updateOffset);
+    };
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setMobileMenuOffset(headerRef.current?.offsetHeight ?? 0);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isScrolled, isMobileOpen, forceSolid]);
 
   const brandName = useMemo(() => settings.company_name || "Digital-Perfect", [settings.company_name]);
   const logoFontClass = settings.logo_font_family === "serif" ? "font-serif" : settings.logo_font_family === "mono" ? "font-mono" : "";
@@ -59,6 +123,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
     } else {
       window.location.href = url;
     }
+
     setIsMobileOpen(false);
   };
 
@@ -74,19 +139,17 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const dropdownShellClass = forceSolid ? "header-dropdown-shell" : "shadow-xl";
   const dropdownShellStyle = forceSolid ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
   const dropdownHoverBg = forceSolid ? "color-mix(in srgb, var(--hero-headline) 8%, transparent)" : "var(--nav-hover-bg, rgba(255,75,44,0.05))";
-  const mobileOverlayClass = forceSolid ? "header-mobile-shell" : "";
-  const mobileOverlayStyle = forceSolid
-    ? { zIndex: 60 }
-    : {
-        background: "var(--nav-bg, rgba(255,255,255,0.98))",
-        borderColor: "var(--nav-border, rgba(15,23,42,0.08))",
-        backdropFilter: "blur(20px)",
-        color: "var(--nav-text, var(--surface-page-foreground))",
-        zIndex: 60,
-      };
-  const mobilePrimaryTextColor = forceSolid ? "var(--hero-headline)" : "var(--nav-text, var(--surface-page-foreground))";
-  const mobileSecondaryTextColor = forceSolid ? "color-mix(in srgb, var(--hero-headline) 82%, transparent)" : "var(--surface-page-muted)";
-  const mobileIconColor = forceSolid ? "var(--theme-primary-hex)" : "var(--nav-text, var(--surface-page-foreground))";
+  const useSolidMobileShell = forceSolid || isMobileOpen;
+  const mobileOverlayClass = "header-mobile-shell";
+  const mobileTextClass = useSolidMobileShell ? "header-solid-text" : "text-foreground";
+  const mobileMutedClass = useSolidMobileShell ? "header-solid-muted" : "text-muted-foreground hover:text-primary";
+  const mobileBorderClass = useSolidMobileShell ? "header-solid-border" : "border-border/50";
+  const mobileIconClass = useSolidMobileShell ? "header-solid-icon" : "text-primary";
+  const mobileOverlayStyle = {
+    top: mobileMenuOffset,
+    height: mobileMenuOffset ? `calc(100dvh - ${mobileMenuOffset}px)` : "100dvh",
+    overscrollBehavior: "contain" as const,
+  };
   const logoColor = forceSolid ? "var(--hero-headline)" : settings.text_logo_color_hex || desktopNavColor;
   const navigationThemeSettings = ((settings.navigation_theme && typeof settings.navigation_theme === "object" && !Array.isArray(settings.navigation_theme))
     ? (settings.navigation_theme as Record<string, unknown>)
@@ -97,18 +160,20 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const navCtaLink = typeof navigationThemeSettings.cta_link === "string" && navigationThemeSettings.cta_link.trim()
     ? navigationThemeSettings.cta_link.trim()
     : "#kontakt";
-  const headerClassName = forceSolid
+  const headerClassName = forceSolid || isMobileOpen
     ? `py-4 header-solid-shell border-b ${solidBackgroundClassName || ""}`
     : isScrolled
       ? "py-4 shadow-lg border-b"
       : "py-6 bg-transparent";
-  const headerStyle = forceSolid || !isScrolled ? undefined : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
+  const headerStyle = forceSolid || isMobileOpen || !isScrolled
+    ? undefined
+    : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
 
   return (
-    <header className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${headerClassName}`} style={headerStyle}>
+    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${headerClassName}`} style={headerStyle}>
       <div className="section-container">
         <div className="flex items-center justify-between">
-          <Link to="/" className="relative z-10 flex items-center gap-3 group outline-none">
+          <Link to="/" className="relative z-10 flex items-center gap-3 group outline-none" onClick={() => setIsMobileOpen(false)}>
             {!settings.use_text_logo && logoUrl ? (
               <img src={logoUrl} alt={brandName} className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
             ) : (
@@ -188,7 +253,11 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
             ) : null}
           </nav>
 
-          <button className={`relative z-10 p-2 outline-none lg:hidden ${forceSolid ? "header-solid-text" : "text-foreground"}`} onClick={() => setIsMobileOpen(!isMobileOpen)}>
+          <button
+            className={`relative z-10 p-2 outline-none lg:hidden ${useSolidMobileShell ? "header-solid-text" : "text-foreground"}`}
+            onClick={() => setIsMobileOpen((prev) => !prev)}
+            aria-label={isMobileOpen ? "Menü schließen" : "Menü öffnen"}
+          >
             {isMobileOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
@@ -197,63 +266,71 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
       <AnimatePresence>
         {isMobileOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed inset-0 z-[60] flex flex-col border-b px-6 pb-8 pt-24 shadow-2xl lg:hidden ${mobileOverlayClass}`}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 24 }}
+            transition={{ duration: 0.24, ease: "easeOut" }}
+            className={`fixed inset-x-0 bottom-0 z-40 border-t shadow-2xl lg:hidden ${mobileOverlayClass}`}
             style={mobileOverlayStyle}
           >
-            <div className="flex-1 overflow-y-auto pr-1">
-              <div className="flex flex-col gap-4 pb-4">
-                {topLevelLinks.map((item) => {
-                  const children = getChildren(item.id);
-                  const hasChildren = children.length > 0;
-                  const isOpen = openMobileDropdowns[item.id];
+            <nav className="flex h-full flex-col px-6 pb-8 pt-6">
+              <div className="flex-1 overflow-y-auto pr-1">
+                <div className="flex flex-col gap-4 pb-2">
+                  {topLevelLinks.map((item) => {
+                    const children = getChildren(item.id);
+                    const hasChildren = children.length > 0;
+                    const isOpen = openMobileDropdowns[item.id];
 
-                  return (
-                    <div key={item.id} className={`flex flex-col border-b pb-4 ${forceSolid ? "header-solid-border" : "border-border/50"}`}>
-                      <div className="flex items-center justify-between gap-3">
-                        <button
-                          onClick={() => !hasChildren ? handleLinkClick(item.url) : toggleMobileDropdown(item.id)}
-                          className={`flex-1 text-left text-xl outline-none ${forceSolid ? "header-solid-text" : ""} ${navTypographyClasses}`}
-                          style={{ color: mobilePrimaryTextColor }}
-                        >
-                          {item.label}
-                        </button>
-                        {hasChildren && (
-                          <button onClick={() => toggleMobileDropdown(item.id)} className={`p-2 ${forceSolid ? "header-solid-icon" : ""}`} style={{ color: mobileIconColor }}>
-                            <ChevronDown size={20} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    return (
+                      <div key={item.id} className={`flex flex-col border-b pb-4 ${mobileBorderClass}`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <button
+                            onClick={() => !hasChildren ? handleLinkClick(item.url) : toggleMobileDropdown(item.id)}
+                            className={`flex-1 text-left text-lg outline-none transition-colors ${mobileTextClass} ${navTypographyClasses}`}
+                          >
+                            {item.label}
                           </button>
+                          {hasChildren && (
+                            <button onClick={() => toggleMobileDropdown(item.id)} className={`shrink-0 p-2 ${mobileIconClass}`}>
+                              <ChevronDown size={20} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                            </button>
+                          )}
+                        </div>
+
+                        {hasChildren && isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className={`mt-4 flex flex-col gap-3 pl-4 ${mobileBorderClass} border-l-2`}
+                          >
+                            {children.map((child) => (
+                              <button
+                                key={child.id}
+                                onClick={() => handleLinkClick(child.url)}
+                                className={`text-left text-base outline-none transition-colors ${mobileMutedClass} ${navTypographyClasses}`}
+                              >
+                                {child.label}
+                              </button>
+                            ))}
+                          </motion.div>
                         )}
                       </div>
-
-                      {hasChildren && isOpen && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className={`mt-4 flex flex-col gap-3 pl-4 ${forceSolid ? "header-solid-border border-l-2" : "border-l-2 border-border/60"}`}>
-                          {children.map((child) => (
-                            <button
-                              key={child.id}
-                              onClick={() => handleLinkClick(child.url)}
-                              className={`text-left text-base outline-none ${forceSolid ? "header-solid-muted" : "hover:text-primary"} ${navTypographyClasses}`}
-                              style={{ color: mobileSecondaryTextColor }}
-                            >
-                              {child.label}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </div>
-                  );
-                })}
-                {navCtaLabel ? (
-                  <button
-                    onClick={() => handleLinkClick(navCtaLink)}
-                    className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
-                  >
-                    {navCtaLabel}
-                  </button>
-                ) : null}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+
+              {navCtaLabel ? (
+                <button
+                  onClick={() => handleLinkClick(navCtaLink)}
+                  className={forceSolid ? "btn-primary mt-6 w-full !py-4 text-lg shadow-xl" : "nav-cta-button mt-6 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"}
+                >
+                  {navCtaLabel}
+                </button>
+              ) : null}
+            </nav>
           </motion.div>
         )}
       </AnimatePresence>

@@ -90,9 +90,8 @@ const AdminPortfolio = () => {
       const filePath = await uploadBrandingAsset(file, "portfolio", siteId);
       setEditing({ ...editing, image_url: filePath });
       toast.success("Bild erfolgreich hochgeladen!");
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Upload fehlgeschlagen";
-      toast.error(`Upload fehlgeschlagen: ${message}`);
+    } catch (error: any) {
+      toast.error("Upload fehlgeschlagen: " + (error?.message || "Unbekannter Fehler"));
     } finally {
       setIsUploading(false);
     }
