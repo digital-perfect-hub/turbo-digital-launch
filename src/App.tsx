@@ -190,6 +190,8 @@ const App = () => (
                   <Route path="settings/domains" element={<AdminDomains />} />
                 </Route>
 
+                <Route path="/seo/:slug" element={<DynamicPage />} />
+                <Route path="/webdesign/:slug" element={<DynamicPage />} />
                 <Route path="/:slug" element={<DynamicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

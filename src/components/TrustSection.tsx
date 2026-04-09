@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { BarChart3, Gauge, Shield, Users } from "lucide-react";
 import { defaultSiteText, defaultTrustPoints, type TrustPoint, useSiteSettings } from "@/hooks/useSiteSettings";
 import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import type { LandingTrustBlockData } from "@/lib/landing-page-builder";
 
 const iconMap = {
   users: Users,
@@ -18,28 +19,43 @@ const normalizeTrustPoints = (points: TrustPoint[]) =>
       icon: item.icon && iconMap[item.icon as keyof typeof iconMap] ? item.icon : "users",
     }));
 
-const TrustSection = () => {
+type TrustSectionProps = {
+  overrideData?: LandingTrustBlockData | null;
+};
+
+const TrustSection = ({ overrideData }: TrustSectionProps) => {
   const { getSetting, getJsonSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "trust");
 
-  const trustPoints = normalizeTrustPoints(getJsonSetting<TrustPoint[]>("home_trust_points", defaultTrustPoints));
-  
-  // ARCHITEKTUR-GESETZ: Strikter Killswitch
+  const trustPoints = normalizeTrustPoints(
+    overrideData?.items && overrideData.items.length > 0
+      ? overrideData.items
+      : getJsonSetting<TrustPoint[]>("home_trust_points", defaultTrustPoints),
+  );
+
   if (!trustPoints || trustPoints.length === 0) {
     return null;
   }
 
   const kicker =
-    getSetting("home_trust_kicker", defaultSiteText.home_trust_kicker).trim() || defaultSiteText.home_trust_kicker;
+    overrideData?.kicker?.trim() ||
+    getSetting("home_trust_kicker", defaultSiteText.home_trust_kicker).trim() ||
+    defaultSiteText.home_trust_kicker;
   const title =
-    getSetting("home_trust_title", defaultSiteText.home_trust_title).trim() || defaultSiteText.home_trust_title;
+    overrideData?.title?.trim() ||
+    getSetting("home_trust_title", defaultSiteText.home_trust_title).trim() ||
+    defaultSiteText.home_trust_title;
   const description =
+    overrideData?.description?.trim() ||
     getSetting("home_trust_description", defaultSiteText.home_trust_description).trim() ||
     defaultSiteText.home_trust_description;
 
   return (
-    // PADDING-FIX: Extrem kompaktes Padding (py-6 md:py-8), damit es wie ein verbindendes Element wirkt.
-    <section className="homepage-style-scope surface-section-shell relative z-20 py-6 md:py-8" aria-label="Vertrauen" style={sectionStyleVars}>
+    <section
+      className="homepage-style-scope surface-section-shell relative z-20 py-6 md:py-8"
+      aria-label="Vertrauen"
+      style={sectionStyleVars}
+    >
       <div className="section-container">
         <div className="premium-card p-5 md:p-7 lg:p-8">
           <div className="mb-6 max-w-3xl">

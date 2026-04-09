@@ -1,0 +1,104 @@
+{
+  "slug": "seo/seo-linz",
+  "meta_title": "SEO Linz | Mehr Sichtbarkeit für Unternehmen in Linz",
+  "meta_description": "Dynamische SEO-Landingpage für Linz mit Hero, Trust, Rich Text und FAQ.",
+  "is_published": true,
+  "page_blocks": [
+    {
+      "type": "hero",
+      "data": {
+        "badge_text": "SEO Agentur in Linz",
+        "headline": "SEO Linz\nfür planbare Sichtbarkeit",
+        "subheadline": "Wir bauen saubere, lokale Landingpages mit Conversion-Fokus statt Keyword-Spam.",
+        "primary_cta_text": "Kostenlos anfragen",
+        "primary_cta_href": "/kontakt",
+        "secondary_cta_text": "Leistungen ansehen",
+        "secondary_cta_href": "/#services",
+        "stats": [
+          {
+            "label": "Standort",
+            "value": "Linz"
+          },
+          {
+            "label": "Fokus",
+            "value": "SEO"
+          },
+          {
+            "label": "Setup",
+            "value": "Headless CMS"
+          }
+        ],
+        "proof_items": [
+          {
+            "icon": "badge",
+            "text": "Klare SEO-Struktur statt URL-Chaos"
+          },
+          {
+            "icon": "chart",
+            "text": "Content und Conversion sauber kombiniert"
+          },
+          {
+            "icon": "shield",
+            "text": "Pflegbar direkt aus der Datenbank"
+          }
+        ]
+      }
+    },
+    {
+      "type": "rich_text",
+      "data": {
+        "kicker": "Lokale Sichtbarkeit",
+        "headline": "Warum eine eigene SEO-Landingpage für Linz?",
+        "body_html": "<p>Mit einer dedizierten Landingpage kannst du lokale Suchintentionen gezielt abholen und Inhalte exakt auf die Region zuschneiden.</p><ul><li>Saubere URL-Struktur</li><li>Individuelle Meta-Daten</li><li>Flexible Block-Ausgabe aus Supabase</li></ul>"
+      }
+    },
+    {
+      "type": "trust",
+      "data": {
+        "kicker": "Vertrauen",
+        "title": "Was diese Seite technisch stark macht",
+        "description": "Die Inhalte kommen dynamisch aus Supabase und werden über wiederverwendbare Blöcke gerendert.",
+        "items": [
+          {
+            "icon": "users",
+            "title": "Wiederverwendbar",
+            "desc": "Ein zentrales Blocksystem für viele Landingpages."
+          },
+          {
+            "icon": "gauge",
+            "title": "Performant",
+            "desc": "Saubere Route plus zielgerichtete Datenabfrage."
+          },
+          {
+            "icon": "chart",
+            "title": "SEO-fähig",
+            "desc": "Eigene Meta-Daten pro Slug."
+          },
+          {
+            "icon": "shield",
+            "title": "Kontrolliert",
+            "desc": "Nur veröffentlichte Seiten sind öffentlich lesbar."
+          }
+        ]
+      }
+    },
+    {
+      "type": "faq",
+      "data": {
+        "kicker": "FAQ",
+        "title": "Häufige Fragen zu SEO in Linz",
+        "description": "Die wichtigsten Einwände direkt beantwortet.",
+        "items": [
+          {
+            "question": "Wie wird der Slug gespeichert?",
+            "answer": "Genau so wie die Route ohne führenden Slash, also z. B. seo/seo-linz."
+          },
+          {
+            "question": "Woher kommen Titel und Beschreibung?",
+            "answer": "Direkt aus den Feldern meta_title und meta_description in landing_pages."
+          }
+        ]
+      }
+    }
+  ]
+}
