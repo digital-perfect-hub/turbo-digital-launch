@@ -34,14 +34,52 @@ export const PAGE_BLOCK_OPTIONS: BlockOption[] = [
   { type: "faq", label: "FAQ", description: "Accordion für Einwände und Fragen." },
 ];
 
+export type HeroStatItem = {
+  label?: string;
+  value?: string;
+  helper?: string;
+};
+
+export type HeroProofItem = {
+  icon?: string;
+  text?: string;
+  href?: string;
+};
+
 export type HeroBlockData = {
   badge?: string;
+  badge_text?: string;
   headline?: string;
   subheadline?: string;
   primaryCtaLabel?: string;
   primaryCtaHref?: string;
   secondaryCtaLabel?: string;
   secondaryCtaHref?: string;
+  primary_cta_text?: string;
+  primary_cta_href?: string;
+  secondary_cta_text?: string;
+  secondary_cta_href?: string;
+  stats?: HeroStatItem[];
+  proof_items?: HeroProofItem[];
+  image_path?: string;
+  image_url?: string;
+  image?: string;
+  image_alt?: string;
+  background_image_path?: string;
+  background_mobile_image_path?: string;
+  overlay_opacity?: number;
+  visual_kicker?: string;
+  visual_title?: string;
+  visual_badge?: string;
+  layer_kicker?: string;
+  layer_title?: string;
+  show_visual_panel?: boolean;
+  show_bottom_box1?: boolean;
+  bottom_box1_kicker?: string;
+  bottom_box1_title?: string;
+  show_bottom_box2?: boolean;
+  bottom_box2_kicker?: string;
+  bottom_box2_title?: string;
 };
 
 export type RichTextBlockData = {
@@ -232,6 +270,17 @@ const asString = (value: unknown, fallback = "") => (typeof value === "string" ?
 const asStringArray = (value: unknown) =>
   Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
 
+const asNumber = (value: unknown, fallback = 0) => (typeof value === "number" && Number.isFinite(value) ? value : fallback);
+
+const asBoolean = (value: unknown, fallback = false) => (typeof value === "boolean" ? value : fallback);
+
+const pickFirstString = (...values: unknown[]) => {
+  for (const value of values) {
+    if (typeof value === "string") return value;
+  }
+  return "";
+};
+
 export const normalizePageBlocks = (value: unknown): PageBlock[] => {
   if (!Array.isArray(value)) return [];
 
@@ -243,17 +292,63 @@ export const normalizePageBlocks = (value: unknown): PageBlock[] => {
       switch (entry.type as PageBlockType) {
         case "hero": {
           const data = isObject(entry.data) ? entry.data : {};
+          const stats = Array.isArray(data.stats)
+            ? data.stats
+                .filter(isObject)
+                .map((item) => ({
+                  label: asString(item.label),
+                  value: asString(item.value),
+                  helper: asString(item.helper),
+                }))
+                .filter((item) => item.label || item.value)
+            : [];
+          const proofItems = Array.isArray(data.proof_items)
+            ? data.proof_items
+                .filter(isObject)
+                .map((item) => ({
+                  icon: asString(item.icon),
+                  text: asString(item.text),
+                  href: asString(item.href),
+                }))
+                .filter((item) => item.text)
+            : [];
           return {
             id,
             type: "hero",
             data: {
               badge: asString(data.badge),
+              badge_text: pickFirstString(data.badge_text, data.badge),
               headline: asString(data.headline),
               subheadline: asString(data.subheadline),
               primaryCtaLabel: asString(data.primaryCtaLabel),
               primaryCtaHref: asString(data.primaryCtaHref),
               secondaryCtaLabel: asString(data.secondaryCtaLabel),
               secondaryCtaHref: asString(data.secondaryCtaHref),
+              primary_cta_text: pickFirstString(data.primary_cta_text, data.primaryCtaLabel),
+              primary_cta_href: pickFirstString(data.primary_cta_href, data.primaryCtaHref),
+              secondary_cta_text: pickFirstString(data.secondary_cta_text, data.secondaryCtaLabel),
+              secondary_cta_href: pickFirstString(data.secondary_cta_href, data.secondaryCtaHref),
+              stats,
+              proof_items: proofItems,
+              image_path: asString(data.image_path),
+              image_url: asString(data.image_url),
+              image: asString(data.image),
+              image_alt: asString(data.image_alt),
+              background_image_path: asString(data.background_image_path),
+              background_mobile_image_path: asString(data.background_mobile_image_path),
+              overlay_opacity: asNumber(data.overlay_opacity, 0),
+              visual_kicker: asString(data.visual_kicker),
+              visual_title: asString(data.visual_title),
+              visual_badge: asString(data.visual_badge),
+              layer_kicker: asString(data.layer_kicker),
+              layer_title: asString(data.layer_title),
+              show_visual_panel: asBoolean(data.show_visual_panel, true),
+              show_bottom_box1: asBoolean(data.show_bottom_box1, true),
+              bottom_box1_kicker: asString(data.bottom_box1_kicker),
+              bottom_box1_title: asString(data.bottom_box1_title),
+              show_bottom_box2: asBoolean(data.show_bottom_box2, true),
+              bottom_box2_kicker: asString(data.bottom_box2_kicker),
+              bottom_box2_title: asString(data.bottom_box2_title),
             },
           };
         }

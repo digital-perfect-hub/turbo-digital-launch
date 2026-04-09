@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import HeroSection from "@/components/HeroSection";
 import { sanitizeRichHtml } from "@/lib/content";
 import { getLucideIcon } from "@/lib/lucide-icon-registry";
 import { cn } from "@/lib/utils";
@@ -37,51 +38,7 @@ const SectionShell = ({
   </section>
 );
 
-const HeroBlock = ({ block }: { block: Extract<PageBlock, { type: "hero" }> }) => (
-  <section className="relative overflow-hidden pb-14 pt-[158px] md:pb-18 md:pt-[176px]">
-    <div className="section-container">
-      <div className="premium-card overflow-hidden rounded-[2rem] border border-[color:var(--surface-card-border)] bg-[linear-gradient(135deg,rgba(14,31,83,0.96),rgba(10,16,32,0.94))] px-6 py-10 text-white shadow-[0_40px_110px_-46px_rgba(14,31,83,0.75)] md:px-10 md:py-14">
-        <div className="mx-auto max-w-4xl text-center">
-          {block.data.badge ? (
-            <div className="mb-5 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
-              {block.data.badge}
-            </div>
-          ) : null}
-
-          <h1 className="text-balance text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl lg:text-6xl">
-            {block.data.headline || "Neue Landingpage"}
-          </h1>
-
-          {block.data.subheadline ? (
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75 md:text-xl">
-              {block.data.subheadline}
-            </p>
-          ) : null}
-
-          {(block.data.primaryCtaLabel || block.data.secondaryCtaLabel) && (
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              {block.data.primaryCtaLabel ? (
-                <a href={block.data.primaryCtaHref || "#"} className="btn-primary">
-                  {block.data.primaryCtaLabel}
-                  <ArrowRight size={18} />
-                </a>
-              ) : null}
-
-              {block.data.secondaryCtaLabel ? (
-                <a
-                  href={block.data.secondaryCtaHref || "#"}
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/16 bg-white/10 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/14"
-                >
-                  {block.data.secondaryCtaLabel}
-                </a>
-              ) : null}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  </section>
-);
+const HeroBlock = ({ block }: { block: Extract<PageBlock, { type: "hero" }> }) => <HeroSection overrideData={block.data} />;
 
 const RichTextBlock = ({ block }: { block: Extract<PageBlock, { type: "rich_text" }> }) => (
   <SectionShell kicker={block.data.kicker} headline={block.data.headline}>
@@ -126,7 +83,7 @@ const ImageTextSplitBlock = ({ block }: { block: Extract<PageBlock, { type: "ima
       <div
         className={cn(
           "grid items-center gap-10 lg:grid-cols-[1fr_1fr]",
-          block.data.imageSide === "left" ? "lg:[&>div:first-child]:order-2 lg:[&>div:last-child]:order-1" : ""
+          block.data.imageSide === "left" ? "lg:[&>div:first-child]:order-2 lg:[&>div:last-child]:order-1" : "",
         )}
       >
         <div className="premium-card overflow-hidden rounded-[2rem] border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] p-4 md:p-5">
