@@ -246,33 +246,28 @@ Deno.serve(async (request) => {
 
     const { site, canonicalHost } = resolved;
 
-    const [
-      { data: pages, error: pagesError },
-      { data: landingPages, error: landingPagesError },
-      { data: products, error: productsError },
-      { data: legalPages, error: legalPagesError },
-      { data: forumCategories, error: forumCategoriesError },
-      { data: forumThreads, error: forumThreadsError },
-    ] = await Promise.all([
-      admin.from("pages" as never).select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true),
-      admin.from("landing_pages" as never).select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true),
-      admin.from("products" as never).select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_visible", true),
-      admin.from("legal_pages" as never).select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true),
-      admin.from("forum_categories" as never).select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_active", true),
-      admin
-        .from("forum_threads" as never)
-        .select("slug, status, admin_notes, created_at, updated_at")
-        .eq("site_id", site.id)
-        .eq("is_active", true)
-        .in("status", ["published", "scheduled"]),
-    ]);
+    // --- HIER IST DER FIX ---
+    // Ein robuster Fetcher, der Tabellen-Fehler abfängt, ohne die gesamte Sitemap abstürzen zu lassen
+    const fetchSafe = async (query: any) => {
+      try {
+        const { data, error } = await query;
+        if (error) {
+          console.error("DB Error (Skipped):", error.message);
+          return [];
+        }
+        return data || [];
+      } catch (err) {
+        console.error("Unexpected Fetch Error:", err);
+        return [];
+      }
+    };
 
-    if (pagesError) throw pagesError;
-    if (landingPagesError) throw landingPagesError;
-    if (productsError) throw productsError;
-    if (legalPagesError) throw legalPagesError;
-    if (forumCategoriesError) throw forumCategoriesError;
-    if (forumThreadsError) throw forumThreadsError;
+    const pages = await fetchSafe(admin.from("pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
+    const landingPages = await fetchSafe(admin.from("landing_pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
+    const products = await fetchSafe(admin.from("products").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_visible", true));
+    const legalPages = await fetchSafe(admin.from("legal_pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
+    const forumCategories = await fetchSafe(admin.from("forum_categories").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_active", true));
+    const forumThreads = await fetchSafe(admin.from("forum_threads").select("slug, status, admin_notes, created_at, updated_at").eq("site_id", site.id).eq("is_active", true).in("status", ["published", "scheduled"]));
 
     const entries = new Map<string, string | null>();
     const now = new Date();
@@ -349,7 +344,12 @@ Deno.serve(async (request) => {
     }
 
     return xmlResponse(xml);
-  } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : "Unknown sitemap error" }, 500);
+  } catch (error: any) {
+    console.error("FATAL SITEMAP CRASH:", error);
+    // Erweitertes Error-Logging für den Browser, falls doch noch etwas Unerwartetes passiert
+    return jsonResponse({ 
+      error: "System Error", 
+      detail: error?.message || error 
+    }, 500);
   }
 });
