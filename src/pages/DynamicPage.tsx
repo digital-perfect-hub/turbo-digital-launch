@@ -35,12 +35,13 @@ const DynamicPage = () => {
   const landingSlug = useMemo(() => normalizeLandingPageSlug(location.pathname), [location.pathname]);
 
   const landingPageQuery = useQuery({
-    queryKey: ["landing-page", landingSlug],
+    queryKey: ["landing-page", siteId, landingSlug],
     enabled: Boolean(landingSlug),
     queryFn: async (): Promise<LandingPageRecord | null> => {
       const { data, error } = await supabase
         .from("landing_pages" as never)
         .select("*")
+        .eq("site_id", siteId)
         .eq("slug", landingSlug)
         .eq("is_published", true)
         .limit(1)

@@ -1,6 +1,7 @@
 const BOT_USER_AGENT_PATTERN = /(googlebot|adsbot-google|google-inspectiontool|googleother|google-extended|bingbot|bingpreview|slurp|duckduckbot|baiduspider|yandexbot|semrushbot|ahrefsbot|mj12bot|petalbot|sogou|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|pinterestbot|rogerbot|applebot|discordbot|slackbot|telegrambot|whatsapp|ia_archiver)/i;
 const ASSET_EXTENSION_PATTERN = /\.(?:js|mjs|css|map|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot|otf|xml|txt|pdf|zip|rar|7z|mp4|webm|mp3|wav)$/i;
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
+const DEFAULT_SITEMAP_CACHE_TTL_SECONDS = 60 * 15;
 const PRIMARY_HOST = "digital-perfect.com";
 const WWW_HOST = `www.${PRIMARY_HOST}`;
 
@@ -20,6 +21,18 @@ const normalizeSecret = (value) => (value || "").trim();
 const getEnv = (env, key, fallback = "") => {
   const value = env?.[key];
   return typeof value === "string" ? value.trim() : fallback;
+};
+
+const normalizeHostname = (value) => {
+  const raw = (value || "").trim().toLowerCase();
+  if (!raw) return "";
+
+  return raw
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/.*$/, "")
+    .replace(/:+\d+$/, "")
+    .trim();
 };
 
 const normalizePathname = (pathname) => {
@@ -145,6 +158,87 @@ const fetchPrerenderedResponse = async (request, env) => {
   });
 };
 
+const isSitemapRequest = (request) => {
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  const url = new URL(request.url);
+  return normalizePathname(url.pathname) === "/sitemap.xml";
+};
+
+const buildSitemapFunctionUrl = (env, hostname) => {
+  const explicitUrl = getEnv(env, "SITEMAP_FUNCTION_URL");
+  const supabaseUrl = getEnv(env, "SUPABASE_URL");
+  const base = explicitUrl || (supabaseUrl ? `${supabaseUrl.replace(/\/$/, "")}/functions/v1/generate-sitemap` : "");
+  if (!base) return null;
+
+  const url = new URL(base);
+  url.searchParams.set("host", normalizeHostname(hostname));
+  return url;
+};
+
+const buildSitemapCacheKey = (request) => {
+  const requestUrl = new URL(request.url);
+  const cacheUrl = new URL(requestUrl.toString());
+  cacheUrl.hash = "";
+  cacheUrl.search = "";
+  cacheUrl.searchParams.set("__cf_sitemap", normalizeHostname(requestUrl.hostname) || "default");
+  return new Request(cacheUrl.toString(), { method: "GET" });
+};
+
+const withSitemapCachingHeaders = (response, ttlSeconds) => {
+  const cloned = new Response(response.body, response);
+  cloned.headers.set("Content-Type", "application/xml; charset=utf-8");
+  cloned.headers.set("Cache-Control", `public, max-age=0, s-maxage=${ttlSeconds}, stale-while-revalidate=86400`);
+  cloned.headers.set("X-Sitemap-Cache", "MISS");
+  return cloned;
+};
+
+const fetchSitemapResponse = async (request, env) => {
+  const sharedSecret = normalizeSecret(getEnv(env, "SITEMAP_SHARED_SECRET"));
+  const functionUrl = buildSitemapFunctionUrl(env, new URL(request.url).hostname);
+
+  if (!sharedSecret) {
+    return new Response("Missing SITEMAP_SHARED_SECRET", { status: 500 });
+  }
+
+  if (!functionUrl) {
+    return new Response("Missing SITEMAP_FUNCTION_URL or SUPABASE_URL", { status: 500 });
+  }
+
+  return fetch(functionUrl.toString(), {
+    method: request.method,
+    headers: {
+      "x-sitemap-secret": sharedSecret,
+      "x-sitemap-host": normalizeHostname(new URL(request.url).hostname),
+      "accept": "application/xml,text/xml;q=0.9,*/*;q=0.8",
+    },
+  });
+};
+
+const handleSitemapRequest = async (request, env) => {
+  const cache = caches.default;
+  const cacheKey = buildSitemapCacheKey(request);
+  const cachedResponse = await cache.match(cacheKey);
+
+  if (cachedResponse) {
+    const hit = new Response(cachedResponse.body, cachedResponse);
+    hit.headers.set("X-Sitemap-Cache", "HIT");
+    hit.headers.set("Content-Type", "application/xml; charset=utf-8");
+    return hit;
+  }
+
+  const response = await fetchSitemapResponse(request, env);
+  if (!response.ok) {
+    return response;
+  }
+
+  const ttlSeconds = Number.parseInt(getEnv(env, "SITEMAP_CACHE_TTL_SECONDS", `${DEFAULT_SITEMAP_CACHE_TTL_SECONDS}`), 10);
+  const cacheableResponse = withSitemapCachingHeaders(response, Number.isFinite(ttlSeconds) ? ttlSeconds : DEFAULT_SITEMAP_CACHE_TTL_SECONDS);
+
+  await cache.put(cacheKey, cacheableResponse.clone());
+
+  return cacheableResponse;
+};
+
 export default {
   async fetch(request, env) {
     if (shouldBypassRouting(request, env)) {
@@ -155,6 +249,10 @@ export default {
     const redirectUrl = buildCanonicalRedirectUrl(requestUrl);
     if (redirectUrl) {
       return Response.redirect(redirectUrl.toString(), 301);
+    }
+
+    if (isSitemapRequest(request)) {
+      return handleSitemapRequest(request, env);
     }
 
     if (!shouldPrerender(request)) {

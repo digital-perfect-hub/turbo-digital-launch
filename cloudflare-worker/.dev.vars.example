@@ -1,2 +1,5 @@
 PRERENDER_SERVICE_URL=https://prerender.digital-perfect.com
 PRERENDER_SECRET_TOKEN=replace-me-with-a-long-random-secret
+SITEMAP_FUNCTION_URL=https://YOUR-PROJECT-REF.supabase.co/functions/v1/generate-sitemap
+SITEMAP_SHARED_SECRET=replace-me-with-a-long-random-secret
+SITEMAP_CACHE_TTL_SECONDS=900

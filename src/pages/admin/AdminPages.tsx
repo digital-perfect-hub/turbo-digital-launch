@@ -67,6 +67,7 @@ import {
 import MediaDropzone from "@/components/admin/media/MediaDropzone";
 import BlockRenderer from "@/components/page-builder/BlockRenderer";
 import { cn } from "@/lib/utils";
+import { DEFAULT_SITE_ID } from "@/lib/site";
 
 type LandingPageRow = {
   id: string;
@@ -365,6 +366,7 @@ const AdminPages = () => {
   const { toast } = useToast();
   const { canEditContent } = useAdminAccess();
   const { activeSiteId } = useSiteContext();
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [mode, setMode] = useState<"list" | "editor">("list");
@@ -384,7 +386,7 @@ const AdminPages = () => {
   const currentDraftKeyRef = useRef<string | null>(null);
 
   const pagesQuery = useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: [...QUERY_KEY, siteId],
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 30_000,
@@ -392,6 +394,7 @@ const AdminPages = () => {
       const { data, error } = await supabase
         .from("landing_pages" as never)
         .select("*")
+        .eq("site_id", siteId)
         .order("updated_at", { ascending: false })
         .order("slug", { ascending: true });
 
@@ -550,6 +553,7 @@ const AdminPages = () => {
       if (!payload.page_blocks.length) throw new Error("Bitte mindestens einen Block anlegen.");
 
       const dbPayload = {
+        site_id: siteId,
         slug,
         meta_title: payload.meta_title.trim() || null,
         meta_description: payload.meta_description.trim() || null,
@@ -562,6 +566,7 @@ const AdminPages = () => {
           .from("landing_pages" as never)
           .update(dbPayload as never)
           .eq("id", payload.id)
+          .eq("site_id", siteId)
           .select("*")
           .single();
         if (error) throw error;
@@ -577,7 +582,7 @@ const AdminPages = () => {
       return mapLandingPageRow((data as Record<string, unknown>) || {});
     },
     onSuccess: (savedPage) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, siteId] });
       const savedForm = createFormFromRow(savedPage);
       setFormAndBaseline(savedForm);
       setMode("editor");
@@ -605,11 +610,11 @@ const AdminPages = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("landing_pages" as never).delete().eq("id", id);
+      const { error } = await supabase.from("landing_pages" as never).delete().eq("id", id).eq("site_id", siteId);
       if (error) throw error;
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, siteId] });
       if (form.id === id) {
         const draftKey = getDraftKey(form);
         localStorage.removeItem(draftKey);
@@ -634,6 +639,7 @@ const AdminPages = () => {
     mutationFn: async (page: LandingPageRow) => {
       const slug = generateCopySlug(page.slug, existingSlugs);
       const payload = {
+        site_id: siteId,
         slug,
         meta_title: page.meta_title ? `${page.meta_title} | Kopie` : `${page.slug} | Kopie`,
         meta_description: page.meta_description,
@@ -645,7 +651,7 @@ const AdminPages = () => {
       return mapLandingPageRow((data as Record<string, unknown>) || {});
     },
     onSuccess: (duplicatedPage) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, siteId] });
       enterEditor(createFormFromRow(duplicatedPage));
       toast({ title: "Dupliziert", description: `Die Kopie „${duplicatedPage.slug}“ ist jetzt als Entwurf geöffnet.` });
     },
