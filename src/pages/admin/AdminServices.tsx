@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import IconPicker from "@/components/admin/IconPicker";
 import { getLucideIcon } from "@/lib/lucide-icon-registry";
 
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 type ServiceRow = {
   id?: string;
   title: string;
@@ -35,6 +36,7 @@ const AdminServices = () => {
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const qc = useQueryClient();
   const [editing, setEditing] = useState<ServiceRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ServiceRow | null>(null);
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ["admin-services", siteId],
@@ -200,6 +202,14 @@ const AdminServices = () => {
           <div className="rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-sm text-slate-500">Noch keine Leistungen angelegt.</div>
         )}
       </section>
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Leistung löschen?"
+        description={deleteTarget ? `Die Leistung „${deleteTarget.title}“ wird in Supabase gelöscht.` : ""}
+        onConfirm={() => deleteTarget?.id && deleteMutation.mutate(deleteTarget.id)}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

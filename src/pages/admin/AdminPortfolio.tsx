@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 type PortfolioRecord = Database["public"]["Tables"]["portfolio_items"]["Row"];
 type PortfolioPayload = Database["public"]["Tables"]["portfolio_items"]["Insert"];
 
@@ -34,6 +35,7 @@ const AdminPortfolio = () => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [editing, setEditing] = useState<(Partial<PortfolioRecord> & { id?: string }) | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PortfolioRecord | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
@@ -233,7 +235,7 @@ const AdminPortfolio = () => {
               </div>
               <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button size="sm" variant="outline" onClick={() => setEditing(item)} className="rounded-lg border-slate-200 text-slate-600 hover:text-[#FF4B2C]">Bearbeiten</Button>
-                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => { if(window.confirm("Projekt löschen?")) deleteMutation.mutate(item.id) }}>
+                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => setDeleteTarget(item)}>
                   <Trash2 size={18} />
                 </Button>
               </div>
@@ -249,6 +251,14 @@ const AdminPortfolio = () => {
           )}
         </div>
       )}
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Projekt löschen?"
+        description={deleteTarget ? `Das Portfolio-Projekt „${deleteTarget.title}“ wird in Supabase gelöscht.` : ""}
+        onConfirm={() => deleteTarget?.id && deleteMutation.mutate(deleteTarget.id)}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
-.admin-ui-scope {
+.admin-ui-scope,
+.admin-dialog-scope {
   --background: 210 38% 98%;
   --foreground: 222 47% 11%;
 
@@ -89,6 +90,11 @@ body.admin-ui-portal-scope {
 
 .admin-ui-scope {
   min-height: 100vh;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.admin-dialog-scope {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
 }
@@ -363,4 +369,12 @@ body.admin-ui-portal-scope {
 
 .admin-ui-scope .admin-tabs-shell {
   background: linear-gradient(180deg, rgba(241,245,249,0.9) 0%, rgba(226,232,240,0.72) 100%);
+}
+
+body.admin-ui-portal-scope [data-admin-dialog-theme="dark"] {
+  color: #f8fafc;
+}
+
+body.admin-ui-portal-scope [data-admin-dialog-theme="dark"] * {
+  color: inherit;
 }

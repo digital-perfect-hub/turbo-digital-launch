@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/SEO";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
@@ -42,7 +43,14 @@ const Login = () => {
   };
 
   return (
-    <div className="surface-page-shell min-h-screen px-4">
+    <>
+      <SEO
+        title="Admin Login | Digital-Perfect"
+        description="Sicherer Login für die Verwaltung von Digital-Perfect."
+        canonical="/login"
+        noIndex
+      />
+      <div className="surface-page-shell min-h-screen px-4">
       <div className="mx-auto flex min-h-screen w-full max-w-sm items-center justify-center">
         <div className="surface-card-shell w-full rounded-[2rem] border p-8 shadow-sm">
           <div className="text-center mb-8">
@@ -73,6 +81,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

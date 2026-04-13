@@ -16,6 +16,7 @@ import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { upsertSiteSetting } from "@/lib/site-settings";
 
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 type TeamMember = {
   id?: string;
   name: string;
@@ -48,6 +49,7 @@ const AdminTeam = () => {
     description: defaultSiteText.home_team_description,
   });
   const [editing, setEditing] = useState<TeamMember | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
   const { data: teamMembers = [], isLoading } = useQuery({
     queryKey: ["admin-team-members", siteId],
@@ -297,7 +299,7 @@ const AdminTeam = () => {
                   })}>
                     Bearbeiten
                   </Button>
-                  <Button variant="outline" className="rounded-xl text-rose-600 hover:text-rose-700" onClick={() => deleteMutation.mutate(member.id)} disabled={deleteMutation.isPending}>
+                  <Button variant="outline" className="rounded-xl text-rose-600 hover:text-rose-700" onClick={() => setDeleteTarget(member)} disabled={deleteMutation.isPending}>
                     <Trash2 size={15} className="mr-2" /> Löschen
                   </Button>
                 </div>
@@ -306,6 +308,14 @@ const AdminTeam = () => {
           </Card>
         ))}
       </div>
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Team-Mitglied löschen?"
+        description={deleteTarget ? `Der Eintrag „${deleteTarget.name}“ wird in Supabase gelöscht.` : ""}
+        onConfirm={() => deleteTarget?.id && deleteMutation.mutate(deleteTarget.id)}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

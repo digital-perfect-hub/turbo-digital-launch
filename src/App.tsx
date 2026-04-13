@@ -50,6 +50,8 @@ import AdminPages from "./pages/admin/AdminPages";
 import AdminBilling from "./pages/admin/AdminBilling";
 import AdminTickets from "./pages/admin/AdminTickets";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
+import AdminMedia from "./pages/admin/AdminMedia";
+import AdminBanners from "./pages/admin/AdminBanners";
 import { LoadingScreen } from "./components/ui/LoadingScreen";
 
 const queryClient = new QueryClient();
@@ -176,6 +178,8 @@ const App = () => (
                   <Route path="forum/*" element={<AdminForum />} />
                   <Route path="content" element={<AdminContent />} />
                   <Route path="pages" element={<AdminPages />} />
+                  <Route path="media" element={<AdminMedia />} />
+                  <Route path="banners" element={<AdminBanners />} />
                   <Route path="billing" element={<AdminBilling />} />
                   <Route path="tickets" element={<AdminTickets />} />
                   <Route path="onboarding" element={<AdminOnboarding />} />

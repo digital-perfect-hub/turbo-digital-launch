@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, CheckCircle2, Eye, Globe, Image as ImageIcon, 
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,48 +24,13 @@ type ProductUpsell = {
   stripe_price_id: string;
 };
 
-const PRODUCT_SELECT = "id, title, slug, description, long_description, target_audience, price, features, image_url, demo_url, checkout_url, stripe_price_id, tax_rate, cta_text, cta_color, upsells, sort_order, is_visible, created_at, updated_at";
+const PRODUCT_SELECT = "id, title, slug, description, seo_title, seo_description, long_description, target_audience, price, features, image_url, demo_url, checkout_url, stripe_price_id, tax_rate, cta_text, cta_color, upsells, sort_order, is_visible, created_at, updated_at";
 
 const truncate = (value: string, maxChars: number) => {
   const clean = (value || "").trim();
   if (!clean) return "";
   if (clean.length <= maxChars) return clean;
   return clean.slice(0, maxChars).trimEnd();
-};
-
-const upsertMeta = (attrs: { name?: string; property?: string }, content: string) => {
-  if (!content) return;
-
-  const selector = attrs.name
-    ? `meta[name="${attrs.name}"]`
-    : attrs.property
-      ? `meta[property="${attrs.property}"]`
-      : "";
-
-  if (!selector) return;
-
-  let el = document.head.querySelector(selector) as HTMLMetaElement | null;
-  if (!el) {
-    el = document.createElement("meta");
-    if (attrs.name) el.setAttribute("name", attrs.name);
-    if (attrs.property) el.setAttribute("property", attrs.property);
-    document.head.appendChild(el);
-  }
-
-  el.setAttribute("content", content);
-};
-
-const upsertLink = (rel: string, href: string) => {
-  if (!href) return;
-
-  let el = document.head.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
-  if (!el) {
-    el = document.createElement("link");
-    el.setAttribute("rel", rel);
-    document.head.appendChild(el);
-  }
-
-  el.setAttribute("href", href);
 };
 
 const normalizeFeatures = (value: Json | null | undefined): string[] => {
@@ -187,28 +153,57 @@ const ProductDetail = () => {
   const taxAmount = netTotal * (taxRate / 100);
   const grossTotal = netTotal + taxAmount;
   const ctaText = (product?.cta_text || "Jetzt sichern").trim() || "Jetzt sichern";
+  const metaTitle = useMemo(() => {
+    if (!product) return "Produktseite | Digital-Perfect";
+    return truncate(product.seo_title || `${product.title} kaufen | Digital-Perfect`, 60);
+  }, [product]);
+  const metaDescription = useMemo(() => {
+    if (!product) return "Dieses Produkt ist aktuell nicht verfügbar oder der Link ist veraltet.";
+    return truncate(
+      product.seo_description || product.description || `${product.title} mit Demo, Premium-Features und direktem Checkout jetzt ansehen.`,
+      155,
+    );
+  }, [product]);
+  const canonical = useMemo(
+    () => buildAbsolutePublicUrl(product?.slug ? `/produkt/${product.slug}` : `/produkt/${slug}`),
+    [product?.slug, slug],
+  );
+  const structuredData = useMemo(() => {
+    if (!product) {
+      return {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "Produkt nicht gefunden",
+        description: metaDescription,
+        url: canonical,
+      };
+    }
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.title,
+      description: metaDescription,
+      image: detailImage ? [detailImage] : undefined,
+      url: canonical,
+      brand: {
+        "@type": "Brand",
+        name: "Digital-Perfect",
+      },
+      offers: {
+        "@type": "Offer",
+        url: canonical,
+        priceCurrency: "EUR",
+        price: Number.isFinite(baseNetPrice) ? baseNetPrice.toFixed(2) : undefined,
+        availability: "https://schema.org/InStock",
+      },
+    };
+  }, [baseNetPrice, canonical, detailImage, metaDescription, product]);
+  const shouldNoIndex = Boolean(error || (!isLoading && !product));
 
   useEffect(() => {
     setSelectedUpsellIds([]);
   }, [slug]);
-
-  useEffect(() => {
-    if (!product) return;
-
-    const metaTitle = truncate(`${product.title} kaufen | Digital-Perfect`, 60);
-    const metaDescription = truncate(
-      product.description || `${product.title} mit Demo, Premium-Features und direktem Checkout jetzt ansehen.`,
-      155,
-    );
-
-    document.title = metaTitle;
-    upsertMeta({ name: "description" }, metaDescription);
-    upsertMeta({ property: "og:title" }, metaTitle);
-    upsertMeta({ property: "og:description" }, metaDescription);
-    upsertMeta({ property: "og:type" }, "product");
-    if (detailImage) upsertMeta({ property: "og:image" }, detailImage);
-    upsertLink("canonical", buildAbsolutePublicUrl(`/produkt/${product.slug}`));
-  }, [detailImage, product]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -267,7 +262,17 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="surface-page-shell min-h-screen bg-[var(--surface-page)]">
+    <>
+      <SEO
+        title={metaTitle}
+        description={metaDescription}
+        image={detailImage || undefined}
+        canonical={canonical}
+        type="product"
+        noIndex={shouldNoIndex}
+        structuredData={structuredData}
+      />
+      <div className="surface-page-shell min-h-screen bg-[var(--surface-page)]">
       <Header forceSolid solidBackgroundClassName="!bg-[var(--theme-secondary-hex)] border-b border-white/10 shadow-lg shadow-slate-950/20" />
       <main className="pt-28 md:pt-32">
         {isLoading ? (
@@ -593,6 +598,7 @@ const ProductDetail = () => {
       </main>
       <Footer />
     </div>
+    </>
   );
 };
 

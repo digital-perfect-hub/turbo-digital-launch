@@ -560,6 +560,8 @@ export type Database = {
           demo_url: string | null
           description: string | null
           features: Json | null
+          seo_description: string | null
+          seo_title: string | null
           id: string
           image_url: string | null
           is_visible: boolean | null
@@ -582,6 +584,8 @@ export type Database = {
           demo_url?: string | null
           description?: string | null
           features?: Json | null
+          seo_description?: string | null
+          seo_title?: string | null
           id?: string
           image_url?: string | null
           is_visible?: boolean | null
@@ -604,6 +608,8 @@ export type Database = {
           demo_url?: string | null
           description?: string | null
           features?: Json | null
+          seo_description?: string | null
+          seo_title?: string | null
           id?: string
           image_url?: string | null
           is_visible?: boolean | null

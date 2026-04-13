@@ -1,5 +1,10 @@
 import DOMPurify from "dompurify";
 
+const normalizeRichHeadingHierarchy = (value: string) =>
+  value
+    .replace(/<\s*h1\b([^>]*)>/gi, "<h2$1>")
+    .replace(/<\s*\/\s*h1\s*>/gi, "</h2>");
+
 export const sanitizeRichHtml = (value?: string | null) => {
   if (!value) return "";
   return DOMPurify.sanitize(value, {
@@ -30,6 +35,9 @@ export const sanitizeRichHtml = (value?: string | null) => {
     ],
   });
 };
+
+export const sanitizeRichHtmlWithoutH1 = (value?: string | null) =>
+  normalizeRichHeadingHierarchy(sanitizeRichHtml(value));
 
 export const stripHtmlToText = (value?: string | null) =>
   (value || "")

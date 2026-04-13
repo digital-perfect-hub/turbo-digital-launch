@@ -16,6 +16,7 @@ import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { upsertSiteSetting } from "@/lib/site-settings";
 
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 type TestimonialRow = {
   id?: string;
   name: string;
@@ -50,6 +51,7 @@ const AdminTestimonials = () => {
     description: defaultSiteText.home_testimonials_description,
   });
   const [editing, setEditing] = useState<TestimonialRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
   const { data: testimonials = [], isLoading } = useQuery({
     queryKey: ["admin-testimonials", siteId],
@@ -301,7 +303,7 @@ const AdminTestimonials = () => {
                   })}>
                     Bearbeiten
                   </Button>
-                  <Button variant="outline" className="rounded-xl text-rose-600 hover:text-rose-700" onClick={() => deleteMutation.mutate(item.id)} disabled={deleteMutation.isPending}>
+                  <Button variant="outline" className="rounded-xl text-rose-600 hover:text-rose-700" onClick={() => setDeleteTarget(item)} disabled={deleteMutation.isPending}>
                     <Trash2 size={15} className="mr-2" /> Löschen
                   </Button>
                 </div>
@@ -310,6 +312,14 @@ const AdminTestimonials = () => {
           </Card>
         ))}
       </div>
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Testimonial löschen?"
+        description={deleteTarget ? `Der Eintrag „${deleteTarget.name}“ wird in Supabase gelöscht.` : ""}
+        onConfirm={() => deleteTarget?.id && deleteMutation.mutate(deleteTarget.id)}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

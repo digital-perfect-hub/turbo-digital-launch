@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 type ProductRecord = Database["public"]["Tables"]["products"]["Row"];
 type ProductPayload = Database["public"]["Tables"]["products"]["Insert"];
 
@@ -32,6 +33,8 @@ type ProductFormState = {
   title: string;
   slug: string;
   description: string;
+  seo_title: string;
+  seo_description: string;
   long_description: string;
   target_audience: string;
   price: string;
@@ -48,7 +51,7 @@ type ProductFormState = {
   is_visible: boolean;
 };
 
-const PRODUCTS_SELECT = "id, title, slug, description, long_description, target_audience, price, stripe_price_id, tax_rate, cta_text, cta_color, features, upsells, image_url, demo_url, checkout_url, sort_order, is_visible, created_at, updated_at";
+const PRODUCTS_SELECT = "id, title, slug, description, seo_title, seo_description, long_description, target_audience, price, stripe_price_id, tax_rate, cta_text, cta_color, features, upsells, image_url, demo_url, checkout_url, sort_order, is_visible, created_at, updated_at";
 
 const normalizeFeatures = (value: Json | null | undefined): string[] => {
   if (Array.isArray(value)) {
@@ -152,6 +155,8 @@ const toFormState = (item?: Partial<ProductRecord> & { id?: string }, nextSortOr
   title: item?.title?.trim() || "",
   slug: item?.slug?.trim() || "",
   description: item?.description?.trim() || "",
+  seo_title: item?.seo_title?.trim() || "",
+  seo_description: item?.seo_description?.trim() || "",
   long_description: item?.long_description?.trim() || "",
   target_audience: item?.target_audience?.trim() || "",
   price: typeof item?.price === "string" ? item.price : "",
@@ -174,6 +179,7 @@ const AdminProducts = () => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const [editing, setEditing] = useState<ProductFormState | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProductRecord | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const { hasShop, isLoading: modulesLoading } = useSiteModules();
@@ -226,6 +232,8 @@ const AdminProducts = () => {
         title: item.title.trim(),
         slug: slugify(item.slug || item.title),
         description: item.description.trim() || null,
+        seo_title: item.seo_title.trim() || null,
+        seo_description: item.seo_description.trim() || null,
         long_description: item.long_description.trim() || null,
         target_audience: item.target_audience.trim() || null,
         price: item.price.trim(),
@@ -432,6 +440,33 @@ toast.success("Produktbild erfolgreich hochgeladen.");
                   placeholder="Kurz, klar, premium. Was bekommt der Kunde konkret?"
                   className="resize-none rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
                 />
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="product-seo-title" className="text-slate-700">SEO Title</Label>
+                  <Input
+                    id="product-seo-title"
+                    value={editing.seo_title}
+                    onChange={(e) => setEditing({ ...editing, seo_title: e.target.value })}
+                    placeholder="Google Bewertungsständer mit NFC & QR Code kaufen"
+                    className="rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                  />
+                  <p className="text-xs text-slate-500">Einzigartig pro Produkt. Ziel: unter 60 Zeichen.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="product-seo-description" className="text-slate-700">SEO Description</Label>
+                  <Textarea
+                    id="product-seo-description"
+                    rows={4}
+                    value={editing.seo_description}
+                    onChange={(e) => setEditing({ ...editing, seo_description: e.target.value })}
+                    placeholder="NFC- & QR-Bewertungsständer für mehr Google-Bewertungen, schnellen Setup und einen einfachen Weg zur direkten Kundenbewertung."
+                    className="resize-none rounded-xl border-slate-200 bg-slate-50 focus:border-[#FF4B2C]"
+                  />
+                  <p className="text-xs text-slate-500">Einzigartig pro Produkt. Ziel: unter 155 Zeichen.</p>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -830,7 +865,7 @@ toast.success("Produktbild erfolgreich hochgeladen.");
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => deleteMutation.mutate(product.id)}
+                      onClick={() => setDeleteTarget(product)}
                       disabled={deleteMutation.isPending}
                       className="rounded-xl px-4 text-slate-500 hover:bg-red-50 hover:text-red-600"
                     >
@@ -843,6 +878,15 @@ toast.success("Produktbild erfolgreich hochgeladen.");
           })}
         </div>
       )}
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Produkt löschen?"
+        description={deleteTarget ? `Das Produkt „${deleteTarget.title}“ wird in Supabase gelöscht. Zugehörige Storage-Bilder bleiben bewusst bestehen.` : ""}
+        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+        isLoading={deleteMutation.isPending}
+      />
+
     </div>
   );
 };

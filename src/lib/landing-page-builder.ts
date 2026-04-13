@@ -1,5 +1,6 @@
-import { sanitizeRichHtml } from "@/lib/content";
+import { sanitizeRichHtmlWithoutH1 } from "@/lib/content";
 import type { HeroProofIcon, TrustPoint, TrustPointIcon } from "@/hooks/useSiteSettings";
+
 
 type JsonObject = Record<string, unknown>;
 
@@ -61,6 +62,49 @@ export type LandingTrustBlockData = {
   items: LandingTrustItem[];
 };
 
+export type LandingFeatureGridItem = {
+  title: string;
+  text: string;
+  iconKey?: string;
+};
+
+export type LandingFeatureGridBlockData = {
+  kicker?: string;
+  headline?: string;
+  description?: string;
+  items: LandingFeatureGridItem[];
+};
+
+export type LandingImageTextSplitBlockData = {
+  kicker?: string;
+  headline?: string;
+  body_html?: string;
+  image_path?: string;
+  image_alt?: string;
+  bullets: string[];
+  image_side?: "left" | "right";
+  mobile_image_first?: boolean;
+  cta_label?: string;
+  cta_href?: string;
+};
+
+export type LandingCtaBannerBlockData = {
+  kicker?: string;
+  headline?: string;
+  description?: string;
+  button_label?: string;
+  button_href?: string;
+  image_path?: string;
+  image_alt?: string;
+  tone?: "accent" | "light" | "dark";
+  campaign_id?: string;
+  campaign_name?: string;
+  placement?: "inline" | "top" | "sidebar" | "sticky_mobile";
+  starts_at?: string;
+  ends_at?: string;
+  is_campaign_active?: boolean;
+};
+
 export type LandingFaqItem = {
   question: string;
   answer: string;
@@ -73,10 +117,38 @@ export type LandingFaqBlockData = {
   items: LandingFaqItem[];
 };
 
+export type LandingPageBlockType =
+  | "hero"
+  | "rich_text"
+  | "trust"
+  | "feature_grid"
+  | "image_text_split"
+  | "cta_banner"
+  | "faq";
+
+export type LandingPageBlockOption = {
+  type: LandingPageBlockType;
+  label: string;
+  description: string;
+};
+
+export const LANDING_PAGE_BLOCK_OPTIONS: LandingPageBlockOption[] = [
+  { type: "hero", label: "Hero", description: "Einstieg mit Headline, CTA und Visual." },
+  { type: "rich_text", label: "Rich Text", description: "Freier Content-Block für Einleitung oder SEO-Text." },
+  { type: "feature_grid", label: "Feature Grid", description: "Vorteile oder Module in Kartenstruktur." },
+  { type: "image_text_split", label: "Bild + Text", description: "Split-Sektion mit Bild, Text und Benefits." },
+  { type: "trust", label: "Trust", description: "Vertrauen, Vorteile und Positionierung." },
+  { type: "cta_banner", label: "Promo Banner", description: "Promo-, Werbe- oder CTA-Banner mit optionalem Bild." },
+  { type: "faq", label: "FAQ", description: "Fragen und Einwände sauber abfangen." },
+];
+
 export type LandingPageBlock =
   | { id: string; type: "hero"; data: LandingHeroBlockData }
   | { id: string; type: "rich_text"; data: LandingRichTextBlockData }
   | { id: string; type: "trust"; data: LandingTrustBlockData }
+  | { id: string; type: "feature_grid"; data: LandingFeatureGridBlockData }
+  | { id: string; type: "image_text_split"; data: LandingImageTextSplitBlockData }
+  | { id: string; type: "cta_banner"; data: LandingCtaBannerBlockData }
   | { id: string; type: "faq"; data: LandingFaqBlockData };
 
 export type LandingPageRecord = {
@@ -103,6 +175,13 @@ const asString = (value: unknown, fallback = "") => (typeof value === "string" ?
 const asBoolean = (value: unknown, fallback = false) => (typeof value === "boolean" ? value : fallback);
 
 const asNumber = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : undefined);
+
+const asStringArray = (value: unknown) =>
+  Array.isArray(value)
+    ? value
+        .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+        .filter(Boolean)
+    : [];
 
 const TRUST_ICONS: TrustPointIcon[] = ["users", "gauge", "chart", "shield"];
 const HERO_PROOF_ICONS: HeroProofIcon[] = ["badge", "chart", "shield", "globe"];
@@ -150,6 +229,19 @@ const asTrustItems = (value: unknown): TrustPoint[] => {
     .filter((item) => item.title && item.desc);
 };
 
+const asFeatureItems = (value: unknown): LandingFeatureGridItem[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter(isObject)
+    .map((item) => ({
+      title: asString(item.title).trim(),
+      text: asString(item.text).trim(),
+      iconKey: asString(item.iconKey ?? item.icon_key).trim(),
+    }))
+    .filter((item) => item.title || item.text);
+};
+
 const asFaqItems = (value: unknown): LandingFaqItem[] => {
   if (!Array.isArray(value)) return [];
 
@@ -168,6 +260,141 @@ export const normalizeLandingPageSlug = (pathname: string) =>
     .toLowerCase()
     .replace(/^\/+|\/+$/g, "")
     .replace(/\/+/g, "/");
+
+export const createDefaultLandingPageBlock = (type: LandingPageBlockType): LandingPageBlock => {
+  switch (type) {
+    case "hero":
+      return {
+        id: createId(),
+        type,
+        data: {
+          badge_text: "Digitale Präsenz",
+          headline: "Landingpage mit klarer Positionierung und sauberem Funnel",
+          subheadline: "Mobile-first, conversion-stark und für lokale Sichtbarkeit gebaut.",
+          primary_cta_text: "Jetzt anfragen",
+          primary_cta_href: "/kontakt",
+          secondary_cta_text: "Mehr erfahren",
+          secondary_cta_href: "#vorteile",
+          stats: [
+            { label: "Fokus", value: "Leads" },
+            { label: "System", value: "White-Label" },
+          ],
+          proof_items: [
+            { icon: "badge", text: "Premium Positionierung" },
+            { icon: "shield", text: "Saubere Technik & SEO" },
+          ],
+        },
+      };
+    case "rich_text":
+      return {
+        id: createId(),
+        type,
+        data: {
+          kicker: "Einordnung",
+          headline: "Warum diese Seite relevant ist",
+          body_html: "<p>Beschreibe hier klar den Nutzen, den lokalen Kontext und den Unterschied zu Standard-Agenturen.</p>",
+        },
+      };
+    case "feature_grid":
+      return {
+        id: createId(),
+        type,
+        data: {
+          kicker: "Vorteile",
+          headline: "Das steckt drin",
+          description: "Die wichtigsten Punkte direkt im Überblick.",
+          items: [
+            { title: "Schnell", text: "Klare Nutzerführung und starke Struktur.", iconKey: "Zap" },
+            { title: "Messbar", text: "Fokus auf Leads statt auf Deko.", iconKey: "BarChart3" },
+            { title: "Skalierbar", text: "Ideal für SEO-Landingpages und Services.", iconKey: "Rocket" },
+          ],
+        },
+      };
+    case "image_text_split":
+      return {
+        id: createId(),
+        type,
+        data: {
+          kicker: "Visual",
+          headline: "Bild und Argumentation sauber kombiniert",
+          body_html: "<p>Nutze diesen Block für Prozess, Screenshots oder greifbare Vorteile.</p>",
+          bullets: ["Klare Argumentation", "Sauberes Visual", "Starker CTA"],
+          image_side: "right",
+          mobile_image_first: false,
+          cta_label: "Jetzt ansehen",
+          cta_href: "/kontakt",
+        },
+      };
+    case "trust":
+      return {
+        id: createId(),
+        type,
+        data: {
+          kicker: "Warum wir",
+          title: "Vertrauen entsteht durch Substanz",
+          description: "Echte Vorteile statt leere Floskeln.",
+          items: [
+            { title: "Klarer Prozess", desc: "Saubere Struktur von Strategie bis Launch.", icon: "gauge" },
+            { title: "Saubere Technik", desc: "Performance, Mobile und SEO greifen zusammen.", icon: "shield" },
+          ],
+        },
+      };
+    case "cta_banner":
+      return {
+        id: createId(),
+        type,
+        data: {
+          kicker: "Nächster Schritt",
+          headline: "Lass uns daraus einen Lead-Magneten machen",
+          description: "Sauber aufgebaut, schnell live und für Mobile optimiert.",
+          button_label: "Kostenloses Gespräch sichern",
+          button_href: "/kontakt",
+          tone: "accent",
+        },
+      };
+    case "faq":
+      return {
+        id: createId(),
+        type,
+        data: {
+          kicker: "FAQ",
+          title: "Häufige Fragen",
+          description: "Einwände früh sauber beantworten.",
+          items: [
+            { question: "Wie schnell kann die Seite live gehen?", answer: "Je nach Umfang oft in wenigen Tagen bis wenigen Wochen." },
+            { question: "Ist die Seite mobil optimiert?", answer: "Ja, die Blöcke sind mobile-first aufgebaut und werden im Admin vorab geprüft." },
+          ],
+        },
+      };
+  }
+};
+
+export const cloneLandingPageBlocks = (blocks: LandingPageBlock[]): LandingPageBlock[] =>
+  normalizeLandingPageBlocks(JSON.parse(JSON.stringify(blocks ?? [])));
+
+export const getLandingPageBlockLabel = (type: LandingPageBlockType) =>
+  LANDING_PAGE_BLOCK_OPTIONS.find((item) => item.type === type)?.label ?? type;
+
+export const summarizeLandingPageBlock = (block: LandingPageBlock) => {
+  switch (block.type) {
+    case "hero":
+      return block.data.headline || block.data.badge_text || "Hero";
+    case "rich_text":
+      return block.data.headline || block.data.kicker || "Rich Text";
+    case "feature_grid":
+      return block.data.headline || `${block.data.items.length} Features`;
+    case "image_text_split":
+      return block.data.headline || (block.data.image_path ? "Bild + Text mit Visual" : "Bild + Text");
+    case "trust":
+      return block.data.title || `${block.data.items.length} Trust-Punkte`;
+    case "cta_banner":
+      return block.data.campaign_name || block.data.headline || block.data.kicker || "Promo Banner";
+    case "faq":
+      return block.data.title || `${block.data.items.length} FAQ-Einträge`;
+    default:
+      return block.type;
+  }
+};
 
 export const normalizeLandingPageBlocks = (value: unknown): LandingPageBlock[] => {
   if (!Array.isArray(value)) return [];
@@ -220,7 +447,7 @@ export const normalizeLandingPageBlocks = (value: unknown): LandingPageBlock[] =
             data: {
               kicker: asString(data.kicker),
               headline: asString(data.headline),
-              body_html: sanitizeRichHtml(asString(data.body_html)),
+              body_html: sanitizeRichHtmlWithoutH1(asString(data.body_html)),
             },
           };
         case "trust":
@@ -234,13 +461,68 @@ export const normalizeLandingPageBlocks = (value: unknown): LandingPageBlock[] =
               items: asTrustItems(data.items),
             },
           };
+        case "feature_grid":
+          return {
+            id,
+            type: "feature_grid",
+            data: {
+              kicker: asString(data.kicker),
+              headline: asString(data.headline),
+              description: asString(data.description),
+              items: asFeatureItems(data.items),
+            },
+          };
+        case "image_text_split":
+          return {
+            id,
+            type: "image_text_split",
+            data: {
+              kicker: asString(data.kicker),
+              headline: asString(data.headline),
+              body_html: sanitizeRichHtmlWithoutH1(asString(data.body_html ?? data.body)),
+              image_path: asString(data.image_path ?? data.imagePath),
+              image_alt: asString(data.image_alt ?? data.imageAlt),
+              bullets: asStringArray(data.bullets),
+              image_side: data.image_side === "left" || data.imageSide === "left" ? "left" : "right",
+              mobile_image_first: asBoolean(data.mobile_image_first),
+              cta_label: asString(data.cta_label ?? data.ctaLabel),
+              cta_href: asString(data.cta_href ?? data.ctaHref),
+            },
+          };
+        case "cta_banner":
+          return {
+            id,
+            type: "cta_banner",
+            data: {
+              kicker: asString(data.kicker),
+              headline: asString(data.headline),
+              description: asString(data.description),
+              button_label: asString(data.button_label ?? data.buttonLabel),
+              button_href: asString(data.button_href ?? data.buttonHref),
+              image_path: asString(data.image_path ?? data.imagePath),
+              image_alt: asString(data.image_alt ?? data.imageAlt),
+              tone:
+                data.tone === "dark" || data.tone === "light" || data.tone === "accent"
+                  ? data.tone
+                  : "accent",
+              campaign_id: asString(data.campaign_id),
+              campaign_name: asString(data.campaign_name),
+              placement:
+                data.placement === "top" || data.placement === "sidebar" || data.placement === "sticky_mobile" || data.placement === "inline"
+                  ? data.placement
+                  : "inline",
+              starts_at: asString(data.starts_at),
+              ends_at: asString(data.ends_at),
+              is_campaign_active: asBoolean(data.is_campaign_active, true),
+            },
+          };
         case "faq":
           return {
             id,
             type: "faq",
             data: {
               kicker: asString(data.kicker),
-              title: asString(data.title),
+              title: asString(data.title ?? data.headline),
               description: asString(data.description),
               items: asFaqItems(data.items),
             },

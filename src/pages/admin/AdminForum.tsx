@@ -58,6 +58,7 @@ import {
 import RichTextEditor from "@/components/ui/rich-text-editor";
 import { Badge } from "@/components/ui/badge";
 import { ModuleLockedState } from "@/components/admin/ModuleLockedState";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 
 type ForumCategoryRow = Database["public"]["Tables"]["forum_categories"]["Row"];
 type ForumCategoryInsert = Database["public"]["Tables"]["forum_categories"]["Insert"];
@@ -373,6 +374,9 @@ const AdminForum = () => {
   const [replySearch, setReplySearch] = useState("");
   const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
   const [threadAutosaveAt, setThreadAutosaveAt] = useState<string | null>(null);
+  const [deleteThreadTargetId, setDeleteThreadTargetId] = useState<string | null>(null);
+  const [deleteCategoryTargetId, setDeleteCategoryTargetId] = useState<string | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const hydratedThreadRef = useRef<string | null>(null);
   const hydratedCategoryRef = useRef<string | null>(null);
@@ -751,6 +755,7 @@ const AdminForum = () => {
     },
     onSuccess: async () => {
       await invalidateForumQueries();
+      setDeleteCategoryTargetId(null);
       toast.success("Kategorie gelöscht.");
       navigate("/admin/forum/categories");
     },
@@ -846,6 +851,7 @@ const AdminForum = () => {
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(getThreadAutosaveKey(siteId, id));
       }
+      setDeleteThreadTargetId(null);
       toast.success("Thread gelöscht.");
       navigate("/admin/forum/threads");
     },
@@ -933,6 +939,7 @@ const AdminForum = () => {
     },
     onSuccess: async () => {
       await invalidateForumQueries();
+      setConfirmBulkDelete(false);
       setSelectedThreadIds([]);
       setBulkAction("none");
       toast.success("Bulk-Aktion ausgeführt.");
@@ -1160,7 +1167,10 @@ const AdminForum = () => {
                   disabled={bulkAction === "none" || !selectedThreadIds.length || bulkThreadActionMutation.isPending}
                   onClick={() => {
                     if (bulkAction === "none") return;
-                    if (bulkAction === "delete" && !window.confirm("Ausgewählte Threads wirklich löschen?")) return;
+                    if (bulkAction === "delete") {
+                      setConfirmBulkDelete(true);
+                      return;
+                    }
                     bulkThreadActionMutation.mutate({ action: bulkAction, ids: selectedThreadIds });
                   }}
                 >
@@ -1569,11 +1579,7 @@ const AdminForum = () => {
                     variant="outline"
                     className="rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                     disabled={!threadForm.id || deleteThread.isPending}
-                    onClick={() => {
-                      if (!threadForm.id) return;
-                      if (!window.confirm("Diesen Thread wirklich löschen?")) return;
-                      deleteThread.mutate(threadForm.id);
-                    }}
+                    onClick={() => threadForm.id && setDeleteThreadTargetId(threadForm.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                     Thread löschen
@@ -2091,11 +2097,7 @@ const AdminForum = () => {
                     variant="outline"
                     className="rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                     disabled={!categoryForm.id || deleteCategory.isPending}
-                    onClick={() => {
-                      if (!categoryForm.id) return;
-                      if (!window.confirm("Diese Kategorie wirklich löschen?")) return;
-                      deleteCategory.mutate(categoryForm.id);
-                    }}
+                    onClick={() => categoryForm.id && setDeleteCategoryTargetId(categoryForm.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                     Kategorie löschen
@@ -2320,6 +2322,33 @@ const AdminForum = () => {
         {forumView.section === "categories" && forumView.mode !== "list" && renderCategoryEditor()}
         {forumView.section === "moderation" && renderModeration()}
       </div>
+
+      <ConfirmDeleteDialog
+        open={Boolean(deleteThreadTargetId)}
+        onOpenChange={(open) => !open && setDeleteThreadTargetId(null)}
+        title="Thread löschen?"
+        description={deleteThreadTargetId ? `Der Thread ${deleteThreadTargetId.slice(0, 8)}… wird aus Supabase entfernt.` : ""}
+        onConfirm={() => deleteThreadTargetId && deleteThread.mutate(deleteThreadTargetId)}
+        isLoading={deleteThread.isPending}
+      />
+
+      <ConfirmDeleteDialog
+        open={Boolean(deleteCategoryTargetId)}
+        onOpenChange={(open) => !open && setDeleteCategoryTargetId(null)}
+        title="Kategorie löschen?"
+        description={deleteCategoryTargetId ? `Die Kategorie ${deleteCategoryTargetId.slice(0, 8)}… wird aus Supabase entfernt.` : ""}
+        onConfirm={() => deleteCategoryTargetId && deleteCategory.mutate(deleteCategoryTargetId)}
+        isLoading={deleteCategory.isPending}
+      />
+
+      <ConfirmDeleteDialog
+        open={confirmBulkDelete}
+        onOpenChange={setConfirmBulkDelete}
+        title="Ausgewählte Threads löschen?"
+        description={`Es werden ${selectedThreadIds.length} Threads dauerhaft gelöscht.`}
+        onConfirm={() => bulkThreadActionMutation.mutate({ action: "delete", ids: selectedThreadIds })}
+        isLoading={bulkThreadActionMutation.isPending}
+      />
     </div>
   );
 };

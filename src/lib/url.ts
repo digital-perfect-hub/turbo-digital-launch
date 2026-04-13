@@ -16,6 +16,11 @@ const normalizeOrigin = (value: string) => {
 };
 
 const PUBLIC_FALLBACK_ORIGIN = normalizeOrigin(RAW_PUBLIC_ORIGIN);
+const PUBLIC_FALLBACK_URL = new URL(PUBLIC_FALLBACK_ORIGIN);
+const PUBLIC_FALLBACK_HOSTNAME = PUBLIC_FALLBACK_URL.hostname.toLowerCase();
+const PUBLIC_FALLBACK_WWW_HOSTNAME = PUBLIC_FALLBACK_HOSTNAME.startsWith("www.")
+  ? PUBLIC_FALLBACK_HOSTNAME
+  : `www.${PUBLIC_FALLBACK_HOSTNAME}`;
 
 const INTERNAL_RENDER_HOSTS = RAW_INTERNAL_RENDER_HOSTS
   .split(",")
@@ -115,15 +120,54 @@ const normalizePublicUrl = (url: URL, options?: { stripSearch?: boolean }) => {
   return cloned.toString();
 };
 
-export const getPublicOrigin = () => getResolvedRuntimeUrl()?.origin || PUBLIC_FALLBACK_ORIGIN;
+const isPrimaryDomainVariant = (hostname?: string | null) => {
+  const normalized = (hostname || "").trim().toLowerCase();
+  if (!normalized) return false;
+  return normalized === PUBLIC_FALLBACK_HOSTNAME || normalized === PUBLIC_FALLBACK_WWW_HOSTNAME;
+};
+
+const copyRuntimePathToOrigin = (origin: string, runtimeUrl?: URL | null) => {
+  const next = new URL(origin);
+  if (runtimeUrl) {
+    next.pathname = runtimeUrl.pathname;
+    next.search = runtimeUrl.search;
+  }
+  return next;
+};
+
+const getPreferredPublicOrigin = (runtimeUrl?: URL | null) => {
+  if (!runtimeUrl || !isHttpUrl(runtimeUrl) || isInternalRenderHost(runtimeUrl.hostname)) {
+    return PUBLIC_FALLBACK_ORIGIN;
+  }
+
+  if (isPrimaryDomainVariant(runtimeUrl.hostname)) {
+    return PUBLIC_FALLBACK_ORIGIN;
+  }
+
+  return runtimeUrl.origin;
+};
+
+const coercePrimaryDomainVariant = (url: URL, runtimeUrl?: URL | null) => {
+  if (!isPrimaryDomainVariant(url.hostname)) return url;
+
+  const preferredOrigin = getPreferredPublicOrigin(runtimeUrl);
+  const preferred = new URL(preferredOrigin);
+  const coerced = new URL(url.toString());
+  coerced.protocol = preferred.protocol;
+  coerced.host = preferred.host;
+  return coerced;
+};
+
+export const getPublicOrigin = () => getPreferredPublicOrigin(getResolvedRuntimeUrl());
 
 export const buildAbsolutePublicUrl = (pathOrUrl?: string | null, options?: { stripSearch?: boolean }) => {
   const candidate = (pathOrUrl || "").trim();
   const runtimeUrl = getResolvedRuntimeUrl();
-  const baseOrigin = runtimeUrl?.origin || PUBLIC_FALLBACK_ORIGIN;
+  const baseOrigin = getPreferredPublicOrigin(runtimeUrl);
 
   if (!candidate) {
-    return normalizePublicUrl(runtimeUrl || new URL(baseOrigin), options);
+    const baseUrl = copyRuntimePathToOrigin(baseOrigin, runtimeUrl);
+    return normalizePublicUrl(baseUrl, options);
   }
 
   const absolute = toUrl(candidate, baseOrigin);
@@ -132,7 +176,7 @@ export const buildAbsolutePublicUrl = (pathOrUrl?: string | null, options?: { st
     return normalizePublicUrl(fallback, options);
   }
 
-  return normalizePublicUrl(absolute, options);
+  return normalizePublicUrl(coercePrimaryDomainVariant(absolute, runtimeUrl), options);
 };
 
 export const resolveCanonicalUrl = (canonical?: string | null) => buildAbsolutePublicUrl(canonical || undefined, { stripSearch: true });

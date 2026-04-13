@@ -33,11 +33,10 @@ const DynamicPage = () => {
     .toLowerCase();
 
   const landingSlug = useMemo(() => normalizeLandingPageSlug(location.pathname), [location.pathname]);
-  const isLandingPageRoute = landingSlug.includes("/");
 
   const landingPageQuery = useQuery({
     queryKey: ["landing-page", landingSlug],
-    enabled: Boolean(isLandingPageRoute && landingSlug),
+    enabled: Boolean(landingSlug),
     queryFn: async (): Promise<LandingPageRecord | null> => {
       const { data, error } = await supabase
         .from("landing_pages" as never)
@@ -63,9 +62,11 @@ const DynamicPage = () => {
     },
   });
 
+  const shouldLoadLegacyPage = Boolean(siteId && legacySlug && !landingPageQuery.isLoading && !landingPageQuery.data);
+
   const legacyPageQuery = useQuery({
     queryKey: ["dynamic-page", siteId, legacySlug],
-    enabled: Boolean(!isLandingPageRoute && siteId && legacySlug),
+    enabled: shouldLoadLegacyPage,
     queryFn: async (): Promise<PageRecord | null> => {
       const { data, error } = await supabase
         .from("pages" as never)
@@ -98,11 +99,14 @@ const DynamicPage = () => {
   const isLoading =
     isSiteLoading ||
     isThemeLoading ||
-    (isLandingPageRoute ? landingPageQuery.isLoading : legacyPageQuery.isLoading);
+    landingPageQuery.isLoading ||
+    (shouldLoadLegacyPage && legacyPageQuery.isLoading);
 
-  const startsWithHero = isLandingPageRoute
-    ? landingPageQuery.data?.page_blocks?.[0]?.type === "hero"
-    : legacyPageQuery.data?.content_blocks?.[0]?.type === "hero";
+  const landingPage = landingPageQuery.data;
+  const legacyPage = landingPage ? null : legacyPageQuery.data;
+  const startsWithHero = landingPage
+    ? landingPage.page_blocks?.[0]?.type === "hero"
+    : legacyPage?.content_blocks?.[0]?.type === "hero";
 
   const canonical = useMemo(() => resolveCanonicalUrl(location.pathname), [location.pathname]);
 
@@ -115,49 +119,7 @@ const DynamicPage = () => {
     );
   }
 
-  if (isLandingPageRoute) {
-    const landingPage = landingPageQuery.data;
-
-    if (!landingPage) {
-      return (
-        <>
-          <SEO
-            title="Seite nicht gefunden"
-            description="Diese Landingpage konnte nicht gefunden werden."
-            noIndex
-          />
-          <div className="min-h-screen bg-background">
-            <Header />
-            <main className="pt-[158px] md:pt-[176px]">
-              <section className="py-20">
-                <div className="section-container">
-                  <div className="mx-auto max-w-3xl rounded-[2rem] border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-6 py-10 text-center shadow-[0_30px_70px_-54px_rgba(14,31,83,0.28)] md:px-10 md:py-14">
-                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-[#FF4B2C]/10 text-[#FF4B2C]">
-                      <FileWarning size={28} />
-                    </div>
-                    <h1 className="text-3xl font-black tracking-tight text-[color:var(--theme-text-main-hex)] md:text-4xl">
-                      Diese Landingpage existiert nicht oder ist noch nicht veröffentlicht.
-                    </h1>
-                    <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-[color:var(--theme-text-muted-hex)] md:text-lg">
-                      Prüfe den Slug in <code>landing_pages.slug</code> oder veröffentliche die Seite.
-                    </p>
-                    <div className="mt-8">
-                      <Link to="/" className="btn-primary">
-                        <ArrowLeft size={18} />
-                        Zur Startseite
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </main>
-            <Footer />
-            <SupportWidget />
-          </div>
-        </>
-      );
-    }
-
+  if (landingPage) {
     return (
       <>
         <SEO
@@ -177,36 +139,18 @@ const DynamicPage = () => {
     );
   }
 
-  const legacyPage = legacyPageQuery.data;
-
-  if (!legacyPage) {
+  if (legacyPage) {
     return (
       <>
-        <SEO title="Seite nicht gefunden" description="Diese Landingpage konnte nicht gefunden werden." noIndex />
+        <SEO
+          title={legacyPage.seo_title || undefined}
+          description={legacyPage.seo_description || undefined}
+          canonical={canonical}
+        />
         <div className="min-h-screen bg-background">
           <Header />
-          <main className="pt-[158px] md:pt-[176px]">
-            <section className="py-20">
-              <div className="section-container">
-                <div className="mx-auto max-w-3xl rounded-[2rem] border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-6 py-10 text-center shadow-[0_30px_70px_-54px_rgba(14,31,83,0.28)] md:px-10 md:py-14">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-[#FF4B2C]/10 text-[#FF4B2C]">
-                    <FileWarning size={28} />
-                  </div>
-                  <h1 className="text-3xl font-black tracking-tight text-[color:var(--theme-text-main-hex)] md:text-4xl">
-                    Diese Seite existiert nicht oder ist noch nicht veröffentlicht.
-                  </h1>
-                  <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-[color:var(--theme-text-muted-hex)] md:text-lg">
-                    Prüfe den Slug im Page-Builder oder gehe zurück auf die Startseite.
-                  </p>
-                  <div className="mt-8">
-                    <Link to="/" className="btn-primary">
-                      <ArrowLeft size={18} />
-                      Zur Startseite
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </section>
+          <main className={startsWithHero ? "" : "pt-[148px] md:pt-[168px]"}>
+            <PageRenderer blocks={legacyPage.content_blocks} />
           </main>
           <Footer />
           <SupportWidget />
@@ -215,17 +159,37 @@ const DynamicPage = () => {
     );
   }
 
+  const missingLandingHint = landingSlug.includes("/")
+    ? "Prüfe den Slug in landing_pages.slug oder veröffentliche die Seite."
+    : "Prüfe den Slug im Landing- oder Page-Builder oder gehe zurück auf die Startseite.";
+
   return (
     <>
-      <SEO
-        title={legacyPage.seo_title || undefined}
-        description={legacyPage.seo_description || undefined}
-        canonical={canonical}
-      />
+      <SEO title="Seite nicht gefunden" description="Diese Landingpage konnte nicht gefunden werden." noIndex />
       <div className="min-h-screen bg-background">
         <Header />
-        <main className={startsWithHero ? "" : "pt-[148px] md:pt-[168px]"}>
-          <PageRenderer blocks={legacyPage.content_blocks} />
+        <main className="pt-[158px] md:pt-[176px]">
+          <section className="py-20">
+            <div className="section-container">
+              <div className="mx-auto max-w-3xl rounded-[2rem] border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-6 py-10 text-center shadow-[0_30px_70px_-54px_rgba(14,31,83,0.28)] md:px-10 md:py-14">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-[#FF4B2C]/10 text-[#FF4B2C]">
+                  <FileWarning size={28} />
+                </div>
+                <h1 className="text-3xl font-black tracking-tight text-[color:var(--theme-text-main-hex)] md:text-4xl">
+                  Diese Seite existiert nicht oder ist noch nicht veröffentlicht.
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-[color:var(--theme-text-muted-hex)] md:text-lg">
+                  {missingLandingHint}
+                </p>
+                <div className="mt-8">
+                  <Link to="/" className="btn-primary">
+                    <ArrowLeft size={18} />
+                    Zur Startseite
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
         </main>
         <Footer />
         <SupportWidget />

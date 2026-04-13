@@ -9,6 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
 
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 const AdminFAQ = () => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
@@ -23,6 +24,7 @@ const AdminFAQ = () => {
   });
 
   const [editing, setEditing] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: async (item: any) => {
@@ -74,11 +76,19 @@ const AdminFAQ = () => {
             <span className="font-medium text-sm truncate max-w-md">{f.question}</span>
             <div className="flex gap-1">
               <Button size="sm" variant="ghost" onClick={() => setEditing(f)}>Bearbeiten</Button>
-              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteMutation.mutate(f.id)}><Trash2 size={14} /></Button>
+              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(f)}><Trash2 size={14} /></Button>
             </div>
           </div>
         ))}
       </div>
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="FAQ-Eintrag löschen?"
+        description={deleteTarget ? `Die Frage „${deleteTarget.question}“ wird in Supabase gelöscht.` : ""}
+        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

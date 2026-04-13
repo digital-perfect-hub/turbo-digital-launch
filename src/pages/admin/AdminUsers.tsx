@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 
 type TenantSiteRole = "owner" | "admin" | "editor" | "viewer";
 
@@ -84,6 +85,8 @@ const AdminUsers = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<InviteResponse | null>(null);
   const [pendingHardDeleteUserId, setPendingHardDeleteUserId] = useState<string | null>(null);
+  const [removeTargetUserId, setRemoveTargetUserId] = useState<string | null>(null);
+  const [hardDeleteTargetUserId, setHardDeleteTargetUserId] = useState<string | null>(null);
 
   const canManageUsersForSite = canManageUsers;
   const allowedInviteRoles = isGlobalAdmin
@@ -154,6 +157,7 @@ const AdminUsers = () => {
       return response;
     },
     onSuccess: (response) => {
+      setRemoveTargetUserId(null);
       void rolesQuery.refetch();
       toast.success(response.message || "Benutzer aktualisiert.");
     },
@@ -174,6 +178,7 @@ const AdminUsers = () => {
     },
     onSuccess: (response) => {
       setPendingHardDeleteUserId(null);
+      setHardDeleteTargetUserId(null);
       void rolesQuery.refetch();
       toast.success(response.message || "Auth-User wurde vollständig gelöscht.");
     },
@@ -298,10 +303,7 @@ const AdminUsers = () => {
                               <DropdownMenuItem
                                 className="text-red-600 focus:text-red-600"
                                 disabled={updateMutation.isPending}
-                                onClick={() => updateMutation.mutate({
-                                  target_user_id: assignment.user_id,
-                                  action: "remove",
-                                })}
+                                onClick={() => setRemoveTargetUserId(assignment.user_id)}
                               >
                                 <Trash2 size={14} className="mr-2" /> Benutzer aus Tenant entfernen
                               </DropdownMenuItem>
@@ -309,16 +311,7 @@ const AdminUsers = () => {
                                 <DropdownMenuItem
                                   className="text-red-700 focus:text-red-700"
                                   disabled={hardDeleteMutation.isPending}
-                                  onClick={() => {
-                                    const confirmed = window.confirm(
-                                      `Diesen Auth-User vollständig löschen?
-
-Er wird komplett aus Supabase Auth entfernt und kann danach mit derselben E-Mail frisch neu eingeladen werden.`
-                                    );
-                                    if (!confirmed) return;
-                                    setPendingHardDeleteUserId(assignment.user_id);
-                                    hardDeleteMutation.mutate(assignment.user_id);
-                                  }}
+                                  onClick={() => setHardDeleteTargetUserId(assignment.user_id)}
                                 >
                                   <Skull size={14} className="mr-2" /> Komplett löschen (Debug)
                                 </DropdownMenuItem>
@@ -424,6 +417,28 @@ Er wird komplett aus Supabase Auth entfernt und kann danach mit derselben E-Mail
             </CardContent>
           </Card>
         </div>
+
+        <ConfirmDeleteDialog
+          open={Boolean(removeTargetUserId)}
+          onOpenChange={(open) => !open && setRemoveTargetUserId(null)}
+          title="Benutzer aus Tenant entfernen?"
+          description={removeTargetUserId ? `Der Benutzer ${removeTargetUserId.slice(0, 8)}… wird aus diesem Tenant entfernt.` : ""}
+          onConfirm={() => removeTargetUserId && updateMutation.mutate({ target_user_id: removeTargetUserId, action: "remove" })}
+          isLoading={updateMutation.isPending}
+        />
+
+        <ConfirmDeleteDialog
+          open={Boolean(hardDeleteTargetUserId)}
+          onOpenChange={(open) => !open && setHardDeleteTargetUserId(null)}
+          title="Auth-User vollständig löschen?"
+          description={hardDeleteTargetUserId ? `Der Auth-User ${hardDeleteTargetUserId.slice(0, 8)}… wird komplett aus Supabase Auth gelöscht und kann danach neu eingeladen werden.` : ""}
+          onConfirm={() => {
+            if (!hardDeleteTargetUserId) return;
+            setPendingHardDeleteUserId(hardDeleteTargetUserId);
+            hardDeleteMutation.mutate(hardDeleteTargetUserId);
+          }}
+          isLoading={hardDeleteMutation.isPending}
+        />
       </div>
     </div>
   );

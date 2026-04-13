@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import ModuleLockedState from "@/components/admin/ModuleLockedState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 
 type TenantSiteRole = "owner" | "admin" | "editor" | "viewer";
 
@@ -53,6 +54,7 @@ const AdminDomains = () => {
   const { plan, entitlements, usage } = useBilling();
   const [newDomain, setNewDomain] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SiteDomainRow | null>(null);
 
   const domainsQuery = useQuery({
     queryKey: ["tenant-domains", activeSiteId],
@@ -116,6 +118,7 @@ const AdminDomains = () => {
       return response;
     },
     onSuccess: async (data) => {
+      setDeleteTarget(null);
       await refreshDomains();
       toast.success(data.message || "Primärdomain wurde aktualisiert.");
     },
@@ -139,6 +142,7 @@ const AdminDomains = () => {
       return response;
     },
     onSuccess: async (data) => {
+      setDeleteTarget(null);
       await refreshDomains();
       toast.success(data.message || "Domain wurde entfernt.");
     },
@@ -158,6 +162,7 @@ const AdminDomains = () => {
       return response;
     },
     onSuccess: async (data) => {
+      setDeleteTarget(null);
       await refreshDomains();
       toast.success(data.message || (data.verified ? "Domain verifiziert." : "Domain geprüft."));
     },
@@ -262,7 +267,7 @@ const AdminDomains = () => {
                             {makePrimaryMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Star size={16} className="mr-2" />}
                             Als Primärdomain setzen
                           </Button>
-                          <Button type="button" variant="outline" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" disabled={removeDomainMutation.isPending} onClick={() => removeDomainMutation.mutate(domain.id)}>
+                          <Button type="button" variant="outline" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" disabled={removeDomainMutation.isPending} onClick={() => setDeleteTarget(domain)}>
                             {removeDomainMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Trash2 size={16} className="mr-2" />}
                             Entfernen
                           </Button>
@@ -323,6 +328,15 @@ const AdminDomains = () => {
             </CardContent>
           </Card>
         </div>
+
+        <ConfirmDeleteDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title="Domain entfernen?"
+          description={deleteTarget ? `Die Domain „${deleteTarget.hostname}“ wird aus diesem Tenant gelöst.` : ""}
+          onConfirm={() => deleteTarget && removeDomainMutation.mutate(deleteTarget.id)}
+          isLoading={removeDomainMutation.isPending}
+        />
       </div>
     </div>
   );

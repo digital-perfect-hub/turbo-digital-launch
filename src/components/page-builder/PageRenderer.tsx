@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import HeroSection from "@/components/HeroSection";
-import { sanitizeRichHtml } from "@/lib/content";
+import { sanitizeRichHtmlWithoutH1 } from "@/lib/content";
 import { getLucideIcon } from "@/lib/lucide-icon-registry";
 import { cn } from "@/lib/utils";
 import { type PageBlock, toPageImageUrl } from "@/lib/page-builder";
@@ -45,7 +45,7 @@ const RichTextBlock = ({ block }: { block: Extract<PageBlock, { type: "rich_text
     <div className="mx-auto max-w-3xl rounded-[2rem] border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] p-8 shadow-[0_30px_70px_-54px_rgba(14,31,83,0.3)] md:p-10">
       <div
         className="prose prose-slate max-w-none prose-headings:font-[var(--app-font-heading)] prose-headings:text-[color:var(--theme-text-main-hex)] prose-p:text-[color:var(--theme-text-main-hex)] prose-li:text-[color:var(--theme-text-main-hex)]"
-        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(block.data.bodyHtml || "") }}
+        dangerouslySetInnerHTML={{ __html: sanitizeRichHtmlWithoutH1(block.data.bodyHtml || "") }}
       />
     </div>
   </SectionShell>

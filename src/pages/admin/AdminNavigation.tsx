@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useSiteContext } from "@/context/SiteContext";
@@ -106,6 +107,7 @@ const AdminNavigation = () => {
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
   const [form, setForm] = useState({ label: "", url: "", parent_id: "" });
   const [styling, setStyling] = useState<StylingState>(DEFAULT_STYLING);
 
@@ -250,6 +252,7 @@ const AdminNavigation = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      setDeleteTarget(null);
       qc.invalidateQueries({ queryKey: ["navigation_links", siteId] });
       setEditingId(null);
       setForm({ label: "", url: "", parent_id: "" });
@@ -264,6 +267,7 @@ const AdminNavigation = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      setDeleteTarget(null);
       qc.invalidateQueries({ queryKey: ["navigation_links", siteId] });
       toast.success("Link gelöscht.");
     },
@@ -452,7 +456,7 @@ const AdminNavigation = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => { setForm({ label: link.label, url: link.url, parent_id: link.parent_id || "none" }); setEditingId(link.id); }} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={16} /></button>
-                      <button onClick={() => deleteLink.mutate(link.id)} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={16} /></button>
+                      <button onClick={() => setDeleteTarget({ id: link.id, label: link.label })} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={16} /></button>
                     </div>
                   </div>
 
@@ -466,7 +470,7 @@ const AdminNavigation = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <button onClick={() => { setForm({ label: child.label, url: child.url, parent_id: child.parent_id || "none" }); setEditingId(child.id); }} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={14} /></button>
-                            <button onClick={() => deleteLink.mutate(child.id)} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={14} /></button>
+                            <button onClick={() => setDeleteTarget({ id: child.id, label: child.label })} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={14} /></button>
                           </div>
                         </div>
                       ))}
@@ -519,6 +523,15 @@ const AdminNavigation = () => {
             </div>
           </div>
         </section>
+
+        <ConfirmDeleteDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title="Navigationslink löschen?"
+          description={deleteTarget ? `Der Link „${deleteTarget.label}“ wird aus Supabase gelöscht.` : ""}
+          onConfirm={() => deleteTarget && deleteLink.mutate(deleteTarget.id)}
+          isLoading={deleteLink.isPending}
+        />
       </div>
     </div>
   );

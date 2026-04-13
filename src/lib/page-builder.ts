@@ -1,4 +1,4 @@
-import { sanitizeRichHtml } from "@/lib/content";
+import { sanitizeRichHtmlWithoutH1 } from "@/lib/content";
 import { buildStrictRenderImageUrl } from "@/lib/image";
 
 export const RESERVED_PAGE_SLUGS = new Set([
@@ -360,7 +360,7 @@ export const normalizePageBlocks = (value: unknown): PageBlock[] => {
             data: {
               kicker: asString(data.kicker),
               headline: asString(data.headline),
-              bodyHtml: sanitizeRichHtml(asString(data.bodyHtml)),
+              bodyHtml: sanitizeRichHtmlWithoutH1(asString(data.bodyHtml)),
             },
           };
         }

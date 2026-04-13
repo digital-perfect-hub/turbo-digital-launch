@@ -1,12 +1,62 @@
 const BOT_USER_AGENT_PATTERN = /(googlebot|adsbot-google|google-inspectiontool|googleother|google-extended|bingbot|bingpreview|slurp|duckduckbot|baiduspider|yandexbot|semrushbot|ahrefsbot|mj12bot|petalbot|sogou|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|pinterestbot|rogerbot|applebot|discordbot|slackbot|telegrambot|whatsapp|ia_archiver)/i;
 const ASSET_EXTENSION_PATTERN = /\.(?:js|mjs|css|map|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot|otf|xml|txt|pdf|zip|rar|7z|mp4|webm|mp3|wav)$/i;
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
+const PRIMARY_HOST = "digital-perfect.com";
+const WWW_HOST = `www.${PRIMARY_HOST}`;
+
+const LEGACY_REDIRECTS = new Map([
+  ["/pages/webagentur-linz", "/webagentur-linz"],
+  ["/pages/webdesign-graz-dein-webdesigner-aus-linz", "/webdesign-graz-dein-webdesigner-aus-linz"],
+  ["/pages/webagentur-wien-webdesign-wien", "/webagentur-wien-webdesign-wien"],
+  ["/products/google-bewertungsstander-nfc-qr-code", "/produkt/google-bewertungsstander-nfc-qr-code"],
+  ["/pages/webagentur-linz-ads", "/webagentur-linz"],
+  ["/pages/webdesign-salzburg-seo-webagentur-aus-linz", "/webagentur-linz"],
+  ["/pages/webdesign-munchen-deine-webagentur-aus-linz", "/webagentur-linz"],
+  ["/pages/webdesign-innsbruck-deine-webagentur-aus-linz", "/webagentur-linz"],
+]);
 
 const normalizeSecret = (value) => (value || "").trim();
 
 const getEnv = (env, key, fallback = "") => {
   const value = env?.[key];
   return typeof value === "string" ? value.trim() : fallback;
+};
+
+const normalizePathname = (pathname) => {
+  if (!pathname || pathname === "/") return "/";
+  const normalized = pathname.replace(/\/+$/, "");
+  return normalized || "/";
+};
+
+const buildCanonicalRedirectUrl = (requestUrl) => {
+  const target = new URL(requestUrl.toString());
+  const normalizedPath = normalizePathname(target.pathname);
+  const mappedPath = LEGACY_REDIRECTS.get(normalizedPath);
+  let changed = false;
+
+  if (target.hostname === WWW_HOST) {
+    target.hostname = PRIMARY_HOST;
+    changed = true;
+  }
+
+  if ((target.hostname === PRIMARY_HOST || target.hostname === WWW_HOST) && target.protocol !== "https:") {
+    target.protocol = "https:";
+    changed = true;
+  }
+
+  if (normalizedPath !== target.pathname && normalizedPath !== "/") {
+    target.pathname = normalizedPath;
+    changed = true;
+  }
+
+  if (mappedPath && mappedPath !== target.pathname) {
+    target.pathname = mappedPath;
+    changed = true;
+  }
+
+  target.hash = "";
+
+  return changed ? target : null;
 };
 
 const shouldBypassRouting = (request, env) => {
@@ -99,6 +149,12 @@ export default {
   async fetch(request, env) {
     if (shouldBypassRouting(request, env)) {
       return fetch(request);
+    }
+
+    const requestUrl = new URL(request.url);
+    const redirectUrl = buildCanonicalRedirectUrl(requestUrl);
+    if (redirectUrl) {
+      return Response.redirect(redirectUrl.toString(), 301);
     }
 
     if (!shouldPrerender(request)) {
