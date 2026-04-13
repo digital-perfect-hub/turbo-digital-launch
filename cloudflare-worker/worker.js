@@ -16,134 +16,141 @@ const LEGACY_REDIRECTS = new Map([
   ["/pages/webdesign-innsbruck-deine-webagentur-aus-linz", "/webagentur-linz"],
 ]);
 
-const normalizeSecret = (value) => (value || "").trim();
-
-const getEnv = (env, key, fallback = "") => {
-  const value = env?.[key];
-  return typeof value === "string" ? value.trim() : fallback;
-};
-
-const normalizeHostname = (value) => {
-  const raw = (value || "").trim().toLowerCase();
-  if (!raw) return "";
-
-  return raw
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/.*$/, "")
-    .replace(/:+\d+$/, "")
-    .trim();
-};
-
-const normalizePathname = (pathname) => {
-  if (!pathname || pathname === "/") return "/";
-  const normalized = pathname.replace(/\/+$/, "");
-  return normalized || "/";
-};
-
 const buildCanonicalRedirectUrl = (requestUrl) => {
-  const target = new URL(requestUrl.toString());
-  const normalizedPath = normalizePathname(target.pathname);
-  const mappedPath = LEGACY_REDIRECTS.get(normalizedPath);
-  let changed = false;
+  const host = requestUrl.host;
+  const pathname = requestUrl.pathname;
+  let needsRedirect = false;
 
-  if (target.hostname === WWW_HOST) {
-    target.hostname = PRIMARY_HOST;
-    changed = true;
+  const redirectUrl = new URL(requestUrl.toString());
+
+  if (host === WWW_HOST) {
+    redirectUrl.host = PRIMARY_HOST;
+    needsRedirect = true;
   }
 
-  if ((target.hostname === PRIMARY_HOST || target.hostname === WWW_HOST) && target.protocol !== "https:") {
-    target.protocol = "https:";
-    changed = true;
+  if (LEGACY_REDIRECTS.has(pathname)) {
+    redirectUrl.pathname = LEGACY_REDIRECTS.get(pathname);
+    needsRedirect = true;
   }
 
-  if (normalizedPath !== target.pathname && normalizedPath !== "/") {
-    target.pathname = normalizedPath;
-    changed = true;
-  }
-
-  if (mappedPath && mappedPath !== target.pathname) {
-    target.pathname = mappedPath;
-    changed = true;
-  }
-
-  target.hash = "";
-
-  return changed ? target : null;
+  return needsRedirect ? redirectUrl : null;
 };
 
 const shouldBypassRouting = (request, env) => {
-  const bypassHeader = request.headers.get("x-prerender-bypass");
-  const token = request.headers.get("x-prerender-token");
-  const secret = normalizeSecret(getEnv(env, "PRERENDER_SECRET_TOKEN"));
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  const isSitemapIndex = pathname.startsWith("/sitemaps/");
 
-  if (!bypassHeader) return false;
-  if (!secret) return false;
+  if (isSitemapIndex) {
+    return false;
+  }
 
-  return bypassHeader === "1" && token === secret;
+  if (pathname.includes("/api/") || pathname.includes("/supa/")) {
+    return true;
+  }
+
+  if (ASSET_EXTENSION_PATTERN.test(pathname)) {
+    return true;
+  }
+
+  return false;
 };
 
-const isHtmlNavigation = (request) => {
-  const accept = request.headers.get("accept") || "";
-  return accept.includes("text/html");
+const isSitemapRequest = (request) => {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  return pathname === "/sitemap.xml" || pathname.startsWith("/sitemaps/");
 };
 
-const isBotRequest = (request) => {
+const getEnv = (env, key, fallback = "") => {
+  return (env && typeof env === "object" && env[key]) || fallback;
+};
+
+const handleSitemapRequest = async (request, env) => {
+  const functionUrl = getEnv(env, "SITEMAP_FUNCTION_URL");
+  const secret = getEnv(env, "SITEMAP_SHARED_SECRET");
+
+  if (!functionUrl || !secret) {
+    return new Response("Sitemap configuration missing", { status: 500 });
+  }
+
+  const requestUrl = new URL(request.url);
+  const targetUrl = new URL(functionUrl);
+  targetUrl.search = requestUrl.search;
+
+  try {
+    const sitemapResponse = await fetch(targetUrl.toString(), {
+      method: request.method,
+      headers: {
+        "x-sitemap-secret": secret,
+        "x-sitemap-host": requestUrl.host,
+        "x-sitemap-path": requestUrl.pathname,
+        "accept": request.headers.get("accept") || "application/xml",
+      },
+    });
+
+    const response = new Response(sitemapResponse.body, sitemapResponse);
+    
+    if (sitemapResponse.ok) {
+      response.headers.set("Content-Type", "application/xml; charset=utf-8");
+      response.headers.set("X-Robots-Tag", "noindex");
+    }
+
+    return response;
+  } catch (error) {
+    return new Response("Failed to generate sitemap", { status: 500 });
+  }
+};
+
+const shouldPrerender = (request) => {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return false;
+  }
   const userAgent = request.headers.get("user-agent") || "";
   return BOT_USER_AGENT_PATTERN.test(userAgent);
 };
 
-const shouldPrerender = (request) => {
-  if (request.method !== "GET" && request.method !== "HEAD") return false;
-  if (!isHtmlNavigation(request)) return false;
-
-  const url = new URL(request.url);
-  if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/api") || url.pathname.startsWith("/auth")) return false;
-  if (ASSET_EXTENSION_PATTERN.test(url.pathname)) return false;
-  if (url.searchParams.has("cf_prerender_bypass")) return false;
-
-  return isBotRequest(request);
-};
-
 const buildCacheKey = (request) => {
-  const requestUrl = new URL(request.url);
-  const cacheUrl = new URL(requestUrl.toString());
-  cacheUrl.hash = "";
-  cacheUrl.searchParams.delete("cf_prerender_bypass");
-  cacheUrl.searchParams.set("__cf_prerender", "1");
-  return new Request(cacheUrl.toString(), { method: "GET" });
-};
-
-const buildPrerenderUrl = (requestUrl, env) => {
-  const base = getEnv(env, "PRERENDER_SERVICE_URL", "https://prerender.digital-perfect.com").replace(/\/$/, "");
-  const prerenderUrl = new URL(`${base}/render`);
-  prerenderUrl.searchParams.set("url", requestUrl.toString());
-  return prerenderUrl;
+  const url = new URL(request.url);
+  url.searchParams.delete("fbclid");
+  url.searchParams.delete("gclid");
+  url.searchParams.delete("utm_source");
+  url.searchParams.delete("utm_medium");
+  url.searchParams.delete("utm_campaign");
+  url.searchParams.delete("utm_term");
+  url.searchParams.delete("utm_content");
+  return new Request(url.toString(), request);
 };
 
 const cloneHtmlResponse = async (response) => {
-  const body = await response.text();
-  return new Response(body, response);
+  const cloned = new Response(response.body, response);
+  cloned.headers.set("Cache-Control", `public, max-age=${CACHE_TTL_SECONDS}`);
+  cloned.headers.set("Content-Type", "text/html; charset=utf-8");
+  return cloned;
 };
 
-const withCachingHeaders = (response) => {
+const withSitemapCachingHeaders = (response, ttlSeconds) => {
   const cloned = new Response(response.body, response);
-  cloned.headers.set("Cache-Control", `public, max-age=0, s-maxage=${CACHE_TTL_SECONDS}, stale-while-revalidate=86400`);
-  cloned.headers.set("X-Prerender-Cache", "MISS");
+  if (response.ok) {
+    cloned.headers.set("Cache-Control", `public, s-maxage=${ttlSeconds}, stale-while-revalidate=60`);
+  } else {
+    cloned.headers.set("Cache-Control", "no-store");
+  }
   return cloned;
 };
 
 const fetchPrerenderedResponse = async (request, env) => {
-  const requestUrl = new URL(request.url);
-  const prerenderUrl = buildPrerenderUrl(requestUrl, env);
-  const secret = normalizeSecret(getEnv(env, "PRERENDER_SECRET_TOKEN"));
+  const serviceUrl = getEnv(env, "PRERENDER_SERVICE_URL", "https://prerender.digital-perfect.com");
+  const secret = getEnv(env, "PRERENDER_SECRET_TOKEN");
 
-  if (!secret) {
-    return new Response("Missing PRERENDER_SECRET_TOKEN", { status: 500 });
-  }
+  const requestUrl = new URL(request.url);
+  const prerenderUrl = new URL(serviceUrl);
+  prerenderUrl.pathname = "/render";
+  prerenderUrl.searchParams.set("url", requestUrl.toString());
 
   const headers = new Headers({
-    "x-prerender-original-url": requestUrl.toString(),
+    "x-forwarded-for": request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "",
+    "x-original-url": requestUrl.toString(),
     "x-forwarded-host": requestUrl.host,
     "x-forwarded-proto": requestUrl.protocol.replace(":", ""),
     "user-agent": request.headers.get("user-agent") || "",
@@ -158,89 +165,14 @@ const fetchPrerenderedResponse = async (request, env) => {
   });
 };
 
-const isSitemapRequest = (request) => {
-  if (request.method !== "GET" && request.method !== "HEAD") return false;
-  const url = new URL(request.url);
-  return normalizePathname(url.pathname) === "/sitemap.xml";
-};
-
-const buildSitemapFunctionUrl = (env, hostname) => {
-  const explicitUrl = getEnv(env, "SITEMAP_FUNCTION_URL");
-  const supabaseUrl = getEnv(env, "SUPABASE_URL");
-  const base = explicitUrl || (supabaseUrl ? `${supabaseUrl.replace(/\/$/, "")}/functions/v1/generate-sitemap` : "");
-  if (!base) return null;
-
-  const url = new URL(base);
-  url.searchParams.set("host", normalizeHostname(hostname));
-  return url;
-};
-
-const buildSitemapCacheKey = (request) => {
-  const requestUrl = new URL(request.url);
-  const cacheUrl = new URL(requestUrl.toString());
-  cacheUrl.hash = "";
-  cacheUrl.search = "";
-  cacheUrl.searchParams.set("__cf_sitemap", normalizeHostname(requestUrl.hostname) || "default");
-  return new Request(cacheUrl.toString(), { method: "GET" });
-};
-
-const withSitemapCachingHeaders = (response, ttlSeconds) => {
-  const cloned = new Response(response.body, response);
-  cloned.headers.set("Content-Type", "application/xml; charset=utf-8");
-  cloned.headers.set("Cache-Control", `public, max-age=0, s-maxage=${ttlSeconds}, stale-while-revalidate=86400`);
-  cloned.headers.set("X-Sitemap-Cache", "MISS");
-  return cloned;
-};
-
-const fetchSitemapResponse = async (request, env) => {
-  const sharedSecret = normalizeSecret(getEnv(env, "SITEMAP_SHARED_SECRET"));
-  const functionUrl = buildSitemapFunctionUrl(env, new URL(request.url).hostname);
-
-  if (!sharedSecret) {
-    return new Response("Missing SITEMAP_SHARED_SECRET", { status: 500 });
-  }
-
-  if (!functionUrl) {
-    return new Response("Missing SITEMAP_FUNCTION_URL or SUPABASE_URL", { status: 500 });
-  }
-
-  return fetch(functionUrl.toString(), {
-    method: request.method,
-    headers: {
-      "x-sitemap-secret": sharedSecret,
-      "x-sitemap-host": normalizeHostname(new URL(request.url).hostname),
-      "accept": "application/xml,text/xml;q=0.9,*/*;q=0.8",
-    },
-  });
-};
-
-const handleSitemapRequest = async (request, env) => {
-  const cache = caches.default;
-  const cacheKey = buildSitemapCacheKey(request);
-  const cachedResponse = await cache.match(cacheKey);
-
-  if (cachedResponse) {
-    const hit = new Response(cachedResponse.body, cachedResponse);
-    hit.headers.set("X-Sitemap-Cache", "HIT");
-    hit.headers.set("Content-Type", "application/xml; charset=utf-8");
-    return hit;
-  }
-
-  const response = await fetchSitemapResponse(request, env);
-  if (!response.ok) {
-    return response;
-  }
-
-  const ttlSeconds = Number.parseInt(getEnv(env, "SITEMAP_CACHE_TTL_SECONDS", `${DEFAULT_SITEMAP_CACHE_TTL_SECONDS}`), 10);
-  const cacheableResponse = withSitemapCachingHeaders(response, Number.isFinite(ttlSeconds) ? ttlSeconds : DEFAULT_SITEMAP_CACHE_TTL_SECONDS);
-
-  await cache.put(cacheKey, cacheableResponse.clone());
-
-  return cacheableResponse;
-};
-
 export default {
   async fetch(request, env) {
+    // 1. SITEMAP ZUERST ABFANGEN
+    if (isSitemapRequest(request)) {
+      return handleSitemapRequest(request, env);
+    }
+
+    // 2. NORMALE DATEIEN (wie .xml, .css, .js) DURCHWINKEN
     if (shouldBypassRouting(request, env)) {
       return fetch(request);
     }
@@ -249,10 +181,6 @@ export default {
     const redirectUrl = buildCanonicalRedirectUrl(requestUrl);
     if (redirectUrl) {
       return Response.redirect(redirectUrl.toString(), 301);
-    }
-
-    if (isSitemapRequest(request)) {
-      return handleSitemapRequest(request, env);
     }
 
     if (!shouldPrerender(request)) {
@@ -275,10 +203,8 @@ export default {
     }
 
     const htmlResponse = await cloneHtmlResponse(prerenderResponse);
-    const cacheableResponse = withCachingHeaders(htmlResponse);
+    await cache.put(cacheKey, htmlResponse.clone());
 
-    await cache.put(cacheKey, cacheableResponse.clone());
-
-    return cacheableResponse;
+    return htmlResponse;
   },
 };
