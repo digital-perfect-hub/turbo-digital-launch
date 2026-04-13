@@ -263,7 +263,7 @@ Deno.serve(async (request) => {
     };
 
     const pages = await fetchSafe(admin.from("pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
-    const landingPages = await fetchSafe(admin.from("landing_pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
+    const landingPages = await fetchSafe(admin.from("landing_pages").select("slug, created_at, updated_at").eq("site_id", site.id));
     const products = await fetchSafe(admin.from("products").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_visible", true));
     const legalPages = await fetchSafe(admin.from("legal_pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
     const forumCategories = await fetchSafe(admin.from("forum_categories").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_active", true));
