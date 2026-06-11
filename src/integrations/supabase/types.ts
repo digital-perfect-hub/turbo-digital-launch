@@ -481,6 +481,7 @@ export type Database = {
           description: string | null
           email: string
           id: string
+          site_id: string | null
           name: string
           phone: string | null
           service: string | null
@@ -493,6 +494,7 @@ export type Database = {
           description?: string | null
           email: string
           id?: string
+          site_id?: string | null
           name: string
           phone?: string | null
           service?: string | null
@@ -505,6 +507,7 @@ export type Database = {
           description?: string | null
           email?: string
           id?: string
+          site_id?: string | null
           name?: string
           phone?: string | null
           service?: string | null

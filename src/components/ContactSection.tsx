@@ -23,38 +23,6 @@ const iconMap = {
   mail: Mail,
 } as const;
 
-const finalServiceOptions = [
-  "SEO & KI Sichtbarkeit",
-  "Webdesign / neue Website",
-  "Website-Relaunch / bestehende Seite verbessern",
-  "Local SEO / Google Business Sichtbarkeit",
-  "Kostenlose Erstprüfung / ich bin unsicher",
-];
-
-const finalPackageOptions = [
-  "SEO & KI Starter – 790 € netto/Monat (948 € brutto)",
-  "SEO & KI Wachstum – 1.500 € netto/Monat (1.800 € brutto)",
-  "SEO & KI Dominanz – 2.500 € netto/Monat (3.000 € brutto)",
-  "Webdesign Starter – 1.150 € netto (1.380 € brutto)",
-  "Webdesign Business – 1.750 € netto (2.100 € brutto)",
-  "Local SEO Premium Website – 2.500 € netto (3.000 € brutto)",
-  "Ich bin unsicher – bitte empfehlen",
-];
-
-const getFinalContactLabels = (labels: ContactSectionContent["labels"]) => ({
-  ...labels,
-  service: "Projektart",
-  budget: "Gewünschtes Paket",
-});
-
-const getFinalContactPlaceholders = (
-  placeholders: ContactSectionContent["placeholders"],
-) => ({
-  ...placeholders,
-  service_placeholder: "Projektart wählen...",
-  budget_placeholder: "Paket oder Beratung anfordern...",
-});
-
 const normalizeTrustSignals = (signals: ContactTrustSignal[]) =>
   signals
     .filter((signal) => signal?.title?.trim() || signal?.text?.trim())
@@ -68,16 +36,22 @@ const normalizeTrustSignals = (signals: ContactTrustSignal[]) =>
 const mergeContactContent = (value: ContactSectionContent | null | undefined): ContactSectionContent => ({
   panel_description: value?.panel_description || "",
   trust_signals: normalizeTrustSignals(value?.trust_signals?.length ? value.trust_signals : defaultContactSectionContent.trust_signals),
-  labels: getFinalContactLabels({
+  labels: {
     ...defaultContactSectionContent.labels,
     ...(value?.labels || {}),
-  }),
-  placeholders: getFinalContactPlaceholders({
+  },
+  placeholders: {
     ...defaultContactSectionContent.placeholders,
     ...(value?.placeholders || {}),
-  }),
-  service_options: finalServiceOptions,
-  budget_options: finalPackageOptions,
+  },
+  service_options:
+    value?.service_options?.filter((item) => item?.trim())?.length
+      ? value.service_options.filter((item) => item?.trim())
+      : defaultContactSectionContent.service_options,
+  budget_options:
+    value?.budget_options?.filter((item) => item?.trim())?.length
+      ? value.budget_options.filter((item) => item?.trim())
+      : defaultContactSectionContent.budget_options,
   submit_text: value?.submit_text || defaultContactSectionContent.submit_text,
   submitting_text: value?.submitting_text || defaultContactSectionContent.submitting_text,
   success_title: value?.success_title || defaultContactSectionContent.success_title,
@@ -87,6 +61,19 @@ const mergeContactContent = (value: ContactSectionContent | null | undefined): C
   error_toast_title: value?.error_toast_title || defaultContactSectionContent.error_toast_title,
   error_toast_description: value?.error_toast_description || defaultContactSectionContent.error_toast_description,
 });
+
+
+const deriveServiceFromPackage = (selectedPackage: string): string | null => {
+  const value = selectedPackage.toLowerCase();
+
+  if (!selectedPackage.trim()) return null;
+  if (value.includes("seo") || value.includes("ki")) return "SEO & KI Sichtbarkeit";
+  if (value.includes("webdesign")) return "Webdesign / neue Website";
+  if (value.includes("local seo")) return "Local SEO / Google Business Sichtbarkeit";
+  if (value.includes("unsicher") || value.includes("empfehlen")) return "Kostenlose Erstprüfung / Empfehlung";
+
+  return "Projektanfrage";
+};
 
 const ContactSection = () => {
   const { activeSiteId } = useSiteContext();
@@ -137,7 +124,7 @@ const ContactSection = () => {
         company: formData.company || null,
         email: formData.email,
         phone: formData.phone || null,
-        service: formData.service || null,
+        service: deriveServiceFromPackage(formData.budget),
         budget: formData.budget || null,
         website: formData.website || null,
         description: formData.description || null,
@@ -150,7 +137,8 @@ const ContactSection = () => {
         title: content.success_toast_title,
         description: content.success_toast_description,
       });
-    } catch {
+    } catch (error) {
+      console.error("Lead submit failed", error);
       toast({
         title: content.error_toast_title,
         description: content.error_toast_description,
@@ -282,46 +270,21 @@ const ContactSection = () => {
                 </div>
               </div>
 
-              <div className="rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5">
-                <h3 className="text-lg font-extrabold text-foreground">Projekt einordnen</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Wähle zuerst den Projektbereich und danach das passende Paket. Wenn du unsicher bist, empfehlen wir dir im kostenlosen Erstgespräch die sinnvollste Lösung.
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
+                <select required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
+                  <option value="" disabled>
+                    {content.placeholders.budget_placeholder}
+                  </option>
+                  {content.budget_options.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Wähle direkt dein Wunschpaket. Wenn du unsicher bist, nimm „Ich bin unsicher – bitte empfehlen“.
                 </p>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.service}</label>
-                  <select
-                    required
-                    value={formData.service}
-                    onChange={(e) => update("service", e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="" disabled>
-                      {content.placeholders.service_placeholder}
-                    </option>
-                    {content.service_options.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
-                  <select required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
-                    <option value="" disabled>
-                      {content.placeholders.budget_placeholder}
-                    </option>
-                    {content.budget_options.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div>
