@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowRight, BadgeCheck, BarChart3, Globe, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
 import { getLucideIcon } from "@/lib/lucide-icon-registry";
 import { useHeroContent, type HeroRecord } from "@/hooks/useHeroContent";
@@ -142,6 +143,7 @@ type HeroSectionProps = {
 
 const HeroSection = ({ hero: prefetchedHero, overrideData }: HeroSectionProps) => {
   const { settings } = useGlobalTheme();
+  const { getSetting } = useSiteSettings();
   const { hero: queriedHero, isLoading } = useHeroContent();
   const hero = prefetchedHero ?? queriedHero;
 
@@ -229,8 +231,18 @@ const HeroSection = ({ hero: prefetchedHero, overrideData }: HeroSectionProps) =
     fallbackHero.cta_text,
   );
   const primaryCtaHref = pickText(overrideData?.primary_cta_href, overrideData?.primaryCtaHref, "#kontakt");
-  const secondaryCtaLabel = pickText(overrideData?.secondary_cta_text, overrideData?.secondaryCtaLabel, "Projekte ansehen");
-  const secondaryCtaHref = pickText(overrideData?.secondary_cta_href, overrideData?.secondaryCtaHref, "#portfolio");
+  const secondaryCtaLabel = pickText(
+    overrideData?.secondary_cta_text,
+    overrideData?.secondaryCtaLabel,
+    getSetting("home_hero_secondary_cta_text", defaultSiteText.home_hero_secondary_cta_text),
+    "Pakete ansehen",
+  );
+  const secondaryCtaHref = pickText(
+    overrideData?.secondary_cta_href,
+    overrideData?.secondaryCtaHref,
+    getSetting("home_hero_secondary_cta_link", defaultSiteText.home_hero_secondary_cta_link),
+    "#seo-pakete",
+  );
 
   const visualKicker = pickText(overrideData?.visual_kicker, hero?.visual_kicker, "Hero Visual");
   const visualTitle = pickText(overrideData?.visual_title, hero?.visual_title, "Ein starkes Bild sagt mehr als 1000 Worte.");

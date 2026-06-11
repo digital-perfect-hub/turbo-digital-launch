@@ -99,6 +99,26 @@ const textFieldGroups: Array<{
     ],
   },
   {
+    id: "seo-packages",
+    title: "SEO & KI Pakete",
+    description: "Header-Texte für die SEO- und KI-Sichtbarkeitspakete.",
+    fields: [
+      { key: "home_seo_packages_kicker", label: "Kicker" },
+      { key: "home_seo_packages_title", label: "Titel" },
+      { key: "home_seo_packages_description", label: "Beschreibung", multiline: true, rows: 4 },
+    ],
+  },
+  {
+    id: "webdesign-packages",
+    title: "Webdesign Pakete",
+    description: "Header-Texte für die Webdesign-Paketübersicht.",
+    fields: [
+      { key: "home_webdesign_packages_kicker", label: "Kicker" },
+      { key: "home_webdesign_packages_title", label: "Titel" },
+      { key: "home_webdesign_packages_description", label: "Beschreibung", multiline: true, rows: 4 },
+    ],
+  },
+  {
     id: "why-choose",
     title: "Why Choose",
     description: "Pitch-Block mit HTML-Body, CTA und strukturierter Vorteils-Liste.",
@@ -645,6 +665,18 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
         title: textForm.home_audience_title || "Für die richtigen Kunden gebaut.",
         description: textForm.home_audience_description || "Karten und Bullets der Audience-Sektion werden hier sichtbar.",
         ctaText: "Mehr erfahren",
+      },
+      "seo-packages": {
+        badge: textForm.home_seo_packages_kicker || "SEO & KI Sichtbarkeit",
+        title: textForm.home_seo_packages_title || "Pakete für Sichtbarkeit und Anfragen.",
+        description: textForm.home_seo_packages_description || "Preis-Karten für monatliche SEO- und KI-Sichtbarkeitsbetreuung.",
+        ctaText: "SEO Paket anfragen",
+      },
+      "webdesign-packages": {
+        badge: textForm.home_webdesign_packages_kicker || "Webdesign Pakete",
+        title: textForm.home_webdesign_packages_title || "Websites, die Vertrauen und Anfragen erzeugen.",
+        description: textForm.home_webdesign_packages_description || "Preis-Karten für Starter, Business und Local SEO Premium Websites.",
+        ctaText: "Webdesign anfragen",
       },
       services: {
         badge: textForm.home_services_kicker || "Leistungen",

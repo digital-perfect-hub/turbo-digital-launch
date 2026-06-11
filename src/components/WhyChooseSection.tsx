@@ -84,7 +84,7 @@ const WhyChooseSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-border bg-card p-8 shadow-sm transition-all duration-500 hover:shadow-xl"
+                className="dp-blue-card-border dp-blue-card-surface group relative flex h-full flex-col overflow-hidden rounded-[2rem] border-2 border-[#0a1842] bg-white p-8 shadow-none transition-all duration-500 hover:-translate-y-1 hover:shadow-none"
               >
                 <div className="relative z-10 flex flex-1 flex-col">
                   <div className="mb-8 flex items-start justify-between gap-4">

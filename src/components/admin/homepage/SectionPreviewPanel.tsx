@@ -51,7 +51,7 @@ const SectionPreviewPanel = ({ sectionId, sectionLabel, preview, styleVars }: Se
             className={`homepage-style-scope w-full min-w-0 min-h-[420px] p-5 xl:p-6 ${
               isDarkSection
                 ? "dark-section"
-                : sectionId === "faq" || sectionId === "services" || sectionId === "portfolio"
+                : sectionId === "faq" || sectionId === "services" || sectionId === "portfolio" || sectionId === "seo-packages" || sectionId === "webdesign-packages"
                   ? "surface-section-shell"
                   : "surface-page-shell"
             }`}

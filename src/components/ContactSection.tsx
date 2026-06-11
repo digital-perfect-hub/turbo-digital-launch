@@ -23,6 +23,38 @@ const iconMap = {
   mail: Mail,
 } as const;
 
+const finalServiceOptions = [
+  "SEO & KI Sichtbarkeit",
+  "Webdesign / neue Website",
+  "Website-Relaunch / bestehende Seite verbessern",
+  "Local SEO / Google Business Sichtbarkeit",
+  "Kostenlose Erstprüfung / ich bin unsicher",
+];
+
+const finalPackageOptions = [
+  "SEO & KI Starter – 790 € netto/Monat (948 € brutto)",
+  "SEO & KI Wachstum – 1.500 € netto/Monat (1.800 € brutto)",
+  "SEO & KI Dominanz – 2.500 € netto/Monat (3.000 € brutto)",
+  "Webdesign Starter – 1.150 € netto (1.380 € brutto)",
+  "Webdesign Business – 1.750 € netto (2.100 € brutto)",
+  "Local SEO Premium Website – 2.500 € netto (3.000 € brutto)",
+  "Ich bin unsicher – bitte empfehlen",
+];
+
+const getFinalContactLabels = (labels: ContactSectionContent["labels"]) => ({
+  ...labels,
+  service: "Projektbereich *",
+  budget: "Gewünschtes Paket *",
+});
+
+const getFinalContactPlaceholders = (
+  placeholders: ContactSectionContent["placeholders"],
+) => ({
+  ...placeholders,
+  service_placeholder: "Projektbereich wählen...",
+  budget_placeholder: "Paket wählen oder Empfehlung anfordern...",
+});
+
 const normalizeTrustSignals = (signals: ContactTrustSignal[]) =>
   signals
     .filter((signal) => signal?.title?.trim() || signal?.text?.trim())
@@ -36,22 +68,16 @@ const normalizeTrustSignals = (signals: ContactTrustSignal[]) =>
 const mergeContactContent = (value: ContactSectionContent | null | undefined): ContactSectionContent => ({
   panel_description: value?.panel_description || "",
   trust_signals: normalizeTrustSignals(value?.trust_signals?.length ? value.trust_signals : defaultContactSectionContent.trust_signals),
-  labels: {
+  labels: getFinalContactLabels({
     ...defaultContactSectionContent.labels,
     ...(value?.labels || {}),
-  },
-  placeholders: {
+  }),
+  placeholders: getFinalContactPlaceholders({
     ...defaultContactSectionContent.placeholders,
     ...(value?.placeholders || {}),
-  },
-  service_options:
-    value?.service_options?.filter((item) => item?.trim())?.length
-      ? value.service_options.filter((item) => item?.trim())
-      : defaultContactSectionContent.service_options,
-  budget_options:
-    value?.budget_options?.filter((item) => item?.trim())?.length
-      ? value.budget_options.filter((item) => item?.trim())
-      : defaultContactSectionContent.budget_options,
+  }),
+  service_options: finalServiceOptions,
+  budget_options: finalPackageOptions,
   submit_text: value?.submit_text || defaultContactSectionContent.submit_text,
   submitting_text: value?.submitting_text || defaultContactSectionContent.submitting_text,
   success_title: value?.success_title || defaultContactSectionContent.success_title,
@@ -256,6 +282,13 @@ const ContactSection = () => {
                 </div>
               </div>
 
+              <div className="rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5">
+                <h3 className="text-lg font-extrabold text-foreground">Projekt einordnen</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Wähle zuerst den Projektbereich und danach das passende Paket. Wenn du unsicher bist, empfehlen wir dir im kostenlosen Erstgespräch die sinnvollste Lösung.
+                </p>
+              </div>
+
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.service}</label>
@@ -278,7 +311,7 @@ const ContactSection = () => {
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
-                  <select value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
+                  <select required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
                     <option value="" disabled>
                       {content.placeholders.budget_placeholder}
                     </option>

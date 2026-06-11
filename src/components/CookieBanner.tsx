@@ -12,9 +12,13 @@ import {
 } from "@/lib/cookie-consent";
 
 const CookieBanner = () => {
-  const [consent, setConsent] = useState<CookieConsentState | null>(() => readCookieConsent());
+  const [consent, setConsent] = useState<CookieConsentState | null>(() =>
+    readCookieConsent(),
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [draft, setDraft] = useState<Pick<CookieConsentState, "analytics" | "marketing">>({
+  const [draft, setDraft] = useState<
+    Pick<CookieConsentState, "analytics" | "marketing">
+  >({
     analytics: false,
     marketing: false,
   });
@@ -33,12 +37,21 @@ const CookieBanner = () => {
     const handleOpenSettings = () => setSettingsOpen(true);
 
     window.addEventListener(COOKIE_CONSENT_EVENT, syncConsent as EventListener);
-    window.addEventListener(COOKIE_SETTINGS_OPEN_EVENT, handleOpenSettings as EventListener);
+    window.addEventListener(
+      COOKIE_SETTINGS_OPEN_EVENT,
+      handleOpenSettings as EventListener,
+    );
     window.addEventListener("storage", syncConsent);
 
     return () => {
-      window.removeEventListener(COOKIE_CONSENT_EVENT, syncConsent as EventListener);
-      window.removeEventListener(COOKIE_SETTINGS_OPEN_EVENT, handleOpenSettings as EventListener);
+      window.removeEventListener(
+        COOKIE_CONSENT_EVENT,
+        syncConsent as EventListener,
+      );
+      window.removeEventListener(
+        COOKIE_SETTINGS_OPEN_EVENT,
+        handleOpenSettings as EventListener,
+      );
       window.removeEventListener("storage", syncConsent);
     };
   }, []);
@@ -67,14 +80,19 @@ const CookieBanner = () => {
                   Wir respektieren deine Entscheidung.
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-white/72 md:text-base">
-                  Essenzielle Cookies halten die Seite stabil. Analyse- und Marketing-Cookies werden erst nach aktiver Zustimmung geladen.
+                  Essenzielle Cookies halten die Seite stabil. Analyse- und
+                  Marketing-Cookies werden erst nach aktiver Zustimmung geladen.
                 </p>
               </div>
 
               <div className="flex w-full flex-col gap-3 lg:max-w-[260px] lg:items-stretch">
                 <Button
                   className="w-full rounded-xl bg-[#FF4B2C] text-white hover:bg-[#E03A1E]"
-                  onClick={() => saveConsent(createConsentState({ analytics: true, marketing: true }))}
+                  onClick={() =>
+                    saveConsent(
+                      createConsentState({ analytics: true, marketing: true }),
+                    )
+                  }
                 >
                   Alle akzeptieren
                 </Button>
@@ -91,7 +109,14 @@ const CookieBanner = () => {
                   <Button
                     variant="outline"
                     className="w-full rounded-xl border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                    onClick={() => saveConsent(createConsentState({ analytics: false, marketing: false }))}
+                    onClick={() =>
+                      saveConsent(
+                        createConsentState({
+                          analytics: false,
+                          marketing: false,
+                        }),
+                      )
+                    }
                   >
                     Nur essenzielle
                   </Button>
@@ -104,7 +129,7 @@ const CookieBanner = () => {
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
-          className="fixed bottom-4 left-4 z-[70] inline-flex items-center gap-2 rounded-full border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-text-main-hex)] shadow-[0_24px_60px_-34px_rgba(14,31,83,0.3)] backdrop-blur"
+          className="fixed bottom-4 left-4 z-[30] hidden items-center gap-2 rounded-full border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-text-main-hex)] shadow-[0_24px_60px_-34px_rgba(14,31,83,0.3)] md:inline-flex"
         >
           <Settings2 size={14} className="text-primary" />
           Cookie-Einstellungen

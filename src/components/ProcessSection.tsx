@@ -4,6 +4,25 @@ import { ArrowRight } from "lucide-react";
 import { defaultProcessSteps, defaultSiteText, type ProcessStep, useSiteSettings } from "@/hooks/useSiteSettings";
 import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
+const processVisuals = [
+  {
+    src: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=82",
+    alt: "Person füllt ein Kontaktformular am Laptop aus",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=82",
+    alt: "Kostenloser Kennenlern-Call mit Beratungsgespräch",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=82",
+    alt: "Strategie und Angebot mit klarer Projektplanung",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=82",
+    alt: "Umsetzung und Optimierung einer Website mit Performance-Daten",
+  },
+];
+
 const navigateToTarget = (target: string) => {
   const normalized = (target || "").trim();
   if (!normalized) return;
@@ -66,34 +85,41 @@ const ProcessSection = () => {
         </motion.div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:gap-8 xl:grid-cols-4">
-          {steps.map((step, index) => (
-            <motion.div
-              key={`${step.step}-${index}`}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group relative flex h-full flex-col overflow-hidden rounded-[2rem] border p-8 transition-all duration-500 hover:shadow-xl sm:p-10 glass-card"
-            >
-              <div className="dark-ghost-index pointer-events-none absolute -bottom-8 -right-4 select-none text-[8rem] font-black leading-none transition-colors duration-500 group-hover:text-primary/10">
-                {step.step}
-              </div>
+          {steps.map((step, index) => {
+            const visual = processVisuals[index] || processVisuals[processVisuals.length - 1];
 
-              <div className="relative z-10 flex flex-1 flex-col">
-                <div className="mb-8">
+            return (
+              <motion.div
+                key={`${step.step}-${index}`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group relative flex h-full flex-col overflow-hidden rounded-[2rem] border p-0 transition-all duration-500 hover:shadow-xl glass-card"
+              >
+                <div className="relative h-44 overflow-hidden sm:h-48">
+                  <img
+                    src={visual.src}
+                    alt={visual.alt}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-[#0a1842]/35" />
                   {step.time ? (
-                    <span className="dark-panel-kicker inline-flex rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
+                    <span className="dark-panel-kicker absolute bottom-5 left-5 inline-flex rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
                       {step.time}
                     </span>
-                  ) : (
-                    <div className="h-7" />
-                  )}
+                  ) : null}
                 </div>
 
-                <h3 className="hero-stat-value mb-4 text-2xl font-bold leading-tight">{step.title}</h3>
-                <p className="hero-stat-label flex-1 text-base leading-relaxed">{step.description}</p>
-              </div>
-            </motion.div>
-          ))}
+                <div className="relative z-10 flex flex-1 flex-col p-8 sm:p-10">
+                  <h3 className="hero-stat-value mb-4 text-2xl font-bold leading-tight">{step.title}</h3>
+                  <p className="hero-stat-label flex-1 text-base leading-relaxed">{step.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         <motion.div

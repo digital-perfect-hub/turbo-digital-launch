@@ -6,6 +6,8 @@ import TrustSection from "@/components/TrustSection";
 import WhyChooseSection from "@/components/WhyChooseSection";
 import AudienceSection from "@/components/AudienceSection";
 import ServicesSection from "@/components/ServicesSection";
+import SeoPackagesSection from "@/components/SeoPackagesSection";
+import WebdesignPackagesSection from "@/components/WebdesignPackagesSection";
 import PortfolioSection from "@/components/PortfolioSection";
 import TeamSection from "@/components/TeamSection";
 import ProcessSection from "@/components/ProcessSection";
@@ -36,6 +38,8 @@ const sectionRegistry: Record<HomepageSectionId, ComponentType> = {
   "why-choose": WhyChooseSection,
   audience: AudienceSection,
   services: ServicesSection,
+  "seo-packages": SeoPackagesSection,
+  "webdesign-packages": WebdesignPackagesSection,
   forum: ForumTeaser,
   shop: ShopSection,
   portfolio: PortfolioSection,

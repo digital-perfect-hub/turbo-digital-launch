@@ -3,6 +3,8 @@ import type { CSSProperties } from "react";
 export const HOMEPAGE_SECTION_IDS = [
   "intro",
   "trust",
+  "seo-packages",
+  "webdesign-packages",
   "why-choose",
   "audience",
   "services",
@@ -21,6 +23,8 @@ export type HomepageSectionId = (typeof HOMEPAGE_SECTION_IDS)[number];
 export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionId, string> = {
   intro: "Intro",
   trust: "Trust",
+  "seo-packages": "SEO & KI Pakete",
+  "webdesign-packages": "Webdesign Pakete",
   "why-choose": "Why Choose",
   audience: "Audience",
   services: "Services",
@@ -426,5 +430,24 @@ export const resolveHomepageSectionStyleVarsFromSettings = (
   return resolveHomepageSectionStyleVars(allStyles, sectionId);
 };
 
-export const resolveHomepageSectionPatternClass = () => "";
-export const resolveHomepageSectionPatternClassFromSettings = () => "";
+export const resolveHomepageSectionPatternClass = (
+  allStyles: HomepageSectionStyles,
+  sectionId: HomepageSectionId,
+) => {
+  const sectionStyle = allStyles[sectionId] ?? createDefaultHomepageSectionStyle();
+  const classes = ["homepage-pattern-enabled", `homepage-pattern--${sectionId}`];
+
+  if (sectionStyle.pattern_type && sectionStyle.pattern_type !== "none") {
+    classes.push("homepage-pattern-has-svg", `homepage-pattern-type--${sectionStyle.pattern_type}`);
+  }
+
+  return classes.join(" ");
+};
+
+export const resolveHomepageSectionPatternClassFromSettings = (
+  settings: Record<string, unknown>,
+  sectionId: HomepageSectionId,
+) => {
+  const allStyles = parseHomepageSectionStyles(settings.home_section_styles);
+  return resolveHomepageSectionPatternClass(allStyles, sectionId);
+};

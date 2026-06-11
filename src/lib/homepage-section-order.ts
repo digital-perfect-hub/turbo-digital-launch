@@ -3,17 +3,19 @@ import { HOMEPAGE_SECTION_IDS, type HomepageSectionId } from "@/lib/homepage-sec
 export const DEFAULT_HOMEPAGE_SECTION_ORDER: HomepageSectionId[] = [
   "intro",
   "trust",
+  "seo-packages",
+  "webdesign-packages",
+  "process",
   "why-choose",
   "audience",
   "services",
-  "forum",
-  "shop",
   "portfolio",
-  "team",
-  "process",
   "testimonials",
   "contact",
   "faq",
+  "team",
+  "forum",
+  "shop",
 ];
 
 const isSectionId = (value: unknown): value is HomepageSectionId =>
