@@ -43,16 +43,16 @@ const finalPackageOptions = [
 
 const getFinalContactLabels = (labels: ContactSectionContent["labels"]) => ({
   ...labels,
-  service: "Projektbereich *",
-  budget: "Gewünschtes Paket *",
+  service: "Projektart",
+  budget: "Gewünschtes Paket",
 });
 
 const getFinalContactPlaceholders = (
   placeholders: ContactSectionContent["placeholders"],
 ) => ({
   ...placeholders,
-  service_placeholder: "Projektbereich wählen...",
-  budget_placeholder: "Paket wählen oder Empfehlung anfordern...",
+  service_placeholder: "Projektart wählen...",
+  budget_placeholder: "Paket oder Beratung anfordern...",
 });
 
 const normalizeTrustSignals = (signals: ContactTrustSignal[]) =>
