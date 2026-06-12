@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
@@ -40,6 +40,8 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const headerRef = useRef<HTMLElement | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOffset, setMobileMenuOffset] = useState(0);
@@ -132,13 +134,42 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const navFontStyle = settings.nav_font_style === "italic" ? "italic" : "not-italic";
   const navTypographyClasses = `${navFontFamily} ${navFontWeight} ${navFontStyle}`;
 
-  const handleLinkClick = (url: string) => {
-    if (url.startsWith("#")) {
-      document.querySelector(url)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      window.location.href = url;
+  const scrollToHomeAnchor = (hash: string) => {
+    const targetId = decodeURIComponent(hash.replace(/^#/, ""));
+    if (!targetId) return false;
+
+    const target = document.getElementById(targetId);
+    if (!target) return false;
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, "", hash);
     }
 
+    return true;
+  };
+
+  const handleLinkClick = (url: string) => {
+    const rawUrl = url.trim();
+    const homeHash = rawUrl.startsWith("/#")
+      ? rawUrl.slice(1)
+      : rawUrl.startsWith("#")
+        ? rawUrl
+        : null;
+
+    if (homeHash) {
+      if (location.pathname === "/") {
+        scrollToHomeAnchor(homeHash);
+      } else {
+        navigate({ pathname: "/", hash: homeHash });
+      }
+
+      setIsMobileOpen(false);
+      return;
+    }
+
+    window.location.href = rawUrl;
     setIsMobileOpen(false);
   };
 
@@ -206,7 +237,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
                 <div key={item.id} className="relative group flex items-center">
                   <button
                     onClick={() => !hasChildren ? handleLinkClick(item.url) : null}
-                    className={`relative flex items-center gap-1.5 py-1 text-sm uppercase tracking-widest outline-none transition-colors duration-300 ${navTypographyClasses}`}
+                    className={`relative flex items-center gap-1.5 py-1 text-[15px] 2xl:text-base uppercase tracking-[0.12em] outline-none transition-colors duration-300 ${navTypographyClasses}`}
                     style={{ color: desktopNavColor }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = desktopNavHoverColor)}
                     onMouseLeave={(e) => (e.currentTarget.style.color = desktopNavColor)}
@@ -257,7 +288,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
             {navCtaLabel ? (
               <button
                 onClick={() => handleLinkClick(navCtaLink)}
-                className={forceSolid ? "btn-primary !px-6 !py-3 shadow-[0_10px_20px_-10px_rgba(var(--primary),0.3)] transition-colors" : "nav-cta-button inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5"}
+                className={forceSolid ? "btn-primary !px-7 !py-3.5 text-[15px] 2xl:text-base shadow-[0_10px_20px_-10px_rgba(var(--primary),0.3)] transition-colors" : "nav-cta-button inline-flex items-center justify-center rounded-full px-7 py-3.5 text-[15px] 2xl:text-base font-bold shadow-lg transition-all duration-300 hover:-translate-y-0.5"}
               >
                 {navCtaLabel}
               </button>

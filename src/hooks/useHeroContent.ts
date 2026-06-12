@@ -26,6 +26,7 @@ export type HeroRecord = {
   visual_badge?: string | null;
   layer_kicker?: string | null;
   layer_title?: string | null;
+  show_visual_panel?: boolean | null;
   show_bottom_box1?: boolean | null;
   bottom_box1_kicker?: string | null;
   bottom_box1_title?: string | null;

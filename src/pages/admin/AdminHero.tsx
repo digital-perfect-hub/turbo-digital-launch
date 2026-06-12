@@ -36,6 +36,7 @@ const HERO_EDITABLE_COLUMNS = [
   "visual_badge",
   "layer_kicker",
   "layer_title",
+  "show_visual_panel",
   "show_bottom_box1",
   "bottom_box1_kicker",
   "bottom_box1_title",
@@ -48,7 +49,7 @@ const LEGACY_HERO_COLUMNS = HERO_EDITABLE_COLUMNS.filter(
   (key) => ![
     "background_image_path", "background_mobile_image_path", "overlay_opacity",
     "visual_kicker", "visual_title", "visual_badge", "layer_kicker", "layer_title",
-    "show_bottom_box1", "bottom_box1_kicker", "bottom_box1_title",
+    "show_visual_panel", "show_bottom_box1", "bottom_box1_kicker", "bottom_box1_title",
     "show_bottom_box2", "bottom_box2_kicker", "bottom_box2_title"
   ].includes(key),
 );
@@ -153,6 +154,12 @@ const AdminHero = () => {
   const heroVisualPreview = resolveStorageImage(form.image_path);
   const heroBackgroundPreview = resolveStorageImage(form.background_image_path);
   const overlayOpacity = Number.isFinite(Number(form.overlay_opacity)) ? Math.max(0, Math.min(100, Number(form.overlay_opacity))) : 58;
+  const visualKickerPreview = String(form.visual_kicker || "Erster Eindruck").trim();
+  const visualTitlePreview = String(form.visual_title || "Ein professioneller Auftritt schafft Vertrauen, bevor ein Wort gelesen wird.").trim();
+  const visualBadgePreview = String(form.visual_badge || "Starker Einstieg").trim();
+  const layerKickerPreview = String(form.layer_kicker || "Klare Nutzerführung").trim();
+  const layerTitlePreview = String(form.layer_title || "Klare Botschaft, sichtbarer Nutzen und direkter Anfrageweg").trim();
+  const showVisualPanelPreview = form.show_visual_panel !== false;
 
   if (isLoading) return <div className="p-6">Laden...</div>;
 
@@ -189,8 +196,29 @@ const AdminHero = () => {
               <p className="mt-3 max-w-[25rem] text-sm leading-relaxed text-slate-200">{form.subheadline || "Hier siehst du live, wie Hintergrundbild, Overlay und Inhalte zusammenspielen."}</p>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="overflow-hidden rounded-[1.35rem] border border-white/12 bg-slate-950/55 backdrop-blur-xl">
-                  <img src={heroVisualPreview} alt="Visual Vorschau" className="h-32 w-full object-cover" />
+                <div className="overflow-hidden rounded-[1.35rem] border border-white/12 bg-slate-950/55 p-3 backdrop-blur-xl">
+                  {showVisualPanelPreview ? (
+                    <>
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[0.58rem] font-bold uppercase tracking-[0.22em] text-slate-300">{visualKickerPreview}</p>
+                          <p className="mt-1 text-[0.68rem] leading-snug text-slate-300">{visualTitlePreview}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full border border-white/15 bg-white/10 px-2 py-1 text-[0.58rem] font-semibold text-white">
+                          {visualBadgePreview}
+                        </span>
+                      </div>
+                      <div className="relative overflow-hidden rounded-2xl">
+                        <img src={heroVisualPreview} alt="Visual Vorschau" className="h-28 w-full object-cover" />
+                        <div className="absolute left-2 top-2 rounded-xl border border-white/15 bg-slate-950/75 px-3 py-2 backdrop-blur-md">
+                          <p className="text-[0.55rem] font-bold uppercase tracking-[0.2em] text-slate-300">{layerKickerPreview}</p>
+                          <p className="mt-1 max-w-[9rem] text-[0.62rem] font-semibold leading-snug text-white">{layerTitlePreview}</p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <img src={heroVisualPreview} alt="Visual Vorschau" className="h-32 w-full object-cover" />
+                  )}
                 </div>
                 <div className="grid gap-3">
                   {[1, 2, 3].map((nr) => (
@@ -293,24 +321,32 @@ const AdminHero = () => {
             {/* TAB 4: LAYER & BOXEN */}
             <TabsContent value="layer" className="space-y-6 mt-0 outline-none">
               
+              <div className="flex items-start justify-between gap-4 rounded-2xl border border-orange-100 bg-orange-50/60 p-5">
+                <div>
+                  <Label className="text-slate-800 font-bold">Hero-Visual anzeigen?</Label>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">Steuert den rechten Visual-Block im Hero-Bereich inklusive Kicker, Badge und Text-Layer.</p>
+                </div>
+                <Switch checked={form.show_visual_panel !== false} onCheckedChange={(c) => setForm({...form, show_visual_panel: c})} className="data-[state=checked]:bg-[#FF4B2C]" />
+              </div>
+
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Oberer Bereich (Visual Kicker)</Label>
+                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Texte oberhalb des Hero-Bildes</Label>
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-500">Kicker</Label>
                   <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.visual_kicker || ""} onChange={(e) => setForm({...form, visual_kicker: e.target.value})} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-500">Beschreibungstext</Label>
+                  <Label className="text-xs text-slate-500">Unterzeile</Label>
                   <Textarea rows={2} className="rounded-xl bg-white border-slate-200 resize-none text-sm" value={form.visual_title || ""} onChange={(e) => setForm({...form, visual_title: e.target.value})} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-500">Badge rechts</Label>
+                  <Label className="text-xs text-slate-500">Badge rechts oben</Label>
                   <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.visual_badge || ""} onChange={(e) => setForm({...form, visual_badge: e.target.value})} />
                 </div>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Innerer Layer (Auf Bild oben links)</Label>
+                <Label className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2 block">Text-Layer auf dem Hero-Bild</Label>
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-500">Kicker</Label>
                   <Input className="rounded-xl bg-white border-slate-200 h-9" value={form.layer_kicker || ""} onChange={(e) => setForm({...form, layer_kicker: e.target.value})} />

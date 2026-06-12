@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Edit2, Link2, Menu, Palette, Plus, Trash2, Type } from "lucide-react";
+import { ArrowDown, ArrowUp, Edit2, Link2, Menu, Palette, Plus, Trash2, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ type NavigationLink = {
   label: string;
   url: string;
   parent_id: string | null;
+  sort_order: number | null;
+  created_at?: string | null;
 };
 
 type StylingState = {
@@ -255,11 +257,18 @@ const AdminNavigation = () => {
 
   const saveLink = useMutation({
     mutationFn: async () => {
+      const parentId = form.parent_id === "none" || !form.parent_id ? null : form.parent_id;
+      const existingLink = editingId ? links.find((item) => item.id === editingId) : null;
+      const parentChanged = Boolean(existingLink) && (existingLink?.parent_id || null) !== parentId;
+      const siblings = links.filter((item) => item.id !== editingId && (item.parent_id || null) === parentId);
+      const nextSortOrder = siblings.length ? Math.max(...siblings.map((item) => item.sort_order ?? 0)) + 1 : 0;
+
       const payload = {
         site_id: siteId,
         label: form.label,
         url: form.url,
-        parent_id: form.parent_id === "none" || !form.parent_id ? null : form.parent_id,
+        parent_id: parentId,
+        sort_order: editingId && !parentChanged ? existingLink?.sort_order ?? 0 : nextSortOrder,
       };
 
       if (editingId) {
@@ -274,11 +283,46 @@ const AdminNavigation = () => {
     onSuccess: () => {
       setDeleteTarget(null);
       qc.invalidateQueries({ queryKey: ["navigation_links", siteId] });
+      qc.invalidateQueries({ queryKey: ["navigation_links_frontend", siteId] });
       setEditingId(null);
       setForm({ label: "", url: "", parent_id: "" });
       toast.success("Navigationslink gespeichert.");
     },
     onError: (error: any) => toast.error(error?.message || "Link konnte nicht gespeichert werden."),
+  });
+
+  const moveLink = useMutation({
+    mutationFn: async ({ id, direction }: { id: string; direction: -1 | 1 }) => {
+      const current = links.find((item) => item.id === id);
+      if (!current) return;
+
+      const siblings = links
+        .filter((item) => (item.parent_id || null) === (current.parent_id || null))
+        .sort((a, b) => {
+          const bySortOrder = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+          if (bySortOrder !== 0) return bySortOrder;
+          return (a.created_at || "").localeCompare(b.created_at || "");
+        });
+
+      const currentIndex = siblings.findIndex((item) => item.id === id);
+      const targetIndex = currentIndex + direction;
+
+      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= siblings.length) return;
+
+      const reordered = [...siblings];
+      [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+
+      for (const [index, item] of reordered.entries()) {
+        const { error } = await supabase.from("navigation_links").update({ sort_order: index }).eq("id", item.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["navigation_links", siteId] });
+      qc.invalidateQueries({ queryKey: ["navigation_links_frontend", siteId] });
+      toast.success("Reihenfolge gespeichert.");
+    },
+    onError: (error: any) => toast.error(error?.message || "Reihenfolge konnte nicht gespeichert werden."),
   });
 
   const deleteLink = useMutation({
@@ -296,6 +340,8 @@ const AdminNavigation = () => {
 
   const topLevelLinks = links.filter((item) => !item.parent_id);
   const getChildren = (parentId: string) => links.filter((item) => item.parent_id === parentId);
+  const canMoveUp = (group: NavigationLink[], index: number) => index > 0 && group.length > 1;
+  const canMoveDown = (group: NavigationLink[], index: number) => index < group.length - 1 && group.length > 1;
 
   const previewFontFamily = styling.nav_font_family === "serif" ? "font-serif" : styling.nav_font_family === "mono" ? "font-mono" : "font-sans";
   const previewFontWeight = styling.nav_font_weight === "normal" ? "font-normal" : styling.nav_font_weight === "medium" ? "font-medium" : styling.nav_font_weight === "extrabold" ? "font-extrabold" : "font-bold";
@@ -475,37 +521,77 @@ const AdminNavigation = () => {
             <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">Noch keine Links vorhanden.</div>
           ) : (
             <div className="space-y-4">
-              {topLevelLinks.map((link) => (
-                <div key={link.id} className="rounded-2xl border bg-background/70 p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-bold text-foreground">{link.label}</div>
-                      <div className="mt-1 text-sm text-muted-foreground">{link.url}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => { setForm({ label: link.label, url: link.url, parent_id: link.parent_id || "none" }); setEditingId(link.id); }} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={16} /></button>
-                      <button onClick={() => setDeleteTarget({ id: link.id, label: link.label })} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={16} /></button>
-                    </div>
-                  </div>
+              {topLevelLinks.map((link, linkIndex) => {
+                const children = getChildren(link.id);
 
-                  {getChildren(link.id).length > 0 && (
-                    <div className="mt-4 space-y-2 border-l pl-4">
-                      {getChildren(link.id).map((child) => (
-                        <div key={child.id} className="flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
-                          <div>
-                            <div className="text-sm font-semibold text-foreground">{child.label}</div>
-                            <div className="text-xs text-muted-foreground">{child.url}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => { setForm({ label: child.label, url: child.url, parent_id: child.parent_id || "none" }); setEditingId(child.id); }} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={14} /></button>
-                            <button onClick={() => setDeleteTarget({ id: child.id, label: child.label })} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={14} /></button>
-                          </div>
-                        </div>
-                      ))}
+                return (
+                  <div key={link.id} className="rounded-2xl border bg-background/70 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="font-bold text-foreground">{link.label}</div>
+                        <div className="mt-1 text-sm text-muted-foreground">{link.url}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => moveLink.mutate({ id: link.id, direction: -1 })}
+                          disabled={!canMoveUp(topLevelLinks, linkIndex) || moveLink.isPending}
+                          title="Nach oben verschieben"
+                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary disabled:pointer-events-none disabled:opacity-30"
+                        >
+                          <ArrowUp size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveLink.mutate({ id: link.id, direction: 1 })}
+                          disabled={!canMoveDown(topLevelLinks, linkIndex) || moveLink.isPending}
+                          title="Nach unten verschieben"
+                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary disabled:pointer-events-none disabled:opacity-30"
+                        >
+                          <ArrowDown size={16} />
+                        </button>
+                        <button type="button" onClick={() => { setForm({ label: link.label, url: link.url, parent_id: link.parent_id || "none" }); setEditingId(link.id); }} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={16} /></button>
+                        <button type="button" onClick={() => setDeleteTarget({ id: link.id, label: link.label })} className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={16} /></button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    {children.length > 0 && (
+                      <div className="mt-4 space-y-2 border-l pl-4">
+                        {children.map((child, childIndex) => (
+                          <div key={child.id} className="flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
+                            <div>
+                              <div className="text-sm font-semibold text-foreground">{child.label}</div>
+                              <div className="text-xs text-muted-foreground">{child.url}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => moveLink.mutate({ id: child.id, direction: -1 })}
+                                disabled={!canMoveUp(children, childIndex) || moveLink.isPending}
+                                title="Nach oben verschieben"
+                                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary disabled:pointer-events-none disabled:opacity-30"
+                              >
+                                <ArrowUp size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveLink.mutate({ id: child.id, direction: 1 })}
+                                disabled={!canMoveDown(children, childIndex) || moveLink.isPending}
+                                title="Nach unten verschieben"
+                                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary disabled:pointer-events-none disabled:opacity-30"
+                              >
+                                <ArrowDown size={14} />
+                              </button>
+                              <button type="button" onClick={() => { setForm({ label: child.label, url: child.url, parent_id: child.parent_id || "none" }); setEditingId(child.id); }} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-primary"><Edit2 size={14} /></button>
+                              <button type="button" onClick={() => setDeleteTarget({ id: child.id, label: child.label })} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={14} /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

@@ -73,6 +73,31 @@ const parseBooleanSetting = (value: unknown) => {
   return false;
 };
 
+const HashScrollHandler = () => {
+  const location = useLocation();
+
+  useLayoutEffect(() => {
+    if (!location.hash || location.pathname !== "/") return;
+
+    const targetId = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (!targetId) return;
+
+    let timeoutId: number | undefined;
+    const frameId = window.requestAnimationFrame(() => {
+      timeoutId = window.setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [location.hash, location.pathname]);
+
+  return null;
+};
+
 const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const { activeSiteId, hostname, isLoading: isSiteLoading, resolvedSite } = useSiteContext();
@@ -134,6 +159,7 @@ const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
 
   return (
     <>
+      <HashScrollHandler />
       <ConsentScriptGate />
       <PageViewTracker />
       {children}

@@ -87,7 +87,9 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main>
-          <HeroSection hero={hero} />
+          <div id="start" className="homepage-scroll-anchor">
+            <HeroSection hero={hero} />
+          </div>
           {sectionOrder
             .filter((sectionId) => sectionVisibility[sectionId] !== false)
             .map((sectionId) => {

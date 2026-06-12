@@ -2184,12 +2184,14 @@
     box-shadow: 0 18px 46px -36px rgba(255, 107, 44, 0.44) !important;
   }
 
-  section[id] {
+  section[id],
+  .homepage-scroll-anchor {
     scroll-margin-top: 110px;
   }
 
   @media (max-width: 767px) {
-    section[id] {
+    section[id],
+    .homepage-scroll-anchor {
       scroll-margin-top: 92px;
     }
   }

@@ -286,7 +286,7 @@ const HeroSection = ({ hero: prefetchedHero, overrideData }: HeroSectionProps) =
   );
   const overlayAlpha = (pickNumber(overrideData?.overlay_opacity, hero?.overlay_opacity) ?? 58) / 100;
 
-  const showVisualPanel = pickBoolean(overrideData?.show_visual_panel, true) !== false;
+  const showVisualPanel = pickBoolean(overrideData?.show_visual_panel, hero?.show_visual_panel, true) !== false;
   const showBottomBox1 = pickBoolean(overrideData?.show_bottom_box1, hero?.show_bottom_box1, true) !== false;
   const showBottomBox2 = pickBoolean(overrideData?.show_bottom_box2, hero?.show_bottom_box2, true) !== false;
   const heroImageAlt = pickText(
