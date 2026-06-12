@@ -18,8 +18,8 @@ const seoPackages = [
     tabLabel: "Starter",
     name: "SEO & KI Starter",
     price: "790 €",
-    grossPrice: "948 € brutto",
-    interval: "/ Monat",
+    interval: "netto / Monat",
+    taxNote: "zzgl. 20 % USt.",
     description:
       "Für kleine Unternehmen, die ihre Website technisch und inhaltlich sichtbar besser aufstellen wollen.",
     icon: Search,
@@ -37,8 +37,8 @@ const seoPackages = [
     tabLabel: "Wachstum",
     name: "SEO & KI Wachstum",
     price: "1.500 €",
-    grossPrice: "1.800 € brutto",
-    interval: "/ Monat",
+    interval: "netto / Monat",
+    taxNote: "zzgl. 20 % USt.",
     description:
       "Für Betriebe, die dauerhaft bei Google, lokalen Suchanfragen und KI-Antwortsystemen sichtbarer werden wollen.",
     icon: Radar,
@@ -58,8 +58,8 @@ const seoPackages = [
     tabLabel: "Dominanz",
     name: "SEO & KI Dominanz",
     price: "2.500 €",
-    grossPrice: "3.000 € brutto",
-    interval: "/ Monat",
+    interval: "netto / Monat",
+    taxNote: "zzgl. 20 % USt.",
     description:
       "Für ambitionierte Unternehmen, die ganze Themencluster, Standorte und Anfragewege professionell ausbauen wollen.",
     icon: Bot,
@@ -85,6 +85,7 @@ const SeoPackagesSection = () => {
   const [activePackageName, setActivePackageName] = useState(
     seoPackages[1].name,
   );
+  const [expandedPackage, setExpandedPackage] = useState<string | null>(null);
   const { getSetting, settings } = useSiteSettings();
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(
     settings,
@@ -206,78 +207,66 @@ const SeoPackagesSection = () => {
               onTouchStart={handlePackageTouchStart}
               onTouchEnd={handlePackageTouchEnd}
             >
-            <div className="flex items-start justify-between gap-4">
-              <div
-                className={`inline-flex rounded-full border px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] ${
-                  "border-primary/15 bg-primary/5 text-primary"
-                }`}
-              >
-                {activePackage.badge}
+              <div className="flex items-start justify-between gap-4">
+                <div className="inline-flex rounded-full border border-primary/15 bg-primary/5 px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] text-primary">
+                  {activePackage.badge}
+                </div>
+                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+                  <ActiveIcon size={24} strokeWidth={1.8} />
+                </div>
               </div>
-              <div
+
+              <h3 className="mobile-package-active-title mt-8 text-2xl font-black tracking-tight">
+                {activePackage.name}
+              </h3>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                {activePackage.description}
+              </p>
+
+              <div className="my-7 rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5">
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  Monatlich ab
+                </div>
+                <div className="mt-2 flex flex-wrap items-end gap-x-2 gap-y-1">
+                  <span className="text-5xl font-black leading-none tracking-tight text-primary">
+                    {activePackage.price}
+                  </span>
+                  <span className="pb-1.5 text-sm font-semibold text-muted-foreground">
+                    {activePackage.interval}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-muted-foreground">
+                  {activePackage.taxNote}
+                </p>
+              </div>
+
+              <ul className="space-y-3.5">
+                {activePackage.features.map((feature) => (
+                  <li key={feature} className="flex gap-3 text-sm leading-relaxed">
+                    <Check
+                      className="mt-0.5 shrink-0 text-primary"
+                      size={17}
+                      strokeWidth={2.5}
+                    />
+                    <span className="text-foreground/82">
+                      {feature}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={scrollToContact}
                 className={
-                  "rounded-2xl bg-primary/10 p-3 text-primary"
+                  activePackage.featured
+                    ? "btn-primary mt-8 w-full !justify-center !py-4 !text-base"
+                    : "btn-outline mt-8 w-full !justify-center !py-4 !text-base"
                 }
               >
-                <ActiveIcon size={24} strokeWidth={1.8} />
-              </div>
-            </div>
-
-            <h3 className="mobile-package-active-title mt-8 text-2xl font-black tracking-tight">
-              {activePackage.name}
-            </h3>
-            <p
-              className="mt-4 text-base leading-relaxed text-muted-foreground"
-            >
-              {activePackage.description}
-            </p>
-
-            <div className="my-7 rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5">
-              <div className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Monatlich ab
-              </div>
-              <div className="mt-2 flex flex-wrap items-end gap-x-2 gap-y-1">
-                <span className="text-5xl font-black leading-none tracking-tight text-primary">
-                  {activePackage.price}
-                </span>
-                <span className="pb-1.5 text-sm font-semibold text-muted-foreground">
-                  netto {activePackage.interval}
-                </span>
-              </div>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground">
-                {activePackage.grossPrice} inkl. 20 % USt. {activePackage.interval}
-              </p>
-            </div>
-
-            <ul className="space-y-3.5">
-              {activePackage.features.map((feature) => (
-                <li key={feature} className="flex gap-3 text-sm leading-relaxed">
-                  <Check
-                    className="mt-0.5 shrink-0 text-primary"
-                    size={17}
-                    strokeWidth={2.5}
-                  />
-                  <span
-                    className="text-foreground/82"
-                  >
-                    {feature}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <button
-              type="button"
-              onClick={scrollToContact}
-              className={
-                activePackage.featured
-                  ? "btn-primary mt-8 w-full !justify-center !py-4 !text-base"
-                  : "btn-outline mt-8 w-full !justify-center !py-4 !text-base"
-              }
-            >
-              {activePackage.cta}
-              <ArrowRight size={18} />
-            </button>
+                {activePackage.cta}
+                <ArrowRight size={18} />
+              </button>
             </motion.article>
 
             <div className="mobile-package-dots" aria-label="SEO Paket wechseln">
@@ -296,109 +285,142 @@ const SeoPackagesSection = () => {
           </div>
         </div>
 
-        <div className="hidden lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-6">
-          {seoPackages.map((item, index) => {
-            const Icon = item.icon;
-            const cardClass = item.featured
-              ? "relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#0a1842] bg-[#050B1F] p-10 text-white shadow-none lg:-mt-6"
-              : "dp-blue-card-border dp-blue-card-surface relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#0a1842] bg-white p-10 shadow-none transition-all duration-500 hover:-translate-y-1";
-            const badgeClass = item.featured
-              ? "border-primary/35 bg-primary/15 text-primary"
-              : "border-primary/15 bg-primary/5 text-primary";
-            const mutedClass = item.featured
-              ? "text-slate-300"
-              : "text-muted-foreground";
-            const titleClass = item.featured ? "package-title-on-dark" : "text-foreground";
+        <div className="hidden lg:block mobile-package-edge-fade">
+          <div className="mobile-package-carousel lg:grid lg:grid-cols-3 lg:items-stretch">
+            {seoPackages.map((item, index) => {
+              const Icon = item.icon;
+              const cardClass = item.featured
+                ? "relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#050B1F] p-8 text-white shadow-none sm:p-10 lg:-mt-6"
+                : "dp-blue-card-border dp-blue-card-surface relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-white p-8 shadow-none transition-all duration-500 hover:-translate-y-1 sm:p-10";
+              const badgeClass = item.featured
+                ? "dp-popular-badge"
+                : "border-primary/15 bg-primary/5 text-primary";
+              const mutedClass = item.featured
+                ? "text-slate-300"
+                : "text-muted-foreground";
+              const titleClass = item.featured
+                ? "text-white"
+                : "text-foreground";
+              const isExpandable = item.features.length > 5;
+              const isExpanded = expandedPackage === item.name;
+              const featureListClass = isExpandable && !isExpanded
+                ? "mobile-package-feature-list-collapsed"
+                : "";
 
-            return (
-              <motion.article
-                key={item.name}
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                className={cardClass}
-              >
-                {item.featured ? (
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#0a1842]" />
-                ) : null}
-
-                <div className="relative z-10 flex flex-1 flex-col">
-                  <div className="mb-8 flex items-start justify-between gap-4">
-                    <div
-                      className={`inline-flex rounded-full border px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] ${badgeClass}`}
-                    >
-                      {item.badge}
+              return (
+                <motion.article
+                  key={item.name}
+                  initial={{ opacity: 0, y: 32 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                  className={`${cardClass} mobile-package-card ${item.featured ? "mobile-package-card-dark" : ""} ${isExpanded ? "mobile-package-card-expanded" : ""}`}
+                >
+                  <div className="relative z-10 flex flex-1 flex-col">
+                    <div className="mobile-package-badge-row mb-8 flex items-start justify-between gap-4">
+                      <div
+                        className={`inline-flex rounded-full border px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] ${badgeClass}`}
+                      >
+                        {item.badge}
+                      </div>
+                      <div
+                        className={
+                          item.featured
+                            ? "rounded-2xl bg-primary/15 p-3 text-primary"
+                            : "rounded-2xl bg-primary/10 p-3 text-primary"
+                        }
+                      >
+                        <Icon size={25} strokeWidth={1.7} />
+                      </div>
                     </div>
-                    <div
+
+                    <h3
+                      className={`dp-package-card-title text-2xl font-black tracking-tight ${titleClass}`}
+                    >
+                      {item.name}
+                    </h3>
+                    <p
+                      className={`mobile-package-description mt-4 min-h-[78px] text-base leading-relaxed ${mutedClass}`}
+                    >
+                      {item.description}
+                    </p>
+
+                    <div className="mobile-package-price-row my-8">
+                      <div className="flex items-end gap-2">
+                        <span
+                          className={`mobile-package-price text-5xl font-black tracking-tight sm:text-6xl ${item.featured ? "text-primary" : "text-primary"}`}
+                        >
+                          {item.price}
+                        </span>
+                        <span
+                          className={`pb-2 text-sm font-semibold ${mutedClass}`}
+                        >
+                          {item.interval}
+                        </span>
+                      </div>
+                      <p className={`mobile-package-tax-note mt-2 text-sm font-semibold ${mutedClass}`}>
+                        {item.taxNote}
+                      </p>
+                    </div>
+
+                    <ul className={`mobile-package-feature-list mb-4 space-y-4 ${featureListClass}`}>
+                      {item.features.map((feature) => (
+                        <li
+                          key={feature}
+                          className="flex gap-3 text-sm leading-relaxed"
+                        >
+                          <span
+                            className={
+                              item.featured
+                                ? "mt-0.5 text-primary"
+                                : "mt-0.5 text-primary"
+                            }
+                          >
+                            <Check size={17} strokeWidth={2.5} />
+                          </span>
+                          <span
+                            className={
+                              item.featured
+                                ? "text-slate-100"
+                                : "text-foreground/82"
+                            }
+                          >
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {isExpandable ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedPackage(isExpanded ? null : item.name)
+                        }
+                        className="mobile-package-more-button lg:hidden"
+                        aria-expanded={isExpanded}
+                      >
+                        {isExpanded ? "Weniger anzeigen" : "Mehr anzeigen"}
+                      </button>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={scrollToContact}
                       className={
                         item.featured
-                          ? "rounded-2xl bg-primary/15 p-3 text-primary"
-                          : "rounded-2xl bg-primary/10 p-3 text-primary"
+                          ? "btn-primary mt-auto w-full !justify-center !py-4 !text-base"
+                          : "btn-outline mt-auto w-full !justify-center !py-4 !text-base"
                       }
                     >
-                      <Icon size={25} strokeWidth={1.7} />
-                    </div>
+                      {item.cta}
+                      <ArrowRight size={18} />
+                    </button>
                   </div>
-
-                  <h3
-                    className={`text-2xl font-black tracking-tight ${titleClass}`}
-                    style={item.featured ? { color: "#ffffff" } : undefined}
-                  >
-                    {item.name}
-                  </h3>
-                  <p className={`mt-4 min-h-[78px] text-base leading-relaxed ${mutedClass}`}>
-                    {item.description}
-                  </p>
-
-                  <div className={`my-8 rounded-[1.5rem] border-2 border-[#0a1842] p-5 ${item.featured ? "bg-white/5" : "bg-white"}`}>
-                    <div className={`text-sm font-bold uppercase tracking-[0.18em] ${item.featured ? "text-slate-300" : "text-muted-foreground"}`}>
-                      Monatlich ab
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-end gap-x-2 gap-y-1">
-                      <span className="text-6xl font-black tracking-tight text-primary">
-                        {item.price}
-                      </span>
-                      <span className={`pb-2 text-sm font-semibold ${mutedClass}`}>
-                        netto {item.interval}
-                      </span>
-                    </div>
-                    <p className={`mt-2 text-sm font-semibold ${mutedClass}`}>
-                      {item.grossPrice} inkl. 20 % USt. {item.interval}
-                    </p>
-                  </div>
-
-                  <ul className="mb-8 space-y-4">
-                    {item.features.map((feature) => (
-                      <li key={feature} className="flex gap-3 text-sm leading-relaxed">
-                        <Check
-                          className="mt-0.5 shrink-0 text-primary"
-                          size={17}
-                          strokeWidth={2.5}
-                        />
-                        <span className={item.featured ? "text-slate-100" : "text-foreground/82"}>
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    type="button"
-                    onClick={scrollToContact}
-                    className={
-                      item.featured
-                        ? "btn-primary mt-auto w-full !justify-center !py-4 !text-base"
-                        : "btn-outline mt-auto w-full !justify-center !py-4 !text-base"
-                    }
-                  >
-                    {item.cta}
-                    <ArrowRight size={18} />
-                  </button>
-                </div>
-              </motion.article>
-            );
-          })}
+                </motion.article>
+              );
+            })}
+          </div>
         </div>
 
         <div className="dp-blue-card-border dp-blue-card-surface mt-8 grid gap-4 rounded-[2rem] border-2 border-[#0a1842] bg-white p-6 text-sm leading-relaxed text-muted-foreground shadow-none md:grid-cols-3 md:p-8">

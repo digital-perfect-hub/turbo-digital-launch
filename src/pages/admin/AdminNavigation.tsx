@@ -32,6 +32,8 @@ type StylingState = {
   nav_text_color_hex: string;
   nav_hover_color_hex: string;
   nav_cta_color_hex: string;
+  nav_cta_label: string;
+  nav_cta_link: string;
 };
 
 const DEFAULT_STYLING: StylingState = {
@@ -47,6 +49,8 @@ const DEFAULT_STYLING: StylingState = {
   nav_text_color_hex: "#0E1F53",
   nav_hover_color_hex: "#FF4B2C",
   nav_cta_color_hex: "#FF4B2C",
+  nav_cta_label: "Anfrage starten",
+  nav_cta_link: "#kontakt",
 };
 
 const normalizeHex = (value?: string | null, fallback = "#FF4B2C") => {
@@ -101,6 +105,18 @@ const getReadableText = (hex: string) => {
   return luminance > 0.62 ? "#0F172A" : "#FFFFFF";
 };
 
+const cleanCtaLabel = (value?: string | null) => {
+  const raw = (value || "").trim().replace(/\s+/g, " ");
+  if (!raw) return DEFAULT_STYLING.nav_cta_label;
+  if (/^Anfrage starten\d+$/i.test(raw)) return DEFAULT_STYLING.nav_cta_label;
+  return raw;
+};
+
+const cleanCtaLink = (value?: string | null) => {
+  const raw = (value || "").trim();
+  return raw || DEFAULT_STYLING.nav_cta_link;
+};
+
 const AdminNavigation = () => {
   const qc = useQueryClient();
   const { activeSiteId } = useSiteContext();
@@ -146,6 +162,8 @@ const AdminNavigation = () => {
       nav_text_color_hex: normalizeHex(themeSettings?.nav_text_color_hex || navTheme.text_color, DEFAULT_STYLING.nav_text_color_hex),
       nav_hover_color_hex: normalizeHex(themeSettings?.nav_hover_color_hex || navTheme.hover_text_color, DEFAULT_STYLING.nav_hover_color_hex),
       nav_cta_color_hex: normalizeHex(navTheme.cta_background_color, DEFAULT_STYLING.nav_cta_color_hex),
+      nav_cta_label: cleanCtaLabel(navTheme.cta_label),
+      nav_cta_link: cleanCtaLink(navTheme.cta_link),
     });
   }, [themeSettings]);
 
@@ -187,6 +205,8 @@ const AdminNavigation = () => {
       hover_text_color: hoverColor,
       cta_background_color: ctaColor,
       cta_text_color: getReadableText(ctaColor),
+      cta_label: cleanCtaLabel(styling.nav_cta_label),
+      cta_link: cleanCtaLink(styling.nav_cta_link),
       topbar_background_color: styling.nav_glass_effect ? rgbaFromHex(styling.nav_background_hex, Math.max(0.72, opacity - 0.08)) : backgroundColor,
       topbar_text_color: textColor,
       topbar_accent_color: ctaColor,
@@ -320,7 +340,7 @@ const AdminNavigation = () => {
             ))}
 
             <div className="ml-auto hidden rounded-full px-5 py-3 text-sm font-bold md:inline-flex" style={{ background: previewTheme.cta_background_color || undefined, color: previewTheme.cta_text_color || undefined }}>
-              Anfrage starten
+              {previewTheme.cta_label || DEFAULT_STYLING.nav_cta_label}
             </div>
           </div>
         </div>
@@ -347,6 +367,14 @@ const AdminNavigation = () => {
               <div className="space-y-2">
                 <Label>CTA-Farbe</Label>
                 <Input type="color" className="h-12 cursor-pointer" value={styling.nav_cta_color_hex} onChange={(event) => setStyling((prev) => ({ ...prev, nav_cta_color_hex: event.target.value.toUpperCase() }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>CTA Text</Label>
+                <Input value={styling.nav_cta_label} onChange={(event) => setStyling((prev) => ({ ...prev, nav_cta_label: event.target.value }))} placeholder="Anfrage starten" />
+              </div>
+              <div className="space-y-2">
+                <Label>CTA Link</Label>
+                <Input value={styling.nav_cta_link} onChange={(event) => setStyling((prev) => ({ ...prev, nav_cta_link: event.target.value }))} placeholder="#kontakt" />
               </div>
             </div>
 

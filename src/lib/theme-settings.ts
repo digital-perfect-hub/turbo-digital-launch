@@ -11,6 +11,8 @@ export type NavigationTheme = {
   hover_text_color: string | null;
   cta_background_color: string | null;
   cta_text_color: string | null;
+  cta_label: string | null;
+  cta_link: string | null;
   topbar_background_color: string | null;
   topbar_text_color: string | null;
   topbar_accent_color: string | null;
@@ -118,6 +120,8 @@ export const defaultNavigationTheme: NavigationTheme = {
   hover_text_color: "#FF4B2C",
   cta_background_color: "#FF4B2C",
   cta_text_color: "#FFFFFF",
+  cta_label: "Anfrage starten",
+  cta_link: "#kontakt",
   topbar_background_color: "rgba(4, 15, 47, 0.77)",
   topbar_text_color: "#FFFFFF",
   topbar_accent_color: "#FF4B2C",

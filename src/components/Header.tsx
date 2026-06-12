@@ -21,6 +21,21 @@ type HeaderProps = {
   solidBackgroundClassName?: string;
 };
 
+const cleanNavCtaLabel = (value: unknown) => {
+  const raw = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+  if (!raw) return "Anfrage starten";
+
+  // Harter Schutz gegen den aktuellen Datenbankfehler aus navigation_theme.cta_label.
+  if (/^Anfrage starten\d+$/i.test(raw)) return "Anfrage starten";
+
+  return raw;
+};
+
+const cleanNavCtaLink = (value: unknown) => {
+  const raw = typeof value === "string" ? value.trim() : "";
+  return raw || "#kontakt";
+};
+
 const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
@@ -154,12 +169,8 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const navigationThemeSettings = ((settings.navigation_theme && typeof settings.navigation_theme === "object" && !Array.isArray(settings.navigation_theme))
     ? (settings.navigation_theme as Record<string, unknown>)
     : {}) as Record<string, unknown>;
-  const navCtaLabel = typeof navigationThemeSettings.cta_label === "string" && navigationThemeSettings.cta_label.trim()
-    ? navigationThemeSettings.cta_label.trim()
-    : "Anfrage starten";
-  const navCtaLink = typeof navigationThemeSettings.cta_link === "string" && navigationThemeSettings.cta_link.trim()
-    ? navigationThemeSettings.cta_link.trim()
-    : "#kontakt";
+  const navCtaLabel = cleanNavCtaLabel(navigationThemeSettings.cta_label);
+  const navCtaLink = cleanNavCtaLink(navigationThemeSettings.cta_link);
   const headerClassName = forceSolid || isMobileOpen
     ? `py-4 header-solid-shell border-b ${solidBackgroundClassName || ""}`
     : isScrolled

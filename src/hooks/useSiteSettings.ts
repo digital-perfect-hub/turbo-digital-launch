@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { useLocation } from "react-router-dom";
 
 export type WhyChoosePoint = {
   title: string;
@@ -371,9 +370,9 @@ export const defaultContactSectionContent: ContactSectionContent = {
     company: "Unternehmen",
     email: "E-Mail *",
     phone: "Telefonnummer",
-    service: "Projektart",
-    budget: "Gewünschtes Paket *",
-    website: "Aktuelle Website (falls vorhanden)",
+    service: "Was brauchst du? *",
+    budget: "Paket auswählen *",
+    website: "Aktuelle Webseite (optional)",
     description: "Projekt kurz beschreiben *",
     privacy:
       "Ich bin mit den Datenschutzbestimmungen einverstanden und stimme der Verarbeitung meiner Angaben zur Kontaktaufnahme zu.",
@@ -385,8 +384,8 @@ export const defaultContactSectionContent: ContactSectionContent = {
     phone: "+43 664 1234567",
     website: "https://deine-webseite.at",
     description: "Beschreib kurz dein Unternehmen, deine Website und dein Ziel ...",
-    service_placeholder: "Projektart wählen...",
-    budget_placeholder: "Paket wählen...",
+    service_placeholder: "Bereich wählen...",
+    budget_placeholder: "Paket auswählen...",
   },
   service_options: [
     "SEO & KI Paket",
@@ -396,15 +395,15 @@ export const defaultContactSectionContent: ContactSectionContent = {
     "Kostenlose Erstprüfung / ich bin unsicher",
   ],
   budget_options: [
-    "SEO & KI Starter – 790 € netto/Monat (948 € brutto)",
-    "SEO & KI Wachstum – 1.500 € netto/Monat (1.800 € brutto)",
-    "SEO & KI Dominanz – 2.500 € netto/Monat (3.000 € brutto)",
-    "Webdesign Starter – 1.150 € netto (1.380 € brutto)",
-    "Webdesign Business – 1.750 € netto (2.100 € brutto)",
-    "Local SEO Premium Website – 2.500 € netto (3.000 € brutto)",
+    "SEO & KI Starter – 790 € / Monat",
+    "SEO & KI Wachstum – 1.500 € / Monat",
+    "SEO & KI Dominanz – 2.500 € / Monat",
+    "Webdesign Starter – 1.150 € netto",
+    "Webdesign Business – 1.750 € netto",
+    "Local SEO Premium Website – 2.500 € netto",
     "Ich bin unsicher – bitte empfehlen",
   ],
-  submit_text: "Kostenlose Erstprüfung anfragen",
+  submit_text: "Anfrage senden",
   submitting_text: "Wird gesendet...",
   success_title: "Vielen Dank!",
   success_text: "Wir haben deine Anfrage erhalten und melden uns in Kürze persönlich bei dir zurück.",
@@ -553,9 +552,7 @@ const parseJsonSetting = <T,>(value: unknown, fallback: T): T => {
 
 export const useSiteSettings = () => {
   const { activeSiteId } = useSiteContext();
-  const location = useLocation();
-  const isAdminRoute = /^\/admin(?:\/|$)/.test(location.pathname);
-  const siteId = isAdminRoute ? activeSiteId || DEFAULT_SITE_ID : activeSiteId;
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["site_settings", siteId],

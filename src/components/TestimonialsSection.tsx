@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Quote, Star } from "lucide-react";
+import { BadgeCheck, Quote, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { defaultTestimonials, useSiteSettings } from "@/hooks/useSiteSettings";
@@ -234,8 +234,8 @@ const TestimonialsSection = () => {
                       style={{ borderColor: "color-mix(in srgb, var(--surface-card-border) 88%, transparent)" }}
                     >
                       <Avatar
-                        className="h-16 w-16 border-2 shadow-[0_22px_42px_-28px_rgba(14,31,83,0.3)]"
-                        style={{ borderColor: "var(--surface-card-border)" }}
+                        className="testimonial-author-avatar h-16 w-16 border-[3px] shadow-[0_22px_42px_-28px_rgba(255,107,44,0.42)]"
+                        style={{ borderColor: "color-mix(in srgb, var(--theme-secondary-hex) 62%, #ffffff 38%)" }}
                       >
                         {item.image_url ? (
                           <AvatarImage
@@ -244,23 +244,23 @@ const TestimonialsSection = () => {
                           />
                         ) : null}
                         <AvatarFallback
+                          className="testimonial-author-fallback"
                           style={{
-                            background: "var(--theme-secondary-hex)",
-                            color: "hsl(var(--secondary-foreground))",
+                            background:
+                              "linear-gradient(135deg, color-mix(in srgb, var(--theme-secondary-hex) 18%, #ffffff 82%) 0%, color-mix(in srgb, var(--theme-secondary-hex) 8%, #ffffff 92%) 100%)",
+                            color: "var(--theme-secondary-hex)",
                           }}
                         >
-                          {item.name
-                            .split(" ")
-                            .map((part) => part[0])
-                            .join("")
-                            .slice(0, 2)
-                            .toUpperCase()}
+                          <BadgeCheck size={28} strokeWidth={2.5} />
                         </AvatarFallback>
                       </Avatar>
 
                       <div className="min-w-0">
-                        <div className="truncate text-lg font-bold text-[var(--surface-card-text)]">{item.name}</div>
-                        <div className="mt-1 text-sm leading-6 text-[var(--surface-card-muted)]">{item.role}</div>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="truncate text-lg font-bold text-[var(--surface-card-text)]">{item.name}</div>
+                          <BadgeCheck className="shrink-0 text-primary" size={18} strokeWidth={2.5} />
+                        </div>
+                        <div className="mt-1 text-sm font-semibold leading-6 text-[var(--surface-card-muted)]">{item.role}</div>
                       </div>
                     </div>
                   </div>

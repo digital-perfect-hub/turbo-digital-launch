@@ -179,10 +179,12 @@ const ContactSection = () => {
             initial={{ opacity: 0, x: -30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="dark-panel-shell relative self-start overflow-hidden rounded-[2.5rem] p-10 xl:sticky xl:top-32 md:p-14"
+            className="dark-panel-shell contact-info-panel relative self-start overflow-hidden rounded-[2.5rem] p-10 xl:sticky xl:top-32 md:p-14"
           >
+            <div className="pointer-events-none absolute left-0 top-12 h-44 w-1.5 rounded-r-full bg-primary shadow-[0_0_34px_rgba(255,107,44,0.42)]" />
+            <div className="pointer-events-none absolute right-8 top-8 h-28 w-28 rounded-full bg-primary/15 blur-3xl" />
             <div className="relative z-10">
-              <p className="dark-panel-kicker mb-6 inline-flex rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] backdrop-blur-md">
+              <p className="dark-panel-kicker mb-6 inline-flex rounded-full border !border-primary/40 !bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] !text-primary backdrop-blur-md">
                 {kicker}
               </p>
 
@@ -197,8 +199,8 @@ const ContactSection = () => {
                   const Icon = iconMap[signal.icon] || Mail;
 
                   return (
-                    <div key={`${signal.title}-${index}`} className="flex gap-5">
-                      <div className="dark-panel-icon inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
+                    <div key={`${signal.title}-${index}`} className="contact-trust-row flex gap-5">
+                      <div className="dark-panel-icon contact-trust-icon inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
                         <Icon size={22} />
                       </div>
 
@@ -217,9 +219,9 @@ const ContactSection = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="surface-card-shell rounded-[2.5rem] border border-border bg-card p-8 shadow-xl sm:p-12"
+            className="surface-card-shell contact-form-card relative overflow-hidden rounded-[2.5rem] border bg-card p-8 shadow-xl sm:p-12"
           >
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.name}</label>
@@ -310,7 +312,7 @@ const ContactSection = () => {
                 />
               </div>
 
-              <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-primary/30">
+              <label className="contact-privacy-box flex cursor-pointer items-start gap-4 rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-primary/40">
                 <input
                   type="checkbox"
                   required

@@ -282,6 +282,7 @@
     }
   }
 
+
   /* Legacy Klassen abgefangen und auf Orange geroutet */
   .gradient-gold,
   .gradient-primary {
@@ -1079,6 +1080,7 @@
 
   .homepage-style-scope .dp-blue-card-surface {
     background: #ffffff !important;
+    color: #1f2a44 !important;
   }
 
   .homepage-style-scope .text-primary,
@@ -2010,4 +2012,445 @@
     opacity: 1 !important;
     backdrop-filter: none !important;
   }
+}
+
+
+@layer components {
+  /* Paketkarten gegen Admin-Farbvererbung absichern */
+  .homepage-style-scope .mobile-package-card:not(.mobile-package-card-dark) .dp-package-card-title,
+  .homepage-style-scope .dp-pricing-desktop-card:not(.dp-pricing-desktop-card-dark) .dp-pricing-card-title,
+  .homepage-style-scope .dp-pricing-mobile-card .dp-pricing-card-title {
+    color: #0a1842 !important;
+    -webkit-text-fill-color: #0a1842 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  .homepage-style-scope .mobile-package-card-dark .dp-package-card-title,
+  .homepage-style-scope .dp-pricing-desktop-card-dark .dp-pricing-card-title {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  .homepage-style-scope .mobile-package-card:not(.mobile-package-card-dark) h3:not(.section-title),
+  .homepage-style-scope .dp-blue-card-surface h3:not(.section-title) {
+    color: #0a1842 !important;
+    -webkit-text-fill-color: #0a1842 !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .mobile-package-card-dark h3:not(.section-title) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .dp-popular-badge {
+    border-color: #ff6b2c !important;
+    background: #ff6b2c !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: 0 14px 34px -22px rgba(255, 107, 44, 0.82);
+  }
+
+  /* Weiße Cards in dunklen/Admin-gestylten Sektionen: Lesbarkeit hart schützen */
+  .homepage-style-scope .dp-blue-card-surface .text-muted-foreground,
+  .homepage-style-scope .dp-blue-card-surface .text-foreground,
+  .homepage-style-scope .dp-blue-card-surface [class*="text-foreground/"],
+  .homepage-style-scope .dp-blue-card-surface p,
+  .homepage-style-scope .dp-blue-card-surface li,
+  .homepage-style-scope .dp-blue-card-surface span:not(.text-primary):not(.mobile-package-price) {
+    color: #1f2a44 !important;
+    -webkit-text-fill-color: #1f2a44 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  .homepage-style-scope .dp-blue-card-surface strong,
+  .homepage-style-scope .dp-blue-card-surface h1:not(.section-title),
+  .homepage-style-scope .dp-blue-card-surface h2:not(.section-title),
+  .homepage-style-scope .dp-blue-card-surface h3:not(.section-title),
+  .homepage-style-scope .dp-blue-card-surface h4:not(.section-title) {
+    color: #0a1842 !important;
+    -webkit-text-fill-color: #0a1842 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  .homepage-style-scope .dp-blue-card-surface .text-primary,
+  .homepage-style-scope .dp-blue-card-surface .mobile-package-price,
+  .homepage-style-scope .dp-blue-card-surface svg.text-primary,
+  .homepage-style-scope .dp-blue-card-surface .theme-accent-icon {
+    color: #ff6b2c !important;
+    -webkit-text-fill-color: #ff6b2c !important;
+  }
+
+
+
+  /* Finaler Premium-Feinschliff: orange Paketkontur, Testimonials und Kontaktbereich */
+  .homepage-style-scope .mobile-package-card {
+    border-color: color-mix(in srgb, var(--theme-secondary-hex) 68%, #ffffff 32%) !important;
+    border-width: 1.5px !important;
+    box-shadow:
+      0 34px 88px -60px rgba(255, 107, 44, 0.42),
+      0 24px 70px -58px rgba(10, 24, 66, 0.32) !important;
+  }
+
+  .homepage-style-scope .mobile-package-card:hover {
+    border-color: var(--theme-secondary-hex) !important;
+    box-shadow:
+      0 42px 96px -58px rgba(255, 107, 44, 0.54),
+      0 28px 76px -58px rgba(10, 24, 66, 0.34) !important;
+  }
+
+  .homepage-style-scope .mobile-package-card .mobile-package-price-box {
+    border-color: color-mix(in srgb, var(--theme-secondary-hex) 42%, #0a1842 58%) !important;
+  }
+
+  .homepage-style-scope .testimonial-author-avatar {
+    background: #ffffff !important;
+    box-shadow:
+      0 20px 46px -26px rgba(255, 107, 44, 0.58),
+      0 16px 36px -30px rgba(10, 24, 66, 0.42) !important;
+  }
+
+  .homepage-style-scope .testimonial-author-fallback {
+    color: var(--theme-secondary-hex) !important;
+    -webkit-text-fill-color: var(--theme-secondary-hex) !important;
+  }
+
+  .homepage-style-scope .testimonial-author-fallback svg {
+    color: var(--theme-secondary-hex) !important;
+    stroke-width: 2.5;
+  }
+
+  .homepage-style-scope .contact-info-panel {
+    border: 1.5px solid color-mix(in srgb, var(--theme-secondary-hex) 46%, rgba(255,255,255,0.18) 54%) !important;
+    box-shadow:
+      0 38px 100px -56px rgba(255, 107, 44, 0.32),
+      0 36px 86px -50px rgba(4, 9, 26, 0.78) !important;
+  }
+
+  .homepage-style-scope .contact-info-panel .dark-panel-kicker {
+    border-color: color-mix(in srgb, var(--theme-secondary-hex) 50%, transparent) !important;
+    background: color-mix(in srgb, var(--theme-secondary-hex) 13%, transparent) !important;
+    color: var(--theme-secondary-hex) !important;
+    -webkit-text-fill-color: var(--theme-secondary-hex) !important;
+  }
+
+  .homepage-style-scope .contact-trust-icon {
+    background: color-mix(in srgb, var(--theme-secondary-hex) 18%, transparent) !important;
+    color: var(--theme-secondary-hex) !important;
+    border: 1px solid color-mix(in srgb, var(--theme-secondary-hex) 34%, transparent) !important;
+    box-shadow: 0 18px 42px -28px rgba(255, 107, 44, 0.58) !important;
+  }
+
+  .homepage-style-scope .contact-form-card {
+    border-color: color-mix(in srgb, var(--theme-secondary-hex) 42%, #0a1842 58%) !important;
+    box-shadow:
+      0 34px 90px -62px rgba(255, 107, 44, 0.36),
+      0 22px 70px -60px rgba(10, 24, 66, 0.36) !important;
+  }
+
+  .homepage-style-scope .contact-form-card input,
+  .homepage-style-scope .contact-form-card textarea,
+  .homepage-style-scope .contact-form-card select {
+    border-color: color-mix(in srgb, #0a1842 80%, var(--theme-secondary-hex) 20%) !important;
+  }
+
+  .homepage-style-scope .contact-form-card input:hover,
+  .homepage-style-scope .contact-form-card textarea:hover,
+  .homepage-style-scope .contact-form-card select:hover,
+  .homepage-style-scope .contact-form-card input:focus,
+  .homepage-style-scope .contact-form-card textarea:focus,
+  .homepage-style-scope .contact-form-card select:focus {
+    border-color: var(--theme-secondary-hex) !important;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-secondary-hex) 14%, transparent) !important;
+  }
+
+  .homepage-style-scope .contact-form-card input[type="checkbox"] {
+    accent-color: var(--theme-secondary-hex);
+  }
+
+  .homepage-style-scope .contact-privacy-box {
+    border-color: color-mix(in srgb, #0a1842 74%, var(--theme-secondary-hex) 26%) !important;
+  }
+
+  .homepage-style-scope .contact-privacy-box:hover,
+  .homepage-style-scope .contact-privacy-box:focus-within {
+    border-color: var(--theme-secondary-hex) !important;
+    box-shadow: 0 18px 46px -36px rgba(255, 107, 44, 0.44) !important;
+  }
+
+  section[id] {
+    scroll-margin-top: 110px;
+  }
+
+  @media (max-width: 767px) {
+    section[id] {
+      scroll-margin-top: 92px;
+    }
+  }
+
+
+  /* Markus final hotfix: orange Konturen rundherum + Kontakt-Lesbarkeit */
+  .homepage-style-scope .mobile-package-card {
+    border: 1.5px solid #ff6b2c !important;
+    box-shadow:
+      0 34px 86px -64px rgba(255, 107, 44, 0.46),
+      0 24px 68px -58px rgba(10, 24, 66, 0.28) !important;
+  }
+
+  .homepage-style-scope .mobile-package-card:hover {
+    border-color: #ff6b2c !important;
+    box-shadow:
+      0 40px 92px -62px rgba(255, 107, 44, 0.56),
+      0 26px 72px -58px rgba(10, 24, 66, 0.32) !important;
+  }
+
+  .homepage-style-scope .mobile-package-card::before,
+  .homepage-style-scope .mobile-package-card::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .homepage-style-scope .mobile-package-card .mobile-package-price-box {
+    border-color: #0a1842 !important;
+  }
+
+  .homepage-style-scope .mobile-package-card.mobile-package-card-dark .mobile-package-price-box {
+    border-color: rgba(255, 107, 44, 0.45) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035) !important;
+  }
+
+  .homepage-style-scope .mobile-package-card.mobile-package-card-dark .mobile-package-price-box div,
+  .homepage-style-scope .mobile-package-card.mobile-package-card-dark .mobile-package-price-box p,
+  .homepage-style-scope .mobile-package-card.mobile-package-card-dark .mobile-package-price-box span:not(.mobile-package-price) {
+    color: #dbe6f5 !important;
+    -webkit-text-fill-color: #dbe6f5 !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .mobile-package-card.mobile-package-card-dark .mobile-package-price-box .mobile-package-price {
+    color: #ff6b2c !important;
+    -webkit-text-fill-color: #ff6b2c !important;
+  }
+
+  .homepage-style-scope .testimonial-author-avatar {
+    border: 1.5px solid rgba(255, 107, 44, 0.34) !important;
+    background: #ffffff !important;
+    box-shadow:
+      0 20px 46px -26px rgba(255, 107, 44, 0.58),
+      0 16px 36px -30px rgba(10, 24, 66, 0.42) !important;
+  }
+
+  .homepage-style-scope .testimonial-author-fallback,
+  .homepage-style-scope .testimonial-author-fallback svg {
+    color: #ff6b2c !important;
+    -webkit-text-fill-color: #ff6b2c !important;
+    stroke: #ff6b2c !important;
+  }
+
+  .homepage-style-scope .contact-info-panel {
+    border: 1.5px solid rgba(255, 107, 44, 0.36) !important;
+    box-shadow:
+      0 38px 100px -58px rgba(255, 107, 44, 0.28),
+      0 36px 86px -50px rgba(4, 9, 26, 0.78) !important;
+  }
+
+  .homepage-style-scope .contact-info-panel .dark-panel-title,
+  .homepage-style-scope .contact-info-panel .dark-panel-title h1,
+  .homepage-style-scope .contact-info-panel .dark-panel-title h2,
+  .homepage-style-scope .contact-info-panel h2,
+  .homepage-style-scope .contact-info-panel h3,
+  .homepage-style-scope .contact-info-panel h4 {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .contact-info-panel .dark-panel-body,
+  .homepage-style-scope .contact-info-panel p {
+    color: #dbe6f5 !important;
+    -webkit-text-fill-color: #dbe6f5 !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .contact-info-panel .dark-panel-kicker {
+    border-color: rgba(255, 107, 44, 0.42) !important;
+    background: rgba(255, 107, 44, 0.12) !important;
+    color: #ff6b2c !important;
+    -webkit-text-fill-color: #ff6b2c !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .contact-trust-icon,
+  .homepage-style-scope .contact-info-panel .dark-panel-icon {
+    background: rgba(255, 107, 44, 0.12) !important;
+    color: #ff6b2c !important;
+    border: 1px solid rgba(255, 107, 44, 0.28) !important;
+    box-shadow: 0 18px 42px -28px rgba(255, 107, 44, 0.58) !important;
+  }
+
+  .homepage-style-scope .contact-trust-icon svg,
+  .homepage-style-scope .contact-info-panel .dark-panel-icon svg {
+    color: #ff6b2c !important;
+    stroke: #ff6b2c !important;
+  }
+
+  .homepage-style-scope .contact-form-card {
+    border-color: #0a1842 !important;
+    box-shadow: 0 28px 78px -58px rgba(10, 24, 66, 0.38) !important;
+  }
+
+  .homepage-style-scope .contact-form-card label,
+  .homepage-style-scope .contact-form-card .text-foreground {
+    color: #0a1842 !important;
+    -webkit-text-fill-color: #0a1842 !important;
+  }
+
+  .homepage-style-scope .contact-form-card p,
+  .homepage-style-scope .contact-form-card .text-muted-foreground,
+  .homepage-style-scope .contact-form-card span {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .contact-form-card input,
+  .homepage-style-scope .contact-form-card textarea,
+  .homepage-style-scope .contact-form-card select {
+    color: #0a1842 !important;
+    -webkit-text-fill-color: #0a1842 !important;
+    border-color: #0a1842 !important;
+    background: #f6f7fb !important;
+  }
+
+  .homepage-style-scope .contact-form-card input::placeholder,
+  .homepage-style-scope .contact-form-card textarea::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
+
+  .homepage-style-scope .contact-form-card input:hover,
+  .homepage-style-scope .contact-form-card textarea:hover,
+  .homepage-style-scope .contact-form-card select:hover,
+  .homepage-style-scope .contact-form-card input:focus,
+  .homepage-style-scope .contact-form-card textarea:focus,
+  .homepage-style-scope .contact-form-card select:focus {
+    border-color: #ff6b2c !important;
+    box-shadow: 0 0 0 4px rgba(255, 107, 44, 0.14) !important;
+  }
+
+  .homepage-style-scope .contact-form-card input[type="checkbox"] {
+    accent-color: #ff6b2c !important;
+    -webkit-text-fill-color: initial !important;
+  }
+
+  .homepage-style-scope .contact-privacy-box {
+    border-color: #0a1842 !important;
+  }
+
+  .homepage-style-scope .contact-privacy-box:hover,
+  .homepage-style-scope .contact-privacy-box:focus-within {
+    border-color: #ff6b2c !important;
+    box-shadow: 0 18px 46px -36px rgba(255, 107, 44, 0.44) !important;
+  }
+
+
+  /* Finalfix: Desktop-Paketkontur nicht abschneiden.
+     Die hervorgehobene SEO-Karte nutzt lg:-mt-6; der Edge-Fade darf oben nicht clippen. */
+  @media (min-width: 1024px) {
+    .homepage-style-scope .mobile-package-edge-fade {
+      overflow: visible !important;
+      padding-top: 1.75rem;
+      margin-top: -1.75rem;
+    }
+
+    .homepage-style-scope .mobile-package-carousel {
+      overflow: visible !important;
+      contain: none !important;
+    }
+
+    .homepage-style-scope .mobile-package-card {
+      position: relative;
+      z-index: 1;
+      background-clip: padding-box;
+    }
+
+    .homepage-style-scope .mobile-package-card.mobile-package-card-dark {
+      z-index: 2;
+    }
+  }
+
+
+  /* Finaler Schutz: Mobil muss der Paketbereich immer als 1-Karten-Slider laufen, nie als 3-Spalten-Grid. */
+  @media (max-width: 1023.98px) {
+    .homepage-style-scope .mobile-package-edge-fade {
+      overflow: hidden !important;
+    }
+
+    .homepage-style-scope .mobile-package-carousel {
+      display: flex !important;
+      grid-template-columns: none !important;
+      align-items: stretch !important;
+      gap: 0.875rem !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding: 0 1.8rem 1.1rem 0 !important;
+      scroll-snap-type: x mandatory !important;
+      scrollbar-width: none !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y pan-x !important;
+      contain: paint !important;
+    }
+
+    .homepage-style-scope .mobile-package-card {
+      flex: 0 0 min(23rem, calc(100dvw - 4.75rem)) !important;
+      width: min(23rem, calc(100dvw - 4.75rem)) !important;
+      min-width: min(23rem, calc(100dvw - 4.75rem)) !important;
+      max-width: min(23rem, calc(100dvw - 4.75rem)) !important;
+      min-height: 34.75rem !important;
+      height: 34.75rem !important;
+      scroll-snap-align: start !important;
+      scroll-snap-stop: normal !important;
+    }
+
+    .homepage-style-scope .mobile-package-card-expanded {
+      height: auto !important;
+      min-height: 34.75rem !important;
+    }
+  }
+
+  @media (max-width: 374px) {
+    .homepage-style-scope .mobile-package-card {
+      flex-basis: calc(100dvw - 4.35rem) !important;
+      width: calc(100dvw - 4.35rem) !important;
+      min-width: calc(100dvw - 4.35rem) !important;
+      max-width: calc(100dvw - 4.35rem) !important;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 1023.98px) {
+    .homepage-style-scope .mobile-package-carousel {
+      gap: 1.25rem !important;
+      padding-right: 6rem !important;
+    }
+
+    .homepage-style-scope .mobile-package-card {
+      flex-basis: min(72vw, 27rem) !important;
+      width: min(72vw, 27rem) !important;
+      min-width: min(72vw, 27rem) !important;
+      max-width: min(72vw, 27rem) !important;
+      min-height: 40rem !important;
+      height: 40rem !important;
+    }
+  }
+
 }
