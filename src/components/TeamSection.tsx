@@ -68,7 +68,7 @@ const toUiMember = (row: TeamRow): UiTeamMember | null => {
     id: row.id,
     name,
     role: row.role?.trim() || "Team Member",
-    bio: row.bio?.trim() || row.description?.trim() || "Profiltext kann zentral im Admin gepflegt werden.",
+    bio: row.bio?.trim() || row.description?.trim() || "Teil des Digital-Perfect Teams.",
     image_url: row.image_url || row.avatar_url || null,
     link: row.linkedin_url || row.profile_url || null,
   };

@@ -72,9 +72,9 @@ const fallbackStats: HeroStatItem[] = [
 ];
 
 const fallbackProofItems: Required<HeroProofItem>[] = [
-  { icon: "BadgeCheck", text: "Strukturierte Landingpages statt Flächen-Chaos", href: "" },
-  { icon: "BarChart3", text: "Conversion, Sichtbarkeit und Performance im selben System", href: "" },
-  { icon: "ShieldCheck", text: "Robuste Fallbacks, damit leere Admin-Daten nicht alles zerstören", href: "" },
+  { icon: "BadgeCheck", text: "Direkte Zusammenarbeit mit Markus – keine Agentur-Umwege", href: "" },
+  { icon: "BarChart3", text: "Klare Preise, ehrliche Einschätzung, keine Fake-Garantien", href: "" },
+  { icon: "ShieldCheck", text: "SEO, KI-Sichtbarkeit und Webdesign aus einem System", href: "" },
 ];
 
 const proofIconMap: Record<string, LucideIcon> = {

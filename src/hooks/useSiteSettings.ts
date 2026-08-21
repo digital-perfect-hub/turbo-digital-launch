@@ -214,7 +214,7 @@ export const defaultTrustPoints: TrustPoint[] = [
   {
     icon: "shield",
     title: "Robuste Struktur statt Zufallsdesign",
-    desc: "Fallbacks, klare Sektionen und saubere Komponenten machen die Website belastbar und adminfähig.",
+    desc: "Klare Seitenlogik und saubere Inhaltsblöcke machen die Website langfristig belastbar und leicht pflegbar.",
   },
 ];
 
@@ -314,9 +314,9 @@ export const defaultTestimonials: TestimonialItem[] = [
 export const defaultHeaderAuxLinks: HeaderAuxLink[] = [{ label: "Forum", url: "/forum" }];
 
 export const defaultHeroProofItems: HeroProofItem[] = [
-  { icon: "badge", text: "Strukturierte Landingpages statt Flächen-Chaos" },
-  { icon: "chart", text: "Conversion, Sichtbarkeit und Performance im selben System" },
-  { icon: "shield", text: "Robuste Fallbacks, damit leere Admin-Daten nicht alles zerstören" },
+  { icon: "badge", text: "Direkte Zusammenarbeit mit Markus – keine Agentur-Umwege" },
+  { icon: "chart", text: "Klare Preise, ehrliche Einschätzung, keine Fake-Garantien" },
+  { icon: "shield", text: "SEO, KI-Sichtbarkeit und Webdesign aus einem System" },
 ];
 
 export const defaultIntroQuickWins: IntroQuickWin[] = [

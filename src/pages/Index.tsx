@@ -1,4 +1,8 @@
-import type { ComponentType } from "react";
+import { useMemo, type ComponentType } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_SITE_ID } from "@/lib/site";
+import { buildAbsolutePublicUrl } from "@/lib/url";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import IntroSection from "@/components/IntroSection";
@@ -9,6 +13,7 @@ import ServicesSection from "@/components/ServicesSection";
 import SeoPackagesSection from "@/components/SeoPackagesSection";
 import WebdesignPackagesSection from "@/components/WebdesignPackagesSection";
 import PortfolioSection from "@/components/PortfolioSection";
+import AboutFounderSection from "@/components/AboutFounderSection";
 import TeamSection from "@/components/TeamSection";
 import ProcessSection from "@/components/ProcessSection";
 import ShopSection from "@/components/ShopSection";
@@ -43,6 +48,7 @@ const sectionRegistry: Record<HomepageSectionId, ComponentType> = {
   forum: ForumTeaser,
   shop: ShopSection,
   portfolio: PortfolioSection,
+  founder: AboutFounderSection,
   team: TeamSection,
   process: ProcessSection,
   testimonials: TestimonialsSection,
@@ -51,10 +57,62 @@ const sectionRegistry: Record<HomepageSectionId, ComponentType> = {
 };
 
 const Index = () => {
-  const { isLoading } = useSiteContext();
+  const { activeSiteId, isLoading } = useSiteContext();
   const { settings: themeSettings, logoUrl, isLoading: isThemeLoading } = useGlobalTheme();
   const { settings, isLoading: isSiteSettingsLoading } = useSiteSettings();
   const { hero, isLoading: isHeroLoading } = useHeroContent();
+
+  const siteId = activeSiteId || DEFAULT_SITE_ID;
+  const { data: faqItemsForSchema = [] } = useQuery({
+    queryKey: ["faq_items", siteId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("faq_items")
+        .select("*")
+        .eq("site_id", siteId)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const structuredData = useMemo(() => {
+    const canonicalUrl = buildAbsolutePublicUrl("/");
+    const sameAs = [themeSettings.social_linkedin_url, themeSettings.social_instagram_url].filter(
+      (url): url is string => Boolean(url && url.trim()),
+    );
+
+    const organization: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      name: themeSettings.company_name || "Digital-Perfect",
+      url: canonicalUrl,
+      description: themeSettings.meta_description || undefined,
+      ...(logoUrl ? { logo: logoUrl, image: logoUrl } : {}),
+      ...(sameAs.length > 0 ? { sameAs } : {}),
+    };
+
+    const faqEntries = (faqItemsForSchema || []).filter(
+      (faq): faq is { question: string; answer: string } => Boolean(faq?.question?.trim() && faq?.answer?.trim()),
+    );
+
+    if (faqEntries.length === 0) return organization;
+
+    const faqPage = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqEntries.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    };
+
+    return [organization, faqPage];
+  }, [themeSettings.company_name, themeSettings.meta_description, themeSettings.social_linkedin_url, themeSettings.social_instagram_url, logoUrl, faqItemsForSchema]);
 
   const sectionOrder = normalizeHomepageSectionOrder(settings.home_section_order || DEFAULT_HOMEPAGE_SECTION_ORDER);
   const sectionVisibility = parseHomepageSectionVisibility(settings.home_section_visibility);
@@ -83,7 +141,7 @@ const Index = () => {
 
   return (
     <>
-      <SEO />
+      <SEO structuredData={structuredData} />
       <div className="min-h-screen bg-background">
         <Header />
         <main>

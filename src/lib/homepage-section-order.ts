@@ -11,6 +11,7 @@ export const DEFAULT_HOMEPAGE_SECTION_ORDER: HomepageSectionId[] = [
   "services",
   "portfolio",
   "testimonials",
+  "founder",
   "contact",
   "faq",
   "team",

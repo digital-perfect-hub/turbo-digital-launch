@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ListChecks } from "lucide-react";
 import { defaultProcessSteps, defaultSiteText, type ProcessStep, useSiteSettings } from "@/hooks/useSiteSettings";
 import { resolveHomepageSectionPatternClassFromSettings, resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
 
@@ -76,8 +76,8 @@ const ProcessSection = () => {
                 "0 18px 42px -26px color-mix(in srgb, var(--button-primary-bg) 72%, transparent)",
             }}
           >
-            <span aria-hidden="true" className="text-sm leading-none">
-              🚧
+            <span aria-hidden="true" className="leading-none">
+              <ListChecks size={14} />
             </span>
             <span>{kicker}</span>
           </div>

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, type ReactNode } from "react";
+import { lazy, Suspense, useLayoutEffect, useMemo, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,46 +13,52 @@ import { useGlobalTheme } from "./hooks/useGlobalTheme";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import SetPassword from "./pages/SetPassword";
 import NotFound from "./pages/NotFound";
-import Impressum from "./pages/Impressum";
-import Datenschutz from "./pages/Datenschutz";
-import AGB from "./pages/AGB";
-import ProductDetail from "./pages/ProductDetail";
-import Forum from "./pages/Forum";
-import ForumThread from "./pages/ForumThread";
-import DynamicPage from "./pages/DynamicPage";
 import MaintenanceScreen from "./pages/MaintenanceScreen";
-
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminFooter from "./pages/admin/AdminFooter";
-import AdminBranding from "./pages/admin/AdminBranding";
-import AdminNavigation from "./pages/admin/AdminNavigation";
-import AdminHomepage from "./pages/admin/AdminHomepage";
-import AdminHero from "./pages/admin/AdminHero";
-import AdminServices from "./pages/admin/AdminServices";
-import AdminPortfolio from "./pages/admin/AdminPortfolio";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminFAQ from "./pages/admin/AdminFAQ";
-import AdminLeads from "./pages/admin/AdminLeads";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminDomains from "./pages/admin/AdminDomains";
-import AdminForum from "./pages/admin/AdminForum";
-import AdminContent from "./pages/admin/AdminContent";
-import AdminTeam from "./pages/admin/AdminTeam";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminTestimonials from "./pages/admin/AdminTestimonials";
-import AdminLegal from "./pages/admin/AdminLegal";
-import AdminSites from "./pages/admin/AdminSites";
-import AdminPages from "./pages/admin/AdminPages";
-import AdminBilling from "./pages/admin/AdminBilling";
-import AdminTickets from "./pages/admin/AdminTickets";
-import AdminOnboarding from "./pages/admin/AdminOnboarding";
-import AdminMedia from "./pages/admin/AdminMedia";
-import AdminBanners from "./pages/admin/AdminBanners";
 import { LoadingScreen } from "./components/ui/LoadingScreen";
+
+// Nur die Startseite (Index), NotFound und MaintenanceScreen sind eager geladen,
+// da MaintenanceScreen/NotFound außerhalb des Suspense-Baums direkt in ThemeBootstrap
+// gerendert werden. Alle übrigen Routen (inkl. des gesamten Admin-Panels) werden
+// per Code-Splitting nachgeladen, damit Erstbesucher der Startseite nicht das
+// komplette Admin-Bundle (Rich-Text-Editor, Charts, Drag&Drop, Stripe) mitladen.
+const Login = lazy(() => import("./pages/Login"));
+const SetPassword = lazy(() => import("./pages/SetPassword"));
+const Impressum = lazy(() => import("./pages/Impressum"));
+const Datenschutz = lazy(() => import("./pages/Datenschutz"));
+const AGB = lazy(() => import("./pages/AGB"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Forum = lazy(() => import("./pages/Forum"));
+const ForumThread = lazy(() => import("./pages/ForumThread"));
+const DynamicPage = lazy(() => import("./pages/DynamicPage"));
+
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
+const AdminBranding = lazy(() => import("./pages/admin/AdminBranding"));
+const AdminNavigation = lazy(() => import("./pages/admin/AdminNavigation"));
+const AdminHomepage = lazy(() => import("./pages/admin/AdminHomepage"));
+const AdminHero = lazy(() => import("./pages/admin/AdminHero"));
+const AdminServices = lazy(() => import("./pages/admin/AdminServices"));
+const AdminPortfolio = lazy(() => import("./pages/admin/AdminPortfolio"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminFAQ = lazy(() => import("./pages/admin/AdminFAQ"));
+const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminDomains = lazy(() => import("./pages/admin/AdminDomains"));
+const AdminForum = lazy(() => import("./pages/admin/AdminForum"));
+const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
+const AdminTeam = lazy(() => import("./pages/admin/AdminTeam"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
+const AdminLegal = lazy(() => import("./pages/admin/AdminLegal"));
+const AdminSites = lazy(() => import("./pages/admin/AdminSites"));
+const AdminPages = lazy(() => import("./pages/admin/AdminPages"));
+const AdminBilling = lazy(() => import("./pages/admin/AdminBilling"));
+const AdminTickets = lazy(() => import("./pages/admin/AdminTickets"));
+const AdminOnboarding = lazy(() => import("./pages/admin/AdminOnboarding"));
+const AdminMedia = lazy(() => import("./pages/admin/AdminMedia"));
+const AdminBanners = lazy(() => import("./pages/admin/AdminBanners"));
 
 const queryClient = new QueryClient();
 
@@ -177,6 +183,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ThemeBootstrap>
+              <Suspense fallback={<LoadingScreen heading="Bitte kurz warten" subtext="Inhalt wird geladen." />}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
@@ -225,6 +232,7 @@ const App = () => (
                 <Route path="/:slug" element={<DynamicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
             </ThemeBootstrap>
           </BrowserRouter>
         </TooltipProvider>

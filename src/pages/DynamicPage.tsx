@@ -121,12 +121,21 @@ const DynamicPage = () => {
   }
 
   if (landingPage) {
+    const landingStructuredData = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: landingPage.meta_title || undefined,
+      description: landingPage.meta_description || undefined,
+      url: canonical,
+    };
+
     return (
       <>
         <SEO
           title={landingPage.meta_title || undefined}
           description={landingPage.meta_description || undefined}
           canonical={canonical}
+          structuredData={landingStructuredData}
         />
         <div className="min-h-screen bg-background">
           <Header />
@@ -141,12 +150,21 @@ const DynamicPage = () => {
   }
 
   if (legacyPage) {
+    const legacyStructuredData = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: legacyPage.seo_title || undefined,
+      description: legacyPage.seo_description || undefined,
+      url: canonical,
+    };
+
     return (
       <>
         <SEO
           title={legacyPage.seo_title || undefined}
           description={legacyPage.seo_description || undefined}
           canonical={canonical}
+          structuredData={legacyStructuredData}
         />
         <div className="min-h-screen bg-background">
           <Header />
