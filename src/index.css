@@ -585,8 +585,8 @@
       );
     background: var(--surface-card);
     color: var(--surface-card-text);
-    box-shadow: 0 30px 80px -52px rgba(14, 31, 83, 0.28);
-    backdrop-filter: blur(18px);
+    box-shadow: none;
+    backdrop-filter: none;
     transition: all 0.3s ease;
   }
 
@@ -599,7 +599,7 @@
   }
 
   .premium-dark-card {
-    @apply relative overflow-hidden text-white shadow-[0_38px_90px_-44px_rgba(14,31,83,0.72)];
+    @apply relative overflow-hidden text-white;
     border-radius: calc(var(--theme-radius) * 2.6);
     border: 1px solid rgba(14, 31, 83, 0.82);
     background: var(--hero-panel-bg, var(--theme-secondary-hex));
@@ -776,8 +776,8 @@
   }
 
   .homepage-style-scope {
-    background: var(--homepage-section-bg, inherit);
-    color: var(--homepage-section-text, inherit);
+    background: var(--homepage-section-bg, var(--surface-section, inherit));
+    color: var(--homepage-section-text, var(--surface-section-foreground, inherit));
   }
 
   .homepage-pattern-enabled {
@@ -1079,8 +1079,8 @@
   }
 
   .homepage-style-scope .dp-blue-card-surface {
-    background: #ffffff !important;
-    color: #1f2a44 !important;
+    background: #FAF6EE !important;
+    color: #0a1842 !important;
   }
 
   .homepage-style-scope .text-primary,
@@ -1305,8 +1305,8 @@
     );
     background: var(--hero-stat-bg);
     color: var(--hero-stat-value);
-    box-shadow: 0 32px 80px -48px rgba(4, 9, 26, 0.95);
-    backdrop-filter: blur(24px);
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .hero-bottom-fade {
@@ -2028,8 +2028,8 @@
 
   .homepage-style-scope .mobile-package-card-dark .dp-package-card-title,
   .homepage-style-scope .dp-pricing-desktop-card-dark .dp-pricing-card-title {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    color: #FAF6EE !important;
+    -webkit-text-fill-color: #FAF6EE !important;
     opacity: 1 !important;
     text-shadow: none !important;
   }
@@ -2042,17 +2042,17 @@
   }
 
   .homepage-style-scope .mobile-package-card-dark h3:not(.section-title) {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    color: #FAF6EE !important;
+    -webkit-text-fill-color: #FAF6EE !important;
     opacity: 1 !important;
   }
 
   .homepage-style-scope .dp-popular-badge {
     border-color: #ff6b2c !important;
     background: #ff6b2c !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    box-shadow: 0 14px 34px -22px rgba(255, 107, 44, 0.82);
+    color: #FAF6EE !important;
+    -webkit-text-fill-color: #FAF6EE !important;
+    box-shadow: none;
   }
 
   /* Weiße Cards in dunklen/Admin-gestylten Sektionen: Lesbarkeit hart schützen */
@@ -2062,8 +2062,8 @@
   .homepage-style-scope .dp-blue-card-surface p,
   .homepage-style-scope .dp-blue-card-surface li,
   .homepage-style-scope .dp-blue-card-surface span:not(.text-primary):not(.mobile-package-price) {
-    color: #1f2a44 !important;
-    -webkit-text-fill-color: #1f2a44 !important;
+    color: #0a1842 !important;
+    -webkit-text-fill-color: #0a1842 !important;
     opacity: 1 !important;
     text-shadow: none !important;
   }

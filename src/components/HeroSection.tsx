@@ -1,11 +1,9 @@
 import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
-import { ArrowRight, BadgeCheck, BarChart3, Globe, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Globe, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { defaultSiteText, useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildRenderImageUrl } from "@/lib/image";
-import { getLucideIcon } from "@/lib/lucide-icon-registry";
 import { useHeroContent, type HeroRecord } from "@/hooks/useHeroContent";
 import heroFallback from "@/assets/hero-bg.jpg";
 
@@ -71,21 +69,6 @@ const fallbackStats: HeroStatItem[] = [
   { label: "Ziel", value: "Mehr Anfragen", helper: "Conversion" },
 ];
 
-const fallbackProofItems: Required<HeroProofItem>[] = [
-  { icon: "BadgeCheck", text: "Direkte Zusammenarbeit mit Markus – keine Agentur-Umwege", href: "" },
-  { icon: "BarChart3", text: "Klare Preise, ehrliche Einschätzung, keine Fake-Garantien", href: "" },
-  { icon: "ShieldCheck", text: "SEO, KI-Sichtbarkeit und Webdesign aus einem System", href: "" },
-];
-
-const proofIconMap: Record<string, LucideIcon> = {
-  badgecheck: BadgeCheck,
-  barchart3: BarChart3,
-  chart: BarChart3,
-  globe: Globe,
-  shieldcheck: ShieldCheck,
-  shield: ShieldCheck,
-};
-
 const resolveImage = (path?: string | null, fallback: string = heroFallback) => {
   const trimmed = String(path || "").trim();
   if (!trimmed) return fallback;
@@ -107,13 +90,6 @@ const pickBoolean = (...values: Array<boolean | null | undefined>) => {
   return undefined;
 };
 
-const pickNumber = (...values: Array<number | null | undefined>) => {
-  for (const value of values) {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-  }
-  return undefined;
-};
-
 const normalizeStats = (items?: HeroStatItem[] | null) =>
   Array.isArray(items)
     ? items
@@ -123,17 +99,6 @@ const normalizeStats = (items?: HeroStatItem[] | null) =>
           helper: pickText(item?.helper),
         }))
         .filter((item) => item.label || item.value)
-    : [];
-
-const normalizeProofItems = (items?: HeroProofItem[] | null) =>
-  Array.isArray(items)
-    ? items
-        .map((item) => ({
-          icon: pickText(item?.icon, "BadgeCheck"),
-          text: pickText(item?.text),
-          href: pickText(item?.href),
-        }))
-        .filter((item) => item.text)
     : [];
 
 type HeroSectionProps = {
@@ -269,22 +234,10 @@ const HeroSection = ({ hero: prefetchedHero, overrideData }: HeroSectionProps) =
 
   const effectiveStats = overrideStats.length > 0 ? overrideStats : heroStats.length > 0 ? heroStats : fallbackStats;
 
-  const overrideProofItems = normalizeProofItems(overrideData?.proof_items);
-  const effectiveProofItems = overrideProofItems.length > 0 ? overrideProofItems : fallbackProofItems;
-
   const heroImageSrc = resolveImage(
     pickText(overrideData?.image_path, overrideData?.image_url, overrideData?.image, hero?.image_path, hero?.image_url, hero?.image),
     heroFallback,
   );
-  const bgImageSrc = resolveImage(
-    pickText(overrideData?.background_image_path, hero?.background_image_path),
-    heroFallback,
-  );
-  const bgMobileImageSrc = resolveImage(
-    pickText(overrideData?.background_mobile_image_path, hero?.background_mobile_image_path, bgImageSrc),
-    bgImageSrc,
-  );
-  const overlayAlpha = (pickNumber(overrideData?.overlay_opacity, hero?.overlay_opacity) ?? 58) / 100;
 
   const showVisualPanel = pickBoolean(overrideData?.show_visual_panel, hero?.show_visual_panel, true) !== false;
   const showBottomBox1 = pickBoolean(overrideData?.show_bottom_box1, hero?.show_bottom_box1, true) !== false;
@@ -294,29 +247,19 @@ const HeroSection = ({ hero: prefetchedHero, overrideData }: HeroSectionProps) =
     settings.company_name ? `${settings.company_name} Hero Visual` : "Digital-Perfect Hero",
   );
 
-  const proofGridClass =
-    effectiveProofItems.length >= 3
-      ? "md:grid-cols-2 xl:grid-cols-3"
-      : effectiveProofItems.length === 2
-        ? "md:grid-cols-2"
-        : "grid-cols-1";
-
   return (
-    <section id="hero" className="dark-section relative overflow-hidden pt-[158px] lg:pt-[178px]">
-      <div className="absolute inset-0 z-0">
-        <picture>
-          <source media="(max-width: 768px)" srcSet={bgMobileImageSrc} />
-          <img src={bgImageSrc} alt="Hero Background" className="h-full w-full object-cover" loading="eager" />
-        </picture>
-      </div>
+    <section id="hero" className="dark-section relative overflow-hidden pt-[128px] lg:pt-[148px]">
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(120% 90% at 88% -10%, color-mix(in srgb, var(--theme-primary-hex) 20%, transparent) 0%, transparent 48%), linear-gradient(180deg, var(--hero-bg-color) 0%, color-mix(in srgb, var(--hero-bg-color) 84%, black 16%) 100%)",
+        }}
+      />
 
-      <div className="absolute inset-0 z-0" style={{ backgroundColor: "var(--hero-overlay-color)", opacity: overlayAlpha }} />
-      <div className="absolute inset-0 z-0 noise-overlay opacity-35" />
-      <div className="hero-bottom-fade absolute inset-x-0 bottom-0 z-0 h-40" />
-
-      <div className="section-container relative z-10 py-14 md:py-20 lg:py-24">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.06fr_0.94fr] lg:gap-16">
-          <div className="max-w-[860px]">
+      <div className="section-container relative z-10 py-10 md:py-14 lg:py-16">
+        <div className={`grid items-center gap-12 ${showVisualPanel ? "lg:grid-cols-[1.06fr_0.94fr] lg:gap-16" : ""}`}>
+          <div className={showVisualPanel ? "max-w-[860px]" : "max-w-3xl"}>
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -455,40 +398,6 @@ const HeroSection = ({ hero: prefetchedHero, overrideData }: HeroSectionProps) =
             </motion.div>
           ) : null}
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6, delay: 0.22 }}
-          className={`mt-10 grid gap-4 ${proofGridClass}`}
-        >
-          {effectiveProofItems.map((item, index) => {
-            const Icon = proofIconMap[item.icon.toLowerCase()] ?? getLucideIcon(item.icon) ?? BadgeCheck;
-            const proofBody = (
-              <>
-                <div className="hero-proof-icon inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
-                  <Icon size={18} />
-                </div>
-                <p className="hero-proof-text text-sm leading-relaxed">{item.text}</p>
-              </>
-            );
-
-            if (item.href) {
-              return (
-                <a key={`${item.text}-${index}`} href={item.href} className="glass-card hero-proof-card flex items-start gap-4 rounded-[1.6rem] p-5 transition hover:-translate-y-0.5">
-                  {proofBody}
-                </a>
-              );
-            }
-
-            return (
-              <div key={`${item.text}-${index}`} className="glass-card hero-proof-card flex items-start gap-4 rounded-[1.6rem] p-5">
-                {proofBody}
-              </div>
-            );
-          })}
-        </motion.div>
       </div>
     </section>
   );

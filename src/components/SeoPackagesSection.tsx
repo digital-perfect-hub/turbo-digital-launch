@@ -168,7 +168,7 @@ const SeoPackagesSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.55, delay: 0.15 }}
-            className="rounded-[1.5rem] border-2 border-[#0a1842] bg-white px-5 py-4 text-sm font-semibold text-muted-foreground shadow-none"
+            className="rounded-[1.5rem] border-2 border-[#0a1842] bg-[#FAF6EE] px-5 py-4 text-sm font-semibold text-muted-foreground shadow-none"
           >
             <span className="text-primary">Wichtig:</span> SEO braucht saubere
             Umsetzung und Zeit. Wir versprechen keine Rankings, sondern ein
@@ -223,7 +223,7 @@ const SeoPackagesSection = () => {
                 {activePackage.description}
               </p>
 
-              <div className="my-7 rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5">
+              <div className="my-7 rounded-[1.5rem] border-2 border-[#0a1842] bg-[#FAF6EE] p-5">
                 <div className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   Monatlich ab
                 </div>
@@ -290,16 +290,16 @@ const SeoPackagesSection = () => {
             {seoPackages.map((item, index) => {
               const Icon = item.icon;
               const cardClass = item.featured
-                ? "relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#050B1F] p-8 text-white shadow-none sm:p-10 lg:-mt-6"
-                : "dp-blue-card-border dp-blue-card-surface relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-white p-8 shadow-none transition-all duration-500 hover:-translate-y-1 sm:p-10";
+                ? "relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#0A1842] p-8 text-[#FAF6EE] shadow-none sm:p-10 lg:-mt-6"
+                : "dp-blue-card-border dp-blue-card-surface relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#FAF6EE] p-8 shadow-none transition-all duration-500 hover:-translate-y-1 sm:p-10";
               const badgeClass = item.featured
                 ? "dp-popular-badge"
                 : "border-primary/15 bg-primary/5 text-primary";
               const mutedClass = item.featured
-                ? "text-slate-300"
+                ? "text-[#FAF6EE]/72"
                 : "text-muted-foreground";
               const titleClass = item.featured
-                ? "text-white"
+                ? "text-[#FAF6EE]"
                 : "text-foreground";
               const isExpandable = item.features.length > 5;
               const isExpanded = expandedPackage === item.name;
@@ -381,7 +381,7 @@ const SeoPackagesSection = () => {
                           <span
                             className={
                               item.featured
-                                ? "text-slate-100"
+                                ? "text-[#FAF6EE]/90"
                                 : "text-foreground/82"
                             }
                           >
@@ -423,7 +423,7 @@ const SeoPackagesSection = () => {
           </div>
         </div>
 
-        <div className="dp-blue-card-border dp-blue-card-surface mt-8 grid gap-4 rounded-[2rem] border-2 border-[#0a1842] bg-white p-6 text-sm leading-relaxed text-muted-foreground shadow-none md:grid-cols-3 md:p-8">
+        <div className="dp-blue-card-border dp-blue-card-surface mt-8 grid gap-4 rounded-[2rem] border-2 border-[#0a1842] bg-[#FAF6EE] p-6 text-sm leading-relaxed text-muted-foreground shadow-none md:grid-cols-3 md:p-8">
           <div className="flex gap-3">
             <Sparkles className="mt-0.5 shrink-0 text-primary" size={20} />
             <span>

@@ -213,7 +213,7 @@ const WebdesignPackagesSection = () => {
                 {activePackage.description}
               </p>
 
-              <div className="my-7 rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5">
+              <div className="my-7 rounded-[1.5rem] border-2 border-[#0a1842] bg-[#FAF6EE] p-5">
                 <div className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   Fixpreis ab
                 </div>
@@ -278,19 +278,19 @@ const WebdesignPackagesSection = () => {
             {webdesignPackages.map((item, index) => {
               const Icon = item.icon;
               const cardClass = item.featured
-                ? "group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#050B1F] p-8 text-white shadow-none sm:p-10 lg:-mt-6"
-                : "dp-blue-card-border dp-blue-card-surface group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-white p-8 shadow-none transition-all duration-500 hover:-translate-y-1 sm:p-10";
+                ? "group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#0A1842] p-8 text-[#FAF6EE] shadow-none sm:p-10 lg:-mt-6"
+                : "dp-blue-card-border dp-blue-card-surface group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-[#ff6b2c] bg-[#FAF6EE] p-8 shadow-none transition-all duration-500 hover:-translate-y-1 sm:p-10";
               const badgeClass = item.featured
                 ? "dp-popular-badge"
                 : "border-primary/15 bg-primary/5 text-primary";
-              const titleClass = item.featured ? "text-white" : "text-foreground";
-              const mutedClass = item.featured ? "text-slate-300" : "text-muted-foreground";
-              const featureTextClass = item.featured ? "text-slate-100" : "text-foreground/82";
+              const titleClass = item.featured ? "text-[#FAF6EE]" : "text-foreground";
+              const mutedClass = item.featured ? "text-[#FAF6EE]/72" : "text-muted-foreground";
+              const featureTextClass = item.featured ? "text-[#FAF6EE]/90" : "text-foreground/82";
               const priceBoxClass = item.featured
-                ? "mobile-package-price-box my-8 rounded-[1.5rem] border border-white/15 bg-white/5 p-5"
-                : "mobile-package-price-box my-8 rounded-[1.5rem] border-2 border-[#0a1842] bg-white p-5";
+                ? "mobile-package-price-box my-8 rounded-[1.5rem] border border-[#FAF6EE]/15 bg-[#FAF6EE]/5 p-5"
+                : "mobile-package-price-box my-8 rounded-[1.5rem] border-2 border-[#0a1842] bg-[#FAF6EE] p-5";
               const priceLabelClass = item.featured
-                ? "text-slate-300"
+                ? "text-[#FAF6EE]/72"
                 : "text-muted-foreground";
               const isExpandable = item.features.length > 5;
               const isExpanded = expandedPackage === item.name;
