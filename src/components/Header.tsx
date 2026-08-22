@@ -202,12 +202,12 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
     : {}) as Record<string, unknown>;
   const navCtaLabel = cleanNavCtaLabel(navigationThemeSettings.cta_label);
   const navCtaLink = cleanNavCtaLink(navigationThemeSettings.cta_link);
+  // Header ist bewusst immer solide/hell (statt transparent über dem Hero und erst
+  // nach dem Scrollen solide) - fixe Sichtbarkeit und Kontrast unabhängig vom Scroll-Stand.
   const headerClassName = forceSolid || isMobileOpen
     ? `py-4 header-solid-shell border-b ${solidBackgroundClassName || ""}`
-    : isScrolled
-      ? "py-4 shadow-lg border-b"
-      : "py-6 bg-transparent";
-  const headerStyle = forceSolid || isMobileOpen || !isScrolled
+    : `py-4 border-b ${isScrolled ? "shadow-lg" : "shadow-sm"}`;
+  const headerStyle = forceSolid || isMobileOpen
     ? undefined
     : { background: "var(--nav-bg)", borderColor: "var(--nav-border)", backdropFilter: "blur(20px)" };
 
@@ -296,7 +296,8 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
           </nav>
 
           <button
-            className={`relative z-10 p-2 outline-none lg:hidden ${useSolidMobileShell ? "header-solid-text" : "text-foreground"}`}
+            className={`relative z-10 p-2 outline-none lg:hidden ${useSolidMobileShell ? "header-solid-text" : ""}`}
+            style={useSolidMobileShell ? undefined : { color: desktopNavColor }}
             onClick={() => setIsMobileOpen((prev) => !prev)}
             aria-label={isMobileOpen ? "Menü schließen" : "Menü öffnen"}
           >
