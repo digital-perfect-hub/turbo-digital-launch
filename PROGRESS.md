@@ -6,6 +6,38 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-08-22 — Offene Punkte aus Vorsession abgearbeitet (LIVE, VERIFIZIERT), Cache-Fix und Admin-Farben weiter offen
+
+**Status: Code-Fix gepusht (Commit `5ecd024`), zwei Live-DB-Korrekturen angewendet, gegen laufenden Dev-Server verifiziert (Screenshot-Tool in dieser Session nicht verfügbar — Verifikation über `getComputedStyle`/DOM statt Pixel-Vergleich).**
+
+### CLAUDE.md + PROGRESS.md nachträglich committet
+Waren aus der Vorsession (Nutzungslimit-Unterbrechung) noch unstaged. Commit `4248235`, gepusht.
+
+### Echter Live-Bug gefunden und behoben: Nav-Hover-Text-Override
+`useGlobalTheme.tsx` überschrieb `--nav-text`/`--nav-hover-text`/`--nav-underline` direkt nach `applyThemeToRoot()` unconditional mit den flachen Legacy-Feldern (`nav_text_color_hex` etc.), wodurch die kontrastsichere Berechnung aus `navigation_theme` (in `theme-settings.ts`, `resolveReadableColor`) für diese drei Werte wirkungslos war — exakt das in der Vorsession als Risiko notierte Feld-Duplikat. Live-DB-Check bestätigte: die Felder waren bereits auseinandergelaufen (`nav_hover_color_hex` flach = `#FF4B2C`, `navigation_theme.hover_text_color` nested = `#FF6B2C`) — die alte Farbe gewann.
+
+Fix: Override-Zeilen für `--nav-text`/`--nav-hover-text` in `useGlobalTheme.tsx` entfernt (Zeilen für `--nav-underline` bleiben, da es dafür kein nested Gegenstück in `navigation_theme` gibt). Ergebnis nach Fix: Hover-Text löst jetzt korrekt über die Kontrast-Sicherheitslogik auf — auf dem hellen Creme-Header ergibt das dunkles Navy (`#0F172A`) statt eines schlecht lesbaren Orange, weil `resolveReadableColor` Orange-auf-Creme unter dem projektweiten `minimumContrast`-Schwellwert verwirft. Das ist beabsichtigtes Verhalten derselben Logik, die auch alle Hero-/Surface-/Button-Farben absichert — keine Regression.
+
+Zusätzlich `nav_underline_color_hex` per SQL von `#FF4B2C` auf `#FF6B2C` vereinheitlicht (letzte off-palette Reststelle aus der 3-Farben-Aufräumung).
+
+TypeScript (`tsc --noEmit`) und `npm run build` sauber. Live im laufenden Dev-Server (Port 8080) verifiziert: `getComputedStyle` auf `document.documentElement` zeigt korrekte Werte, kein Konsolenfehler.
+
+### FAQ-Antwort ergänzt
+`faq_items.answer` für "Was ist im Webdesign-Paket enthalten?" wiederholte nur die Frage (bereits in der Audit-Runde vom 21./22.08. notiert). Echten Text ergänzt, Inhalt aus `WebdesignPackagesSection.tsx` (Starter/Business/Premium-Leistungen) abgeleitet, damit er faktisch zum tatsächlichen Angebot passt. Live per Klick auf das Accordion-Item verifiziert.
+
+### Test-Foreninhalte in Sitemap: bereits erledigt
+`/forum/kategorie/test` und `/forum/testthread1` existieren nicht mehr in `forum_categories`/`forum_threads` (SQL-Check: leeres Ergebnis). Vermutlich in einer nicht dokumentierten Zwischensession bereinigt oder nie live gegangen. Keine Aktion nötig.
+
+### Noch offen — genuine Blocker, kein Code-Fix möglich
+1. **Cloudflare-/Nixpacks-Cache auf `index.html`**: `cloudflare-worker/worker.js` cacht selbst nur prerenderte Bot-Antworten (`shouldPrerender`-Zweig); normale Besucher-Requests gehen unverändert per `fetch(request)` durch zum Origin. Die 4h-Cache-Wirkung kommt also entweder aus Cloudflares Zone-Einstellungen (Browser Cache TTL / Cache Level) oder aus dem Cache-Control-Header, den Coolifys Nixpacks-Static-Server für `index.html` mitschickt — kein Nginx-/Nixpacks-Config im Repo (nur in Coolify-UI), kein Cloudflare-Dashboard-Zugriff aus dieser Session heraus möglich. **Konkreter Fix (vom User oder mit Coolify/Cloudflare-Zugriff auszuführen):** `index.html` mit `Cache-Control: no-cache` (oder kurzem `max-age`) ausliefern, während gehashte Assets (`/assets/*.js`, `*.css`) weiterhin lang gecacht werden dürfen — verhindert das Zeitfenster mit kaputtem Ladebildschirm nach jedem Deploy. In Coolifys Nixpacks-Static-Konfiguration oder per Cloudflare Cache Rule für Pfad `/` bzw. `/index.html` umsetzbar.
+2. **Nginx-/Coolify-Config nicht im Repo versioniert** — gleicher Zugriffs-Blocker wie oben, nur über Coolify-UI einsehbar/änderbar.
+3. **Admin-Panel-weite Farbvereinheitlichung**: `global_settings.bg_main_hex` (`#F7F9FC`), `bg_card_hex` (`#FFFFFF`), `text_main_hex` (`#0F172A`), `text_muted_hex` (`#64748B` — genau das in der Vorsession als Problem-Grau benannte Feld), `border_color_hex` (`#D9E2F1`) sind weiterhin off-palette und speisen zusätzlich die Admin-Panel-Tokens (`--background`/`--foreground`/`--border` etc.). User-Entscheidung: bewusst zurückgestellt, da eine Änderung das aktuell helle, funktionierende Admin-Theme beeinflussen würde und einen dedizierten Test-Durchgang über die ~27 Admin-Seiten bräuchte.
+
+### Optischer Gesamteindruck Startseite (diese Session)
+Per `getComputedStyle`-Audit über alle `<section>`-Elemente: **jede Section löst exakt auf Navy `#0A1842` oder Creme `#FAF6EE` auf** — keine Grau-/Off-Palette-Reste mehr auf Section-Ebene. `.glass-card`/`.premium-card` bestätigt ohne `backdrop-filter`/`box-shadow` (wie in der Vorsession entfernt); `.dp-blue-card-surface` hat einen bewusst palette-getönten Schatten (Orange+Navy-Mix), keinen generischen Grau-Glow. Einzige Beobachtung ohne Fix-Bedarf: vier Sections in Folge (Testimonials/Kontakt/FAQ + eine weitere) laufen alle in Creme — auf einer sehr langen Scroll-Strecke evtl. etwas eintönig; keine Regression, nur eine Rhythmus-Beobachtung für eine mögliche spätere Iteration.
+
+---
+
 ## 2026-08-22 — Farbsystem auf 3 Farben vereinheitlicht + Hero-Rebuild (LIVE, VERIFIZIERT)
 
 **Status: umgesetzt, gepusht (Commit `5d83c0b`), gegen echte Live-Seite in frischem Browser-Tab verifiziert (nicht nur lokal).**
