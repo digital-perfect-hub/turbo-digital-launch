@@ -145,8 +145,6 @@ export const useGlobalTheme = () => {
     root.style.setProperty("--cta-hover", settings.cta_hover_hex || settings.button_theme?.primary_background_color || settings.primary_color_hex || "#E03A1E");
     root.style.setProperty("--footer-bg", settings.footer_bg_hex || "var(--theme-secondary-hex)");
 
-    if (settings.nav_text_color_hex) root.style.setProperty("--nav-text", settings.nav_text_color_hex);
-    if (settings.nav_hover_color_hex) root.style.setProperty("--nav-hover-text", settings.nav_hover_color_hex);
     if (settings.nav_underline_color_hex) root.style.setProperty("--nav-underline", settings.nav_underline_color_hex);
 
     let baseTitle = "Digital-Perfect";
