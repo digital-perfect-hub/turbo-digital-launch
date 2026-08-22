@@ -168,7 +168,7 @@ const SeoPackagesSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.55, delay: 0.15 }}
-            className="rounded-[1.5rem] border-2 border-[#0a1842] bg-[#FAF6EE] px-5 py-4 text-sm font-semibold text-muted-foreground shadow-none"
+            className="dp-blue-card-border dp-blue-card-surface rounded-[1.5rem] border-2 border-[#0a1842] bg-[#FAF6EE] px-5 py-4 text-sm font-semibold text-muted-foreground shadow-none"
           >
             <span className="text-primary">Wichtig:</span> SEO braucht saubere
             Umsetzung und Zeit. Wir versprechen keine Rankings, sondern ein
@@ -203,7 +203,7 @@ const SeoPackagesSection = () => {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28 }}
-              className="mobile-package-tab-card"
+              className="mobile-package-tab-card dp-blue-card-surface"
               onTouchStart={handlePackageTouchStart}
               onTouchEnd={handlePackageTouchEnd}
             >

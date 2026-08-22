@@ -193,7 +193,7 @@ const WebdesignPackagesSection = () => {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28 }}
-              className="mobile-package-tab-card"
+              className="mobile-package-tab-card dp-blue-card-surface"
               onTouchStart={handlePackageTouchStart}
               onTouchEnd={handlePackageTouchEnd}
             >

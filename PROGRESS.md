@@ -6,6 +6,38 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-08-22 (vierte Session) — Optischer Full-Page-Audit: Weiß-in-Weiß-Bug gefixt (Code, ungepusht), Impressum/Datenschutz/AGB komplett leer entdeckt
+
+**Auslöser:** User bat um optischen Check von digital-perfect.com und was noch zu fixen ist. User hatte den Weiß-in-Weiß-Textbug bereits vorher gemeldet (nicht in PROGRESS.md protokolliert gewesen).
+
+**Tool-Hinweis:** Der Browser-Pane-Screenshot brach in dieser Session bei jedem Scroll zuverlässig zusammen (blank/Tearing), unabhängig von Wheel- vs. JS-Scroll oder Wartezeit — Ursache unklar (evtl. Pane-Visibility im Host). Ein frischer Tab (`tabs_create`) hat es zuverlässig behoben. Falls das erneut auftritt: nicht lange mit Wait/Retry kämpfen, sondern sofort neuen Tab versuchen.
+
+### Gefixt: Cream-auf-Cream-Text in 3 Preis-/Hinweis-Boxen (Code, `tsc`+Build sauber, live im Dev-Server verifiziert, NOCH NICHT gepusht)
+Root Cause: `.surface-section-shell .text-muted-foreground { color: var(--surface-section-muted) !important; }` (index.css:749) erzwingt sektionsweit Creme-Text (korrekt für den dunklen Sektions-Hintergrund), bricht aber lokale helle Boxen (`bg-[#FAF6EE]`) innerhalb dunkler Sektionen, die diese Klasse ohne das etablierte Schutzmuster `dp-blue-card-surface` (index.css:2059ff, exakt für „weiße Cards in dunklen Sektionen" gebaut) verwenden. Betraf:
+- `SeoPackagesSection.tsx` „Wichtig:"-Box (Zeile 171): Fließtext nach dem Label war unsichtbar.
+- `SeoPackagesSection.tsx` mobile Paket-Detailkarte (Zeile 206, `.mobile-package-tab-card`): Beschreibung, „Monatlich ab"-Label, Intervall, Steuerhinweis alle unsichtbar — nur Titel und Preis waren zu sehen.
+- `WebdesignPackagesSection.tsx` dieselbe Stelle (Zeile 196): „Fixpreis ab"-Label, „netto", Steuerhinweis unsichtbar.
+
+Fix: `dp-blue-card-surface` (bzw. zusätzlich `dp-blue-card-border` bei der „Wichtig:"-Box) zu den drei Elementen ergänzt — gleiches Muster, das an anderen Stellen in denselben Dateien schon funktioniert. Kein CSS geändert, nur fehlende Klassen ergänzt.
+
+**Noch offen:** Fix ist nur lokal committed-fähig, nicht gepusht — User-Entscheidung ausstehend, ob jetzt gepusht werden soll.
+
+### Größter Fund: Impressum, Datenschutz und AGB sind auf der Live-Seite komplett leer (nur Platzhaltertext)
+Per SQL gegen `legal_pages` (site_id `00000000-0000-0000-0000-000000000001`, zuletzt geändert 2026-03-22, seither nie befüllt) verifiziert: alle drei Seiten enthalten nur generischen Platzhalter à la „Bitte pflege diese Seite im Admin unter Recht & SEO" / „Bitte ergänze Firmenname, Anschrift und Kontaktangaben." Kein echter Firmenname, keine Adresse, keine UID, kein echter Datenschutz- oder AGB-Text — das bei einer live laufenden Website mit aktivem Kontaktformular (inkl. Datenschutz-Einverständnis-Checkbox, die auf die nicht existente Datenschutzerklärung verweist). Das ist ein reales rechtliches Risiko (Impressumspflicht § 5 TMG/MedienG, DSGVO), kein Code-Bug — Fix erfordert echte, vom User bereitzustellende Geschäftsdaten (Firmenname/Rechtsform, Adresse, UID, echter Datenschutz-/AGB-Text), eintragbar über Admin → Recht & SEO. Nicht selbst ausgefüllt, da diese Angaben nicht erfunden werden dürfen.
+
+Separat auffällig: `global_settings.imprint_address` = literal `"222222222222222222"`, `imprint_contact` = `"333333333333333333333333333333"` — offensichtliche Platzhalter-Testdaten. Werden aber laut Footer.tsx nur als Fallback genutzt, wenn `footerContactItems` leer ist — die Live-Seite zeigt tatsächlich „Wien, Österreich" / hello@digital-perfect.com, kommt also aus einem anderen, tatsächlich befüllten Feld (nicht abschließend identifiziert, welches).
+
+### Content-Inkonsistenz: Footer sagt „Wien", ganze Seite positioniert sich auf „Linz"
+Footer zeigt „Standort: Wien, Österreich", während Title-Tag, Hero („SEO & KI-OPTIMIERUNG AUS LINZ") und das Local-SEO-Premium-Paket („für Linz und Umgebung") durchgängig Linz als Positionierung nutzen. Kann legitim sein (rechtlicher Sitz Wien, Zielmarkt Linz/Oberösterreich) — nicht verifiziert, ob beabsichtigt oder Versehen. Ebenfalls die Footer-Tagline „Premium Webdesign, SEO und digitale Vertriebsmaschinen für Agenturen und Brands, die den Standard setzen wollen." wirkt tonal generischer/reißerischer als die sonst persönliche, ehrliche Copy der Seite („keine Fake-Garantien", Markus-persönlich-Ton) — beides DB-Content (`global_settings.footer_description`), kein Code.
+
+### Kleinere Beobachtung (kein Fix nötig, nur Politur-Idee)
+Alle 5 Karten in „Warum Digital-Perfect" (01–05) nutzen dasselbe generische Häkchen-Icon statt themenspezifischer Icons.
+
+### Als Fehlalarm ausgeschlossen
+Eine zunächst grau wirkende Karte im WhyChoose-Bereich war nur ein Screenshot-Kompositing-Artefakt (siehe Tool-Hinweis oben) — `getComputedStyle` bestätigte korrektes Navy. Gründer-Foto (`dp-hero-markus.png`) ist vorhanden und rendert korrekt, wurde beim ersten Scroll-Durchlauf nur übersprungen. Sektionsfarb-Rhythmus (Navy/Creme-Wechsel) ist sauber, exakt 2 Farben, keine Grau-Reste.
+
+---
+
 ## 2026-08-22 — Offene Punkte aus Vorsession abgearbeitet (LIVE, VERIFIZIERT), Cache-Fix und Admin-Farben weiter offen
 
 **Status: Code-Fix gepusht (Commit `5ecd024`), zwei Live-DB-Korrekturen angewendet, gegen laufenden Dev-Server verifiziert (Screenshot-Tool in dieser Session nicht verfügbar — Verifikation über `getComputedStyle`/DOM statt Pixel-Vergleich).**
