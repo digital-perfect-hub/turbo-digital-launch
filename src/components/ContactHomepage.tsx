@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { CSSProperties } from "react";
-import { ArrowDown, ArrowRight, ArrowUpRight, Check, Code2, Search, Sparkles, Quote } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Check, Code2, Search, Sparkles, Quote, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactSection from "@/components/ContactSection";
@@ -90,7 +90,15 @@ const ContactHomepage = ({ content: c }: { content: ContactHomepageContent }) =>
               <div className="ch-portrait-orbit" aria-hidden="true" />
               <img className="ch-portrait-bg" src={portraitSource(c.portraitUrl, 700)} alt="" aria-hidden="true" />
               <img className="ch-portrait-main" src={portraitSource(c.portraitUrl, 1000)} srcSet={c.portraitUrl.includes("/storage/") ? `${portraitSource(c.portraitUrl, 600)} 600w, ${portraitSource(c.portraitUrl, 1000)} 1000w` : undefined} sizes="(max-width: 760px) 90vw, 48vw" width="900" height="1537" alt={c.portraitAlt} fetchPriority="high" />
-              <div className="ch-portrait-side" aria-hidden="true"><span className="ch-portrait-side-line" /><span className="ch-portrait-side-index">01 <i /> 03</span><div><strong>Digital-Perfect</strong><span>Webdesign · SEO · KI-Sichtbarkeit</span></div></div>
+              <div className="ch-portrait-side" aria-hidden="true">
+                <span className="ch-portrait-side-line" />
+                <div className="ch-portrait-services">
+                  <strong>Digital-Perfect</strong>
+                  <span className="ch-portrait-service"><Code2 size={15} /><b>Webdesign</b></span>
+                  <span className="ch-portrait-service"><Search size={15} /><b>SEO</b></span>
+                  <span className="ch-portrait-service"><Sparkles size={15} /><b>KI-Sichtbarkeit</b></span>
+                </div>
+              </div>
               <div className="ch-portrait-caption"><span>{c.founderName}</span><ArrowUpRight size={24} /></div>
             </div> : <div className="ch-hero-statement" aria-hidden="true">{c.services.map((service, index) => <span key={service.title}>{String(index + 1).padStart(2, "0")} — {service.title}</span>)}<ArrowUpRight /></div>}
           </div>
@@ -110,7 +118,7 @@ const ContactHomepage = ({ content: c }: { content: ContactHomepageContent }) =>
 
         {testimonials.length > 0 && <section id="kundenstimmen" className="ch-section ch-references"><div className="ch-container">
           <div className="ch-section-heading"><p className="ch-kicker">{c.referencesKicker}</p><h2>{c.referencesTitle}</h2><p>{c.referencesText}</p></div>
-          <div className="ch-card-grid">{testimonials.map((item) => <figure className="ch-quote" key={item.id}><Quote size={28} strokeWidth={1.5} aria-hidden="true" /><blockquote>{item.text}</blockquote><figcaption><div className="ch-initials" aria-hidden="true">{item.name?.split(" ").map((word) => word[0]).slice(0, 2).join("")}</div><div><strong>{item.name}</strong><span>{[item.role, item.company].filter(Boolean).join(" · ")}</span></div></figcaption></figure>)}</div>
+          <div className="ch-card-grid">{testimonials.map((item) => <figure className="ch-quote" key={item.id}><Quote size={28} strokeWidth={1.5} aria-hidden="true" /><div className="ch-rating" aria-label="5 von 5 Sternen"><span className="ch-rating-stars" aria-hidden="true">{Array.from({ length: 5 }).map((_, index) => <Star key={index} size={16} strokeWidth={1.8} fill="currentColor" />)}</span><strong>5/5</strong></div><blockquote>{item.text}</blockquote><figcaption><div className="ch-initials" aria-hidden="true">{item.name?.split(" ").map((word) => word[0]).slice(0, 2).join("")}</div><div><strong>{item.name}</strong><span>{[item.role, item.company].filter(Boolean).join(" · ")}</span></div></figcaption></figure>)}</div>
         </div></section>}
 
         {c.references.length > 0 && <section id="referenzen" className="ch-section ch-projects"><div className="ch-container">

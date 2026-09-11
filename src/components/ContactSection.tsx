@@ -65,6 +65,12 @@ const mergeContactContent = (value: ContactSectionContent | null | undefined): C
 });
 
 
+const normalizeWebsiteUrl = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
 const deriveServiceFromPackage = (selectedPackage: string): string | null => {
   const value = selectedPackage.toLowerCase();
 
@@ -136,7 +142,7 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
         phone: formData.phone || null,
         service: contactPage ? formData.service || null : deriveServiceFromPackage(formData.budget),
         budget: contactPage ? null : formData.budget || null,
-        website: formData.website || null,
+        website: normalizeWebsiteUrl(formData.website),
         description: formData.description || null,
       });
 
@@ -184,12 +190,12 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
   return (
     <section id="kontakt" className={`${contactPage ? "contact-page-form" : "homepage-style-scope surface-section-shell"} relative overflow-hidden py-24 sm:py-32`} ref={ref} style={contactPage ? undefined : sectionStyleVars}>
       <div className="section-container relative z-10">
-        <div className="grid gap-12 xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
+        <div className="contact-stage grid gap-8 xl:grid-cols-[0.82fr_1.18fr] xl:gap-8">
           <motion.div
             initial={contactPage ? false : { opacity: 0, x: -30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="dark-panel-shell contact-info-panel relative self-start overflow-hidden rounded-[2.5rem] p-10 xl:sticky xl:top-32 md:p-14"
+            className={`dark-panel-shell contact-info-panel contact-stage-copy relative overflow-hidden rounded-[2.5rem] p-10 md:p-14 ${contactPage ? "" : "self-start xl:sticky xl:top-32"}`}
           >
             <div className="pointer-events-none absolute left-0 top-12 h-44 w-1.5 rounded-r-full bg-primary shadow-[0_0_34px_rgba(255,107,44,0.42)]" />
             <div className="pointer-events-none absolute right-8 top-8 h-28 w-28 rounded-full bg-primary/15 blur-3xl" />
@@ -202,14 +208,20 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
                 {title}
               </h2>
 
-              <p className="dark-panel-body mb-12 text-lg leading-relaxed">{panelDescription}</p>
+              <p className="dark-panel-body mb-8 text-base leading-relaxed">{panelDescription}</p>
+              <div className="contact-panel-pills mb-10" aria-hidden="true">
+                <span>Schnell & unverbindlich</span>
+                <span>Direkte Rückmeldung</span>
+                <span>Klare Empfehlung</span>
+              </div>
 
-              <div className="dark-panel-divider space-y-8 border-t pt-8">
+              <div className="dark-panel-divider contact-trust-list space-y-4 border-t pt-6">
                 {content.trust_signals.map((signal, index) => {
                   const Icon = iconMap[signal.icon] || Mail;
 
                   return (
                     <div key={`${signal.title}-${index}`} className="contact-trust-row flex gap-5">
+                      <span className="contact-trust-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                       <div className="dark-panel-icon contact-trust-icon inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
                         <Icon size={22} />
                       </div>
@@ -222,6 +234,38 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
                   );
                 })}
               </div>
+
+              <div className="contact-panel-footer" aria-hidden="true">
+                <div className="contact-panel-stats">
+                  <div className="contact-panel-stat"><strong>24h</strong><span>Rückmeldung</span></div>
+                  <div className="contact-panel-stat"><strong>1:1</strong><span>Ansprechpartner</span></div>
+                  <div className="contact-panel-stat"><strong>0€</strong><span>Erstgespräch</span></div>
+                </div>
+                <p className="contact-panel-note">Kurz anfragen. Klaren nächsten Schritt erhalten.</p>
+                <div className="contact-panel-highlights">
+                  <div className="contact-panel-highlight">
+                    <span className="contact-panel-highlight-icon"><CheckCircle2 size={15} /></span>
+                    <div>
+                      <strong>Klare Empfehlung</strong>
+                      <span>Kein unnötiger Technik-Overload.</span>
+                    </div>
+                  </div>
+                  <div className="contact-panel-highlight">
+                    <span className="contact-panel-highlight-icon"><Clock3 size={15} /></span>
+                    <div>
+                      <strong>Schneller Start</strong>
+                      <span>Direkte Einschätzung zu deinem Vorhaben.</span>
+                    </div>
+                  </div>
+                  <div className="contact-panel-highlight">
+                    <span className="contact-panel-highlight-icon"><PhoneCall size={15} /></span>
+                    <div>
+                      <strong>Persönlicher Kontakt</strong>
+                      <span>Persönlich statt anonymer Agenturprozess.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -229,10 +273,22 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
             initial={contactPage ? false : { opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="surface-card-shell contact-form-card relative overflow-hidden rounded-[2.5rem] border bg-card p-8 shadow-xl sm:p-12"
+            className="surface-card-shell contact-form-card contact-stage-form relative overflow-hidden rounded-[2.5rem] border bg-card p-6 shadow-xl sm:p-8 xl:p-10"
           >
-            <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-              <div className="grid gap-6 sm:grid-cols-2">
+            <div className="contact-form-top">
+              <div>
+                <p className="contact-form-kicker">Projektanfrage</p>
+                <h3 className="contact-form-title">Erzähl uns kurz, was du vorhast.</h3>
+                <p className="contact-form-lead">Wir melden uns persönlich mit einem klaren nächsten Schritt zurück – ohne unnötiges Hin und Her.</p>
+              </div>
+              <div className="contact-form-pills" aria-hidden="true">
+                <span>Kostenlos</span>
+                <span>Unverbindlich</span>
+                <span>Persönlich</span>
+              </div>
+            </div>
+            <form onSubmit={handleSubmit} className="relative z-10 space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="contact-name" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.name}</label>
                   <input
@@ -261,7 +317,7 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
                 </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="contact-email" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.email}</label>
                   <input
@@ -291,49 +347,68 @@ const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent 
               </div>
 
               {contactPage ? (
-                <div>
-                  <label htmlFor="contact-service" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.service}</label>
-                  <select id="contact-service" value={formData.service} onChange={(e) => update("service", e.target.value)} className={inputClass}>
-                    <option value="">{content.placeholders.service_placeholder}</option>
-                    {content.service_options.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
-                </div>
-              ) : <div>
-                <label htmlFor="contact-budget" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
-                <select id="contact-budget" required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
-                  <option value="" disabled>
-                    {content.placeholders.budget_placeholder}
-                  </option>
-                  {content.budget_options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  Wähle direkt dein Wunschpaket. Wenn du unsicher bist, nimm „Ich bin unsicher – bitte empfehlen“.
-                </p>
-              </div>}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="contact-service" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.service}</label>
+                    <select id="contact-service" value={formData.service} onChange={(e) => update("service", e.target.value)} className={inputClass}>
+                      <option value="">{content.placeholders.service_placeholder}</option>
+                      {content.service_options.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </div>
 
-              <div>
-                <label htmlFor="contact-website" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.website}</label>
-                <input
-                  id="contact-website"
-                  autoComplete="url"
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => update("website", e.target.value)}
-                  className={inputClass}
-                  placeholder={content.placeholders.website}
-                />
-              </div>
+                  <div>
+                    <label htmlFor="contact-website" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.website}</label>
+                    <input
+                      id="contact-website"
+                      autoComplete="url"
+                      type="text"
+                      inputMode="url"
+                      value={formData.website}
+                      onChange={(e) => update("website", e.target.value)}
+                      className={inputClass}
+                      placeholder={content.placeholders.website}
+                    />
+                  </div>
+                </div>
+              ) : <>
+                <div>
+                  <label htmlFor="contact-budget" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
+                  <select id="contact-budget" required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
+                    <option value="" disabled>
+                      {content.placeholders.budget_placeholder}
+                    </option>
+                    {content.budget_options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    Wähle direkt dein Wunschpaket. Wenn du unsicher bist, nimm „Ich bin unsicher – bitte empfehlen“.
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="contact-website" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.website}</label>
+                  <input
+                    id="contact-website"
+                    autoComplete="url"
+                    type="text"
+                    inputMode="url"
+                    value={formData.website}
+                    onChange={(e) => update("website", e.target.value)}
+                    className={inputClass}
+                    placeholder={content.placeholders.website}
+                  />
+                </div>
+              </>}
 
               <div>
                 <label htmlFor="contact-description" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.description}</label>
                 <textarea
                   id="contact-description"
                   required
-                  rows={4}
+                  rows={3}
                   value={formData.description}
                   onChange={(e) => update("description", e.target.value)}
                   className={`${inputClass} resize-none`}

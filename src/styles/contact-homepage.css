@@ -285,3 +285,1357 @@
 .contact-homepage .ch-portrait-side div { display: flex; flex-direction: column; gap: .45rem; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; }
 .contact-homepage .ch-portrait-side div span { color: rgba(255,255,255,.6); }
 @media (max-width: 760px) { .contact-homepage .ch-portrait-side { right: 1rem; top: 44%; transform: translateY(-50%) scale(.82); transform-origin: right center; } }
+
+/* Contact section redesign - cleaner premium layout */
+.contact-homepage #kontakt.contact-page-form {
+  background:
+    radial-gradient(42rem 28rem at 8% 10%, rgba(255, 107, 53, 0.12), transparent 62%),
+    radial-gradient(36rem 22rem at 88% 90%, rgba(10, 24, 66, 0.08), transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #f7f8fc 100%) !important;
+  color: var(--ch-ink);
+}
+
+.contact-homepage #kontakt .contact-stage {
+  position: relative;
+  align-items: stretch;
+  border-radius: 2.25rem;
+  padding: 0.95rem;
+  background: linear-gradient(135deg, #0f1728 0%, #0b1020 100%);
+  box-shadow: 0 30px 80px -40px rgba(15, 23, 42, 0.38);
+}
+
+.contact-homepage #kontakt .contact-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at top right, rgba(255, 107, 53, 0.22), transparent 32%);
+  pointer-events: none;
+}
+
+.contact-homepage #kontakt .contact-stage-copy {
+  position: relative;
+  top: auto !important;
+  align-self: stretch !important;
+  min-height: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1.85rem !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    linear-gradient(160deg, #0f172a 0%, #090f1b 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.contact-homepage #kontakt .contact-stage-copy .pointer-events-none:first-child {
+  display: block !important;
+  opacity: 0.9;
+}
+
+.contact-homepage #kontakt .contact-stage-copy .pointer-events-none:last-child {
+  display: block !important;
+}
+
+.contact-homepage #kontakt .dark-panel-kicker {
+  margin-bottom: 1.25rem !important;
+  color: var(--ch-accent) !important;
+}
+
+.contact-homepage #kontakt .dark-panel-title {
+  color: #ffffff !important;
+  font-size: clamp(2.2rem, 4vw, 3.7rem) !important;
+  max-width: 10.5ch;
+}
+
+.contact-homepage #kontakt h4.dark-panel-title {
+  font-size: 1rem !important;
+  line-height: 1.35;
+}
+
+.contact-homepage #kontakt .dark-panel-body {
+  color: rgba(255, 255, 255, 0.78) !important;
+  max-width: 40rem;
+}
+
+.contact-homepage #kontakt .contact-panel-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.contact-homepage #kontakt .contact-panel-pills span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.62rem 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.contact-homepage #kontakt .contact-trust-list {
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.contact-homepage #kontakt .contact-trust-row {
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.contact-homepage #kontakt .contact-trust-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.contact-homepage #kontakt .contact-trust-index {
+  min-width: 2rem;
+  padding-top: 0.95rem;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.contact-homepage #kontakt .contact-trust-icon,
+.contact-homepage #kontakt .contact-info-panel .dark-panel-icon {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.22), rgba(255, 107, 53, 0.08)) !important;
+  border: 1px solid rgba(255, 107, 53, 0.22);
+  color: var(--ch-accent) !important;
+}
+
+.contact-homepage #kontakt .contact-stage-form {
+  position: relative;
+  align-self: stretch;
+  height: auto;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 1.85rem !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%) !important;
+  box-shadow: 0 30px 70px -40px rgba(15, 23, 42, 0.34) !important;
+}
+
+.contact-homepage #kontakt .contact-stage-form::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at top right, rgba(255, 107, 53, 0.08), transparent 30%);
+  pointer-events: none;
+}
+
+.contact-homepage #kontakt .contact-form-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid #eceff5;
+}
+
+.contact-homepage #kontakt .contact-form-kicker {
+  margin: 0 0 0.65rem;
+  color: var(--ch-accent);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.contact-homepage #kontakt .contact-form-title {
+  margin: 0;
+  color: var(--ch-ink);
+  font-size: clamp(1.7rem, 2.4vw, 2.3rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.contact-homepage #kontakt .contact-form-lead {
+  margin: 0.75rem 0 0;
+  max-width: 40rem;
+  color: #5f6877;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.contact-homepage #kontakt .contact-form-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  max-width: 16rem;
+}
+
+.contact-homepage #kontakt .contact-form-pills span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.3rem;
+  border-radius: 999px;
+  border: 1px solid #e7ebf1;
+  background: #f6f8fb;
+  padding: 0.58rem 0.9rem;
+  color: #152033;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.contact-homepage #kontakt .contact-form-card label,
+.contact-homepage #kontakt .contact-form-card .text-foreground {
+  color: #0f172a !important;
+  font-weight: 700;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]),
+.contact-homepage #kontakt select,
+.contact-homepage #kontakt textarea {
+  min-height: 3.65rem;
+  border: 1px solid #d9dee8 !important;
+  border-radius: 1rem !important;
+  background: #f7f9fc !important;
+  color: #102039 !important;
+  padding: 0.95rem 1rem !important;
+  font-size: 0.96rem !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.contact-homepage #kontakt textarea {
+  min-height: 10.5rem;
+  padding-top: 1rem !important;
+}
+
+.contact-homepage #kontakt input::placeholder,
+.contact-homepage #kontakt textarea::placeholder {
+  color: #8c96a7 !important;
+}
+
+.contact-homepage #kontakt select {
+  cursor: pointer;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]):hover,
+.contact-homepage #kontakt select:hover,
+.contact-homepage #kontakt textarea:hover,
+.contact-homepage #kontakt input:not([type="checkbox"]):focus,
+.contact-homepage #kontakt select:focus,
+.contact-homepage #kontakt textarea:focus {
+  background: #ffffff !important;
+  border-color: rgba(255, 107, 53, 0.5) !important;
+  box-shadow: 0 0 0 0.28rem rgba(255, 107, 53, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.contact-homepage #kontakt .contact-privacy-box {
+  border: 1px solid #e7ebf1 !important;
+  border-radius: 1.25rem !important;
+  background: #fbfcfe !important;
+  padding: 1rem 1.05rem !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box input[type="checkbox"] {
+  accent-color: var(--ch-accent);
+}
+
+.contact-homepage #kontakt .contact-privacy-box span,
+.contact-homepage #kontakt .contact-form-card p,
+.contact-homepage #kontakt .contact-form-card .text-muted-foreground {
+  color: #5f6877 !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box a {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.contact-homepage #kontakt .btn-primary {
+  min-height: 3.85rem;
+  border-radius: 1.1rem !important;
+  background: linear-gradient(135deg, var(--ch-accent), #ff8b55) !important;
+  color: #101626 !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 18px 34px -18px rgba(255, 107, 53, 0.55) !important;
+}
+
+.contact-homepage #kontakt .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 42px -18px rgba(255, 107, 53, 0.58) !important;
+}
+
+@media (max-width: 1100px) {
+  .contact-homepage #kontakt .contact-stage {
+    padding: 0.75rem;
+  }
+
+  .contact-homepage #kontakt .contact-form-top {
+    flex-direction: column;
+  }
+
+  .contact-homepage #kontakt .contact-form-pills {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt.contact-page-form {
+    padding-block: 4.5rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage {
+    border-radius: 1.6rem;
+    padding: 0.55rem;
+  }
+
+  .contact-homepage #kontakt .contact-stage-copy,
+  .contact-homepage #kontakt .contact-stage-form {
+    border-radius: 1.35rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-copy {
+    padding: 2rem 1.3rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-form {
+    padding: 1.5rem 1.2rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-form-top {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.3rem;
+  }
+
+  .contact-homepage #kontakt .dark-panel-title {
+    max-width: none;
+    font-size: clamp(1.95rem, 8vw, 2.8rem) !important;
+  }
+
+  .contact-homepage #kontakt .contact-panel-pills,
+  .contact-homepage #kontakt .contact-form-pills {
+    gap: 0.5rem;
+  }
+
+  .contact-homepage #kontakt .contact-panel-pills span,
+  .contact-homepage #kontakt .contact-form-pills span {
+    font-size: 0.72rem;
+  }
+
+  .contact-homepage #kontakt .contact-trust-row {
+    gap: 0.75rem;
+  }
+
+  .contact-homepage #kontakt .contact-trust-index {
+    min-width: 1.65rem;
+    padding-top: 0.8rem;
+  }
+
+  .contact-homepage #kontakt input:not([type="checkbox"]),
+  .contact-homepage #kontakt select,
+  .contact-homepage #kontakt textarea {
+    border-radius: 0.9rem !important;
+  }
+}
+
+/* Contact section compact desktop pass */
+.contact-homepage #kontakt.contact-page-form {
+  padding-block: 4.75rem !important;
+}
+
+.contact-homepage #kontakt > .section-container {
+  max-width: 1380px;
+}
+
+.contact-homepage #kontakt .contact-stage {
+  gap: 0.9rem !important;
+  align-items: stretch;
+}
+
+.contact-homepage #kontakt .contact-stage-copy {
+  padding: 2.2rem 1.55rem !important;
+}
+
+.contact-homepage #kontakt .contact-stage-form {
+  padding: 1.85rem 1.55rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-title {
+  font-size: clamp(1.95rem, 3vw, 3.05rem) !important;
+  line-height: 1.02 !important;
+  max-width: 8.3ch;
+  margin-bottom: 1rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-body {
+  font-size: 0.98rem !important;
+  line-height: 1.7 !important;
+}
+
+.contact-homepage #kontakt .contact-panel-pills {
+  gap: 0.55rem;
+  margin-bottom: 1.4rem !important;
+}
+
+.contact-homepage #kontakt .contact-panel-pills span,
+.contact-homepage #kontakt .contact-form-pills span {
+  min-height: 2rem;
+  padding: 0.45rem 0.72rem;
+  font-size: 0.69rem;
+}
+
+.contact-homepage #kontakt .contact-trust-list {
+  padding-top: 1rem !important;
+}
+
+.contact-homepage #kontakt .contact-trust-row {
+  gap: 0.85rem;
+  padding: 0.9rem 0;
+}
+
+.contact-homepage #kontakt .contact-trust-index {
+  min-width: 1.5rem;
+  padding-top: 0.72rem;
+  font-size: 0.64rem;
+}
+
+.contact-homepage #kontakt .contact-trust-icon,
+.contact-homepage #kontakt .contact-info-panel .dark-panel-icon {
+  width: 2.65rem !important;
+  height: 2.65rem !important;
+  border-radius: 0.95rem !important;
+}
+
+.contact-homepage #kontakt h4.dark-panel-title {
+  font-size: 0.96rem !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-top {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.15rem;
+}
+
+.contact-homepage #kontakt .contact-form-title {
+  font-size: clamp(1.45rem, 2.2vw, 2.05rem);
+}
+
+.contact-homepage #kontakt .contact-form-lead {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin-top: 0.55rem;
+}
+
+.contact-homepage #kontakt form.space-y-8 > * + * {
+  margin-top: 1.05rem !important;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]),
+.contact-homepage #kontakt select,
+.contact-homepage #kontakt textarea {
+  min-height: 3.2rem;
+  border-radius: 0.9rem !important;
+  padding: 0.8rem 0.95rem !important;
+  font-size: 0.92rem !important;
+}
+
+.contact-homepage #kontakt textarea {
+  min-height: 7.5rem;
+}
+
+.contact-homepage #kontakt .contact-privacy-box {
+  padding: 0.85rem 0.95rem !important;
+  border-radius: 1rem !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box span {
+  font-size: 0.82rem !important;
+  line-height: 1.5 !important;
+}
+
+.contact-homepage #kontakt .btn-primary {
+  min-height: 3.35rem;
+}
+
+@media (min-width: 1101px) {
+  .contact-homepage #kontakt .contact-stage {
+    grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr) !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .contact-homepage #kontakt > .section-container {
+    max-width: 1120px;
+  }
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt.contact-page-form {
+    padding-block: 4rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-copy {
+    padding: 1.5rem 1.05rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-form {
+    padding: 1.35rem 1.05rem !important;
+  }
+
+  .contact-homepage #kontakt .dark-panel-title {
+    max-width: none;
+    font-size: clamp(1.8rem, 7vw, 2.45rem) !important;
+  }
+}
+
+/* Contact compact width optimization */
+.contact-homepage #kontakt {
+  padding-block: 4.5rem !important;
+}
+
+.contact-homepage #kontakt > .section-container {
+  max-width: 1440px !important;
+}
+
+.contact-homepage #kontakt .contact-stage {
+  align-items: stretch;
+}
+
+.contact-homepage #kontakt .contact-stage-copy,
+.contact-homepage #kontakt .contact-stage-form {
+  min-height: auto;
+}
+
+.contact-homepage #kontakt .contact-stage-copy {
+  padding: 2rem 1.5rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-title {
+  font-size: clamp(2rem, 3vw, 3rem) !important;
+  line-height: 1.05;
+  max-width: 8.5ch;
+  margin-bottom: 1rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-body {
+  font-size: 0.98rem !important;
+  line-height: 1.65;
+}
+
+.contact-homepage #kontakt .contact-panel-pills {
+  gap: 0.55rem;
+  margin-bottom: 1.1rem !important;
+}
+
+.contact-homepage #kontakt .contact-panel-pills span {
+  min-height: 2rem;
+  padding: 0.5rem 0.78rem;
+  font-size: 0.72rem;
+}
+
+.contact-homepage #kontakt .contact-trust-list {
+  padding-top: 1rem !important;
+}
+
+.contact-homepage #kontakt .contact-trust-row {
+  gap: 0.85rem;
+  padding: 0.85rem 0;
+}
+
+.contact-homepage #kontakt .contact-trust-icon,
+.contact-homepage #kontakt .contact-info-panel .dark-panel-icon {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 1rem;
+}
+
+.contact-homepage #kontakt .contact-trust-row p {
+  font-size: 0.85rem !important;
+  line-height: 1.5;
+}
+
+.contact-homepage #kontakt .contact-stage-form {
+  padding: 1.75rem 1.5rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem 1.5rem;
+  align-items: start;
+  margin-bottom: 1.3rem;
+  padding-bottom: 1.2rem;
+}
+
+.contact-homepage #kontakt .contact-form-kicker {
+  margin-bottom: 0.45rem;
+}
+
+.contact-homepage #kontakt .contact-form-title {
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  line-height: 1.08;
+}
+
+.contact-homepage #kontakt .contact-form-lead {
+  margin-top: 0.55rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.contact-homepage #kontakt .contact-form-pills {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  max-width: none;
+}
+
+.contact-homepage #kontakt .contact-form-pills span {
+  min-height: 1.95rem;
+  padding: 0.48rem 0.72rem;
+  font-size: 0.71rem;
+  white-space: nowrap;
+}
+
+.contact-homepage #kontakt .contact-form-card form > * + * {
+  margin-top: 1rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-card label {
+  margin-bottom: 0.45rem !important;
+  font-size: 0.89rem;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]),
+.contact-homepage #kontakt select,
+.contact-homepage #kontakt textarea {
+  min-height: 3.2rem;
+  padding: 0.82rem 0.95rem !important;
+}
+
+.contact-homepage #kontakt textarea {
+  min-height: 7.25rem;
+}
+
+.contact-homepage #kontakt .contact-privacy-box {
+  padding: 0.85rem 1rem !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box span {
+  font-size: 0.82rem !important;
+  line-height: 1.5;
+}
+
+.contact-homepage #kontakt .btn-primary {
+  min-height: 3.45rem;
+}
+
+@media (max-width: 1200px) {
+  .contact-homepage #kontakt > .section-container {
+    max-width: 1260px !important;
+  }
+
+  .contact-homepage #kontakt .contact-form-top {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-homepage #kontakt .contact-form-pills {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt {
+    padding-block: 4rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-copy {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-form {
+    padding: 1.35rem 1rem !important;
+  }
+
+  .contact-homepage #kontakt .dark-panel-title {
+    max-width: none;
+  }
+
+  .contact-homepage #kontakt .contact-form-title {
+    font-size: 1.5rem;
+  }
+
+  .contact-homepage #kontakt .contact-form-card form > * + * {
+    margin-top: 0.9rem !important;
+  }
+}
+
+/* Contact final scale-down */
+.contact-homepage #kontakt {
+  padding-block: 3.4rem !important;
+}
+
+.contact-homepage #kontakt > .section-container {
+  max-width: 1320px !important;
+}
+
+.contact-homepage #kontakt .contact-stage {
+  padding: 0.7rem;
+  border-radius: 1.8rem;
+}
+
+.contact-homepage #kontakt .contact-stage-copy {
+  padding: 1.6rem 1.25rem !important;
+  border-radius: 1.5rem !important;
+}
+
+.contact-homepage #kontakt .contact-stage-form {
+  padding: 1.45rem 1.25rem !important;
+  border-radius: 1.5rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-title {
+  font-size: clamp(1.75rem, 2.5vw, 2.5rem) !important;
+  margin-bottom: 0.8rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-body {
+  font-size: 0.92rem !important;
+  line-height: 1.55;
+}
+
+.contact-homepage #kontakt .contact-panel-pills {
+  margin-bottom: 0.8rem !important;
+}
+
+.contact-homepage #kontakt .contact-panel-pills span,
+.contact-homepage #kontakt .contact-form-pills span {
+  min-height: 1.85rem;
+  padding: 0.42rem 0.68rem;
+  font-size: 0.68rem;
+}
+
+.contact-homepage #kontakt .contact-trust-row {
+  padding: 0.65rem 0;
+}
+
+.contact-homepage #kontakt .contact-trust-icon,
+.contact-homepage #kontakt .contact-info-panel .dark-panel-icon {
+  width: 2.45rem;
+  height: 2.45rem;
+}
+
+.contact-homepage #kontakt .contact-trust-row p {
+  font-size: 0.8rem !important;
+}
+
+.contact-homepage #kontakt h4.dark-panel-title {
+  font-size: 0.92rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-top {
+  margin-bottom: 1rem;
+  padding-bottom: 0.95rem;
+}
+
+.contact-homepage #kontakt .contact-form-title {
+  font-size: clamp(1.3rem, 1.9vw, 1.75rem);
+}
+
+.contact-homepage #kontakt .contact-form-lead {
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.contact-homepage #kontakt .contact-form-card form > * + * {
+  margin-top: 0.8rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-card label {
+  font-size: 0.83rem;
+  margin-bottom: 0.35rem !important;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]),
+.contact-homepage #kontakt select,
+.contact-homepage #kontakt textarea {
+  min-height: 2.85rem;
+  padding: 0.68rem 0.82rem !important;
+  font-size: 0.88rem !important;
+  border-radius: 0.85rem !important;
+}
+
+.contact-homepage #kontakt textarea {
+  min-height: 6.2rem;
+}
+
+.contact-homepage #kontakt .contact-privacy-box {
+  padding: 0.68rem 0.8rem !important;
+  border-radius: 1rem !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box span {
+  font-size: 0.76rem !important;
+}
+
+.contact-homepage #kontakt .btn-primary {
+  min-height: 3rem;
+  font-size: 0.9rem !important;
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt {
+    padding-block: 3.2rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-copy,
+  .contact-homepage #kontakt .contact-stage-form {
+    padding: 1.15rem 0.95rem !important;
+  }
+}
+
+/* Contact section final compact pass */
+@media (min-width: 1280px) {
+  .contact-homepage #kontakt .contact-stage {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) !important;
+  }
+}
+
+.contact-homepage #kontakt > .section-container {
+  max-width: 1320px !important;
+}
+
+.contact-homepage #kontakt .contact-stage {
+  padding: 0.5rem;
+}
+
+.contact-homepage #kontakt .contact-stage-copy {
+  padding: 1.55rem 1.15rem !important;
+}
+
+.contact-homepage #kontakt .contact-stage-form {
+  padding: 1.4rem 1.15rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-kicker {
+  margin-bottom: 0.8rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-title {
+  font-size: clamp(1.45rem, 1.85vw, 1.95rem) !important;
+  line-height: 1.08;
+  max-width: none !important;
+  white-space: nowrap;
+}
+
+.contact-homepage #kontakt .dark-panel-body {
+  font-size: 0.92rem !important;
+  line-height: 1.55;
+}
+
+.contact-homepage #kontakt .contact-panel-pills {
+  gap: 0.45rem;
+  margin-bottom: 0.85rem !important;
+}
+
+.contact-homepage #kontakt .contact-panel-pills span {
+  min-height: 1.82rem;
+  padding: 0.4rem 0.62rem;
+  font-size: 0.66rem;
+}
+
+.contact-homepage #kontakt .contact-trust-list {
+  padding-top: 0.85rem !important;
+}
+
+.contact-homepage #kontakt .contact-trust-row {
+  gap: 0.7rem;
+  padding: 0.72rem 0;
+}
+
+.contact-homepage #kontakt .contact-trust-index {
+  min-width: 1.3rem;
+  padding-top: 0.65rem;
+  font-size: 0.62rem;
+}
+
+.contact-homepage #kontakt .contact-trust-icon,
+.contact-homepage #kontakt .contact-info-panel .dark-panel-icon {
+  width: 2.55rem;
+  height: 2.55rem;
+}
+
+.contact-homepage #kontakt h4.dark-panel-title {
+  font-size: 0.93rem !important;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.contact-homepage #kontakt .contact-trust-row p {
+  font-size: 0.8rem !important;
+  line-height: 1.42;
+}
+
+.contact-homepage #kontakt .contact-form-top {
+  margin-bottom: 1rem;
+  padding-bottom: 0.95rem;
+}
+
+.contact-homepage #kontakt .contact-form-title {
+  font-size: clamp(1.3rem, 1.8vw, 1.72rem);
+}
+
+.contact-homepage #kontakt .contact-form-lead {
+  margin-top: 0.42rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.contact-homepage #kontakt .contact-form-pills {
+  gap: 0.42rem;
+}
+
+.contact-homepage #kontakt .contact-form-pills span {
+  min-height: 1.78rem;
+  padding: 0.38rem 0.58rem;
+  font-size: 0.66rem;
+}
+
+.contact-homepage #kontakt .contact-form-card form > * + * {
+  margin-top: 0.8rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-card label {
+  margin-bottom: 0.36rem !important;
+  font-size: 0.82rem;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]),
+.contact-homepage #kontakt select,
+.contact-homepage #kontakt textarea {
+  min-height: 2.85rem;
+  border-radius: 0.85rem !important;
+  padding: 0.72rem 0.9rem !important;
+  font-size: 0.9rem !important;
+}
+
+.contact-homepage #kontakt textarea {
+  min-height: 5.75rem;
+}
+
+.contact-homepage #kontakt .contact-privacy-box {
+  padding: 0.72rem 0.85rem !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box span {
+  font-size: 0.76rem !important;
+  line-height: 1.38;
+}
+
+.contact-homepage #kontakt .btn-primary {
+  min-height: 3rem;
+  font-size: 0.92rem !important;
+}
+
+@media (max-width: 1100px) {
+  .contact-homepage #kontakt .dark-panel-title,
+  .contact-homepage #kontakt h4.dark-panel-title {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt .dark-panel-title,
+  .contact-homepage #kontakt h4.dark-panel-title {
+    white-space: normal;
+  }
+
+  .contact-homepage #kontakt .contact-stage-copy {
+    padding: 1.25rem 0.92rem !important;
+  }
+
+  .contact-homepage #kontakt .contact-stage-form {
+    padding: 1.15rem 0.92rem !important;
+  }
+}
+
+/* Contact section - smaller overall + filled left panel */
+.contact-homepage #kontakt > .section-container {
+  max-width: 1180px !important;
+}
+
+.contact-homepage #kontakt {
+  padding-block: 3.6rem !important;
+}
+
+.contact-homepage #kontakt .contact-stage {
+  padding: 0.38rem;
+  border-radius: 1.7rem;
+}
+
+.contact-homepage #kontakt .contact-stage-copy,
+.contact-homepage #kontakt .contact-stage-form {
+  border-radius: 1.45rem !important;
+}
+
+.contact-homepage #kontakt .contact-stage-copy {
+  padding: 1.2rem 0.95rem !important;
+}
+
+.contact-homepage #kontakt .contact-stage-form {
+  padding: 1.12rem 0.95rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-kicker {
+  margin-bottom: 0.6rem !important;
+  font-size: 0.72rem !important;
+}
+
+.contact-homepage #kontakt .dark-panel-title {
+  font-size: clamp(1.25rem, 1.55vw, 1.6rem) !important;
+  line-height: 1.06;
+}
+
+.contact-homepage #kontakt .dark-panel-body {
+  font-size: 0.85rem !important;
+  line-height: 1.48;
+}
+
+.contact-homepage #kontakt .contact-panel-pills {
+  gap: 0.38rem;
+  margin-bottom: 0.7rem !important;
+}
+
+.contact-homepage #kontakt .contact-panel-pills span {
+  min-height: 1.65rem;
+  padding: 0.34rem 0.54rem;
+  font-size: 0.62rem;
+}
+
+.contact-homepage #kontakt .contact-trust-list {
+  padding-top: 0.7rem !important;
+}
+
+.contact-homepage #kontakt .contact-trust-row {
+  gap: 0.6rem;
+  padding: 0.62rem 0;
+}
+
+.contact-homepage #kontakt .contact-trust-index {
+  min-width: 1.1rem;
+  padding-top: 0.5rem;
+  font-size: 0.58rem;
+}
+
+.contact-homepage #kontakt .contact-trust-icon,
+.contact-homepage #kontakt .contact-info-panel .dark-panel-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.8rem;
+}
+
+.contact-homepage #kontakt h4.dark-panel-title {
+  font-size: 0.84rem !important;
+  line-height: 1.15;
+  margin-bottom: 0.15rem !important;
+}
+
+.contact-homepage #kontakt .contact-trust-row p {
+  font-size: 0.74rem !important;
+  line-height: 1.32;
+}
+
+.contact-homepage #kontakt .contact-panel-footer {
+  margin-top: 0.8rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.contact-homepage #kontakt .contact-panel-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.contact-homepage #kontakt .contact-panel-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 3.5rem;
+  padding: 0.55rem 0.45rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0.9rem;
+  background: rgba(255,255,255,0.035);
+  text-align: center;
+}
+
+.contact-homepage #kontakt .contact-panel-stat strong {
+  color: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.contact-homepage #kontakt .contact-panel-stat span {
+  color: rgba(255,255,255,0.68);
+  font-size: 0.64rem;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.contact-homepage #kontakt .contact-panel-note {
+  margin: 0.55rem 0 0;
+  color: rgba(255,255,255,0.62);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.contact-homepage #kontakt .contact-form-top {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.8rem;
+}
+
+.contact-homepage #kontakt .contact-form-kicker {
+  margin-bottom: 0.34rem;
+  font-size: 0.66rem;
+}
+
+.contact-homepage #kontakt .contact-form-title {
+  font-size: clamp(1.14rem, 1.45vw, 1.45rem);
+  line-height: 1.06;
+}
+
+.contact-homepage #kontakt .contact-form-lead {
+  margin-top: 0.32rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.contact-homepage #kontakt .contact-form-pills {
+  gap: 0.34rem;
+}
+
+.contact-homepage #kontakt .contact-form-pills span {
+  min-height: 1.58rem;
+  padding: 0.3rem 0.52rem;
+  font-size: 0.62rem;
+}
+
+.contact-homepage #kontakt .contact-form-card form > * + * {
+  margin-top: 0.72rem !important;
+}
+
+.contact-homepage #kontakt .contact-form-card label {
+  margin-bottom: 0.28rem !important;
+  font-size: 0.76rem;
+}
+
+.contact-homepage #kontakt input:not([type="checkbox"]),
+.contact-homepage #kontakt select,
+.contact-homepage #kontakt textarea {
+  min-height: 2.55rem;
+  border-radius: 0.75rem !important;
+  padding: 0.62rem 0.78rem !important;
+  font-size: 0.82rem !important;
+}
+
+.contact-homepage #kontakt textarea {
+  min-height: 4.7rem;
+}
+
+.contact-homepage #kontakt .contact-privacy-box {
+  padding: 0.62rem 0.75rem !important;
+  border-radius: 0.9rem !important;
+}
+
+.contact-homepage #kontakt .contact-privacy-box span {
+  font-size: 0.69rem !important;
+  line-height: 1.28;
+}
+
+.contact-homepage #kontakt .btn-primary {
+  min-height: 2.7rem;
+  border-radius: 0.9rem !important;
+  font-size: 0.84rem !important;
+}
+
+@media (max-width: 1100px) {
+  .contact-homepage #kontakt > .section-container {
+    max-width: 1000px !important;
+  }
+
+  .contact-homepage #kontakt .contact-panel-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt > .section-container {
+    max-width: none !important;
+  }
+
+  .contact-homepage #kontakt {
+    padding-block: 3.2rem !important;
+  }
+
+  .contact-homepage #kontakt .dark-panel-title,
+  .contact-homepage #kontakt h4.dark-panel-title {
+    white-space: normal;
+  }
+
+  .contact-homepage #kontakt .contact-panel-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Contact left panel: extra trust/highlight icons */
+.contact-homepage #kontakt .contact-panel-highlights {
+  display: grid;
+  gap: 0.42rem;
+  margin-top: 0.7rem;
+}
+
+.contact-homepage #kontakt .contact-panel-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0.9rem;
+  background: rgba(255,255,255,0.03);
+}
+
+.contact-homepage #kontakt .contact-panel-highlight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255,107,53,0.25);
+  background: linear-gradient(135deg, rgba(255,107,53,0.18), rgba(255,107,53,0.08));
+  color: var(--ch-accent);
+}
+
+.contact-homepage #kontakt .contact-panel-highlight strong {
+  display: block;
+  color: #ffffff;
+  font-size: 0.76rem;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.contact-homepage #kontakt .contact-panel-highlight span:not(.contact-panel-highlight-icon) {
+  display: block;
+  margin-top: 0.14rem;
+  color: rgba(255,255,255,0.66);
+  font-size: 0.67rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+  .contact-homepage #kontakt .contact-panel-highlights {
+    gap: 0.35rem;
+  }
+
+  .contact-homepage #kontakt .contact-panel-highlight {
+    padding: 0.5rem 0.55rem;
+  }
+}
+
+/* Hero service icons + testimonial rating fix */
+.contact-homepage .ch-portrait-side {
+  gap: 0.9rem;
+}
+
+.contact-homepage .ch-portrait-services {
+  display: grid !important;
+  grid-template-columns: repeat(3, auto);
+  align-items: center;
+  gap: 0.55rem 0.65rem !important;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 1rem;
+  background: rgba(10,10,10,.38);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 35px rgba(0,0,0,.18);
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+.contact-homepage .ch-portrait-services > strong {
+  grid-column: 1 / -1;
+  color: #fff;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.contact-homepage .ch-portrait-service {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: .35rem !important;
+  color: rgba(255,255,255,.78) !important;
+  font-size: .66rem !important;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.contact-homepage .ch-portrait-service svg {
+  color: var(--le-orange);
+  flex-shrink: 0;
+}
+
+.contact-homepage .ch-portrait-service b {
+  color: inherit;
+  font-weight: 650;
+}
+
+.contact-homepage .ch-rating {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: -10px 0 16px;
+}
+
+.contact-homepage .ch-rating-stars {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: .16rem;
+  color: var(--le-orange);
+  line-height: 1;
+}
+
+.contact-homepage .ch-rating-stars svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.contact-homepage .ch-rating > strong {
+  display: inline-block;
+  color: var(--le-ink);
+  font-size: .76rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 760px) {
+  .contact-homepage .ch-portrait-services {
+    grid-template-columns: 1fr;
+    gap: .48rem !important;
+    padding: .7rem .75rem;
+  }
+
+  .contact-homepage .ch-portrait-services > strong {
+    grid-column: auto;
+  }
+}
