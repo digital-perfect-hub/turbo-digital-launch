@@ -31,6 +31,8 @@ import {
 } from "@/hooks/useSiteSettings";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { upsertSiteSetting } from "@/lib/site-settings";
+import ContactHomepageEditor from "@/components/admin/homepage/ContactHomepageEditor";
+import { CONTACT_HOMEPAGE_KEY } from "@/lib/contact-homepage";
 import SectionPreviewPanel from "@/components/admin/homepage/SectionPreviewPanel";
 import SectionStyleEditor from "@/components/admin/homepage/SectionStyleEditor";
 import {
@@ -358,7 +360,7 @@ const SectionHeader = ({
   </div>
 );
 
-const AdminHomepage = () => {
+const LegacyAdminHomepage = () => {
   const queryClient = useQueryClient();
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
@@ -429,8 +431,8 @@ const AdminHomepage = () => {
       queryClient.invalidateQueries({ queryKey: ["site_settings", siteId] });
       toast.success("Homepage-Inhalte erfolgreich gespeichert.");
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Fehler beim Speichern.");
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "Fehler beim Speichern.");
     },
   });
 
@@ -1725,6 +1727,13 @@ const toggleSectionVisibility = (sectionId: HomepageSectionId, checked: boolean)
       </div>
     </div>
   );
+};
+
+const AdminHomepage = () => {
+  const { activeSiteId } = useSiteContext();
+  const { settings } = useSiteSettings();
+  if (activeSiteId !== DEFAULT_SITE_ID && !settings[CONTACT_HOMEPAGE_KEY]) return <LegacyAdminHomepage />;
+  return <><ContactHomepageEditor /><details className="m-6 rounded-xl border p-5"><summary className="cursor-pointer font-medium">Bisheriges Layout bearbeiten (nur bei deaktivierter Kontakt-Startseite sichtbar)</summary><LegacyAdminHomepage /></details></>;
 };
 
 export default AdminHomepage;

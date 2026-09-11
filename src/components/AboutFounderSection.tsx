@@ -5,7 +5,6 @@ import {
   resolveHomepageSectionPatternClassFromSettings,
   resolveHomepageSectionStyleVarsFromSettings,
 } from "@/lib/homepage-section-styles";
-import founderPhoto from "@/assets/dp-hero-markus.png";
 
 const navigateToTarget = (target: string) => {
   const normalized = (target || "").trim();
@@ -41,6 +40,8 @@ const AboutFounderSection = () => {
     >
       <div className="section-container relative z-10">
         <div className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+
+          {/* Founder placeholder — swap for real photo when ready */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -48,8 +49,59 @@ const AboutFounderSection = () => {
             transition={{ duration: 0.6 }}
             className="relative mx-auto w-full max-w-sm"
           >
-            <div className="overflow-hidden rounded-[2rem] border shadow-[0_38px_110px_-62px_rgba(14,31,83,0.32)]" style={{ borderColor: "var(--surface-card-border)" }}>
-              <img src={founderPhoto} alt="Markus Schulz, Digital-Perfect" className="h-full w-full object-cover" loading="lazy" />
+            <div
+              className="overflow-hidden rounded-[2rem] border"
+              style={{
+                borderColor: "var(--surface-card-border)",
+                background: "linear-gradient(145deg, var(--theme-navy, #0A1842) 0%, color-mix(in srgb, var(--theme-navy, #0A1842) 80%, var(--theme-primary-hex, #FF6B2C) 20%) 100%)",
+                aspectRatio: "3/4",
+                boxShadow: "0 38px 110px -62px rgba(14,31,83,0.32)",
+              }}
+            >
+              {/* Abstract brand monogram */}
+              <div className="flex h-full flex-col items-center justify-center gap-6 p-10">
+                <div
+                  className="flex h-28 w-28 items-center justify-center rounded-[2rem] text-4xl font-black tracking-tighter"
+                  style={{
+                    background: "color-mix(in srgb, var(--theme-primary-hex, #FF6B2C) 15%, transparent 85%)",
+                    color: "var(--theme-primary-hex, #FF6B2C)",
+                    border: "1.5px solid color-mix(in srgb, var(--theme-primary-hex, #FF6B2C) 40%, transparent 60%)",
+                  }}
+                >
+                  MS
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">Markus Schulz</p>
+                  <p
+                    className="mt-1 text-sm font-medium"
+                    style={{ color: "color-mix(in srgb, white 55%, transparent 45%)" }}
+                  >
+                    Gründer & Geschäftsführer
+                  </p>
+                  <p
+                    className="mt-0.5 text-sm"
+                    style={{ color: "color-mix(in srgb, white 40%, transparent 60%)" }}
+                  >
+                    Digital-Perfect, Linz
+                  </p>
+                </div>
+                {/* Decorative dots */}
+                <div className="flex gap-2">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="rounded-full"
+                      style={{
+                        width: i === 1 ? "24px" : "8px",
+                        height: "8px",
+                        background: i === 1
+                          ? "var(--theme-primary-hex, #FF6B2C)"
+                          : "color-mix(in srgb, white 25%, transparent 75%)",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -74,7 +126,7 @@ const AboutFounderSection = () => {
                 <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Quote size={18} />
                 </div>
-                <p className="text-base leading-relaxed text-[var(--surface-card-text)]">“{featuredTestimonial.text}”</p>
+                <p className="text-base leading-relaxed text-[var(--surface-card-text)]">"{featuredTestimonial.text}"</p>
                 <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--surface-card-muted)]">
                   <BadgeCheck size={16} className="text-primary" />
                   {featuredTestimonial.name} · {featuredTestimonial.role}

@@ -6,6 +6,117 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-09-11 — Kontaktorientierte Startseite im Stil der Referenzseite
+
+**Auslöser:** Analyse der beiden Bildschirmaufnahmen und der Live-Seiten von Digital-Perfect und LeventElci.de. Die neue Startseite soll Levents klare Editorial-Struktur und persönliche Ansprache aufnehmen, die Digital-Perfect-Farben behalten und Preise/Produkte zunächst vollständig aus dem Einstieg entfernen.
+
+### Erledigt: neue Startseitenvariante für Digital-Perfect
+
+- `src/components/ContactHomepage.tsx` + `src/styles/contact-homepage.css`: neue kontaktorientierte Homepage mit dunklem Hero, großem Gründerfoto, drei Leistungsfeldern, vorhandenen Kundenstimmen, persönlichem Founder-Abschnitt, drei Ablauf-Schritten, FAQ und Kontaktabschluss.
+- `public/markus-schulz-gruender-ceo-digital-perfect.webp`: vom User bereitgestelltes neues Gründerfoto im Hero eingebunden.
+- `src/lib/contact-homepage.ts`: validierbares, mandantenbezogenes Content-Modell mit kontaktorientierten Defaults. Es aktiviert sich standardmäßig nur für die Digital-Perfect-Site (`DEFAULT_SITE_ID`); andere Mandanten bleiben auf dem bisherigen Homepage-Renderer.
+- `src/pages/Index.tsx`: neue Variante wird vor dem bisherigen Abschnittsrenderer geladen; Hero-Preload wird für die Kontaktvariante übersprungen.
+- `src/components/Header.tsx` und `Footer.tsx`: neue Homepage kann eigene Anker-Navigation und Kontakt-CTA übergeben.
+- `src/components/ContactSection.tsx`: neue Variante entfernt die Pflicht-Paketauswahl und speichert nur optionales Anliegen; `budget` bleibt bei dieser Variante `null`. Formularlabels sind mit `htmlFor`/`id` und Autocomplete versehen; Datenschutzlink ist sichtbar.
+- `src/components/admin/homepage/ContactHomepageEditor.tsx` und `src/pages/admin/AdminHomepage.tsx`: Inhalte der Kontaktvariante sind im Admin editierbar. Das alte Layout bleibt als aufklappbarer Legacy-Bereich erreichbar.
+
+### Bewusste Entscheidungen
+
+- Preise, Paketnamen und Produktkarten werden in der neuen Startseite nicht gerendert. Auch Menü, Ablauf, Formular und FAQ verwenden keine Paketlogik.
+- Kundenstimmen werden aus der vorhandenen Testimonials-Tabelle geladen; solange dort keine sichtbaren Datensätze liegen, werden die bestehenden Default-Stimmen genutzt.
+- Fotoquelle ist der vom User bereitgestellte lokale Pfad `/markus-schulz-gruender-ceo-digital-perfect.webp`, damit kein externer Upload erforderlich ist.
+- Foto-Alttext, Fotoanzeige, Navigation, Leistungen, FAQ, Founder-Text und Kontakttexte sind über `home_contact_page` editierbar.
+
+### Prüfung
+
+- Lokale Desktop-Vorschau geprüft: Hero, Bild, Kontaktnavigation, Leistungs- und Kontaktabschnitt sichtbar; kein horizontales Überlaufen.
+- Mobile Vorschau bei 390 px geprüft: Menü öffnet, Anker-Navigation schließt wieder, `scrollWidth` entspricht der Viewportbreite, Preise/Paketbegriffe fehlen im neuen `main`.
+- `npm run build` erfolgreich.
+- `vitest run` erfolgreich: 3 Testdateien, 8 Tests.
+- Gezieltes ESLint auf geänderten React/TypeScript-Dateien erfolgreich.
+- Vollständiger TypeScript-Check enthält weiterhin 109 bereits vorhandene Fehler; Vergleich gegen den Baseline-Stand zeigt keine neuen Fehler.
+
+### Offen vor Veröffentlichung
+
+- Änderungen müssen im Repository committed und über den vorhandenen Deployment-Weg veröffentlicht werden.
+- Vor Veröffentlichung im Admin einmal speichern und die tatsächliche Formularzustellung in der Zielumgebung prüfen.
+- Standortangabe „Linz“/„Wien“ und rechtliche Seiten bleiben bestehende Content-/Geschäftsangaben und wurden nicht erfunden oder automatisch geändert.
+
+---
+
+## 2026-08-24 (Folge-Session) — Footer + Kicker-Badge Dark-on-Dark Fixes
+
+**Auslöser:** Fortführung der vorherigen Session (Kontext-Limit). User hatte Screenshot gesendet der deutlich unsichtbare (dunkle) Schrift im Footer und auf der Startseite zeigte.
+
+### Erledigt: Footer.tsx — Headings orange, Logo-Text weiß
+
+`src/components/Footer.tsx`:
+- Alle 3 Spalten-Überschriften (`h4`: Navigation, Rechtliches, Kontakt) hatten kein explizites Farbattribut und erbten `var(--hero-headline)` aus `.footer-shell` — im Live-DB-Setup dunkel auf dunkelblau.
+- Fix: `style={{ color: "var(--theme-primary-hex)" }}` zu allen drei `h4` Elementen ergänzt → jetzt immer orange.
+- Logo-Text im Footer: Frühere Farb-Logik deckte `#0A1842` (navy) nicht ab → Schrift wurde unsichtbar dunkel auf dunkel. Fix: immer `style={{ color: "#FFFFFF" }}` im Footer (Footer-Hintergrund ist immer dunkelblau).
+- `tsc --noEmit` sauber, auf User-PC geliefert.
+
+### Erledigt: index.css — Kicker-Badges auf dunklen Sections fixiert
+
+Problem: `.homepage-style-scope .section-label` fiel auf `var(--surface-card)` als Hintergrund und `var(--surface-card-text)` als Textfarbe zurück. In dunklen Sections (z.B. „Pakete für KMU") überschreibt das Section-Style-System `--surface-card` auf die Kartenfarbe (oft ebenfalls dunkelblau) → Badge-Schrift unsichtbar.
+
+Fix in `index.css` Zeile 928ff:
+```css
+.homepage-style-scope .section-label {
+  background: var(--homepage-badge-bg, color-mix(in srgb, var(--theme-primary-hex, #FF6B2C) 12%, transparent));
+  color: var(--homepage-badge-text, var(--theme-primary-hex, #FF6B2C));
+  border-color: var(--homepage-badge-bg, color-mix(in srgb, var(--theme-primary-hex, #FF6B2C) 30%, transparent));
+}
+```
+→ Wenn `--homepage-badge-bg/text` nicht via DB gesetzt: immer orange (auf dunkel UND auf hell lesbar).
+→ Gilt universell für alle Sections: SeoPackagesSection, WebdesignPackagesSection, TestimonialsSection, AboutFounderSection, etc.
+- Auf User-PC geliefert.
+
+### Push ausstehend
+
+Alle Änderungen wurden auf dem PC des Users gespeichert. User muss im Repo noch `git add` + `git commit` + `git push` ausführen (Cloud-Session hat keinen Push-Zugriff auf `digital-perfect-hub/turbo-digital-launch`).
+
+### Noch offen
+
+Gleiche wie vorherige Session, plus:
+- Browser-Audit wurde unterbrochen (Browser-Renderer fror mehrfach ein) — restliche Sections nach den Paketen nicht vollständig gesehen. Der CSS-Fix deckt alle `homepage-style-scope` Sections universell ab, aber visuelle Verifikation nach dem Push empfohlen.
+- Hero-Bild / visuelles Element noch ausstehend.
+
+---
+
+## 2026-08-24 — Design-Session: Markus-Foto entfernt, Design-Analyse durchgeführt
+
+**Auslöser:** User bat um vollständigen Design-Audit von digital-perfect.com (Browser-Screenshot von oben bis unten) und danach Umsetzung der Fixes — insbesondere alle Bilder von Markus temporär entfernen während die Website fertig designt wird.
+
+### Erledigt: Markus-Foto aus AboutFounderSection entfernt
+
+`src/components/AboutFounderSection.tsx`:
+- Import `founderPhoto from "@/assets/dp-hero-markus.png"` entfernt
+- `<img>`-Tag durch gestalteten Navy/Orange-Placeholder mit Initialen „MS" ersetzt
+- Layout (2-Spalten-Grid) und alle Animationen bleiben unverändert erhalten
+- Placeholder kann jederzeit durch ein neues Foto via `<img src={...}>` ersetzt werden — kein weiteres Refactoring nötig
+- `tsc --noEmit` sauber
+
+**Asset `src/assets/dp-hero-markus.png` bleibt im Repo** — nur der Import/die Verwendung wurde entfernt. Kann bei Bedarf auch aus dem Repo gelöscht werden (git rm), wurde aber bewusst noch behalten.
+
+### Design-Audit Erkenntnisse (noch nicht umgesetzt — nächste Schritte)
+
+Aus dem Browser-Screenshot-Audit ergaben sich folgende priorisierte Punkte:
+
+1. **Portfolio-Sektion fehlt auf der Startseite** — `PortfolioSection.tsx` existiert im Code, ist aber nicht sichtbar verlinkt/beworben. Echte Website-Beispiele (Screenshots mit Link) sind der wichtigste Trust-Faktor für eine Webdesign-Agentur.
+2. **Testimonial-Avatare generisch** — oranges Kreis-Icon statt echter Fotos/Logos. Mindestens Firmenlogos oder Initialen-Avatare wären glaubwürdiger.
+3. **Footer Social-Links nicht konfiguriert** — Code in `Footer.tsx` unterstützt `social_instagram_url` / `social_linkedin_url`, aber in `global_settings` nicht gesetzt. Fix: Supabase → `global_settings` → `social_instagram_url` + `social_linkedin_url` eintragen (kein Code-Change nötig).
+4. **Hero ohne visuelles Element** — reiner Text auf Navy-Hintergrund. Ein Website-Mockup oder Grafik würde den ersten Eindruck stark verbessern.
+5. **Zu viel Fließtext in vielen Sektionen** — Texte kürzen, mehr Weißraum. Kein Code-Fix, Admin-Content-Aufgabe.
+6. **Footer-Tagline** (`global_settings.footer_description`) passt tonal nicht zur ehrlichen Markenstimme — klingt zu generisch/reißerisch. Admin-Content-Fix.
+7. **Standort-Inkonsistenz Footer/Site** — Footer zeigt „Wien", Rest der Seite positioniert sich auf „Linz". Aus vorheriger Session bekannt, noch nicht entschieden ob beabsichtigt.
+
+### Noch offen aus Vorsessions
+- Impressum/Datenschutz/AGB komplett leer (reales rechtliches Risiko — User muss echte Daten eintragen)
+- Cloudflare `index.html` Cache-TTL (kein Code-Fix möglich, nur Coolify/Cloudflare-Einstellung)
+
+---
+
 ## 2026-08-22 (vierte Session) — Optischer Full-Page-Audit: Weiß-in-Weiß-Bug gefixt (Code, ungepusht), Impressum/Datenschutz/AGB komplett leer entdeckt
 
 **Auslöser:** User bat um optischen Check von digital-perfect.com und was noch zu fixen ist. User hatte den Weiß-in-Weiß-Textbug bereits vorher gemeldet (nicht in PROGRESS.md protokolliert gewesen).
@@ -156,3 +267,69 @@ User bat um Analyse des gesamten Projekts + Vergleich mit leventelci.de (Referen
 3. Bild-Render-API-Kosten-/Performance-Tradeoff: User-Entscheidung ausstehend.
 4. Echte Case-Study-Zahlen, Kundenlogo-Freigaben, externes Bewertungs-Platform-Badge (Google/ProvenExpert o.ä.) — brauchen User-Input/Assets, keine Code-Aufgabe.
 5. Nginx-/Coolify-Config nicht im Repo versioniert.
+
+## 2026-09-11 – Referenzprojekte und Header-Navigation
+- Header-Markenlink von SPA-Link auf normalen Startseiten-Link umgestellt, damit ein Klick auf „Digital-Perfect“ die Startseite vollständig neu lädt.
+- Kontakt-Homepage um einen visuellen Referenzbereich mit fünf Projektkarten erweitert: Tiertarif, RankScout, Pudel Schulz, Kraftstamm und seaEQ.
+- Referenzseiten geprüft und lokale Preview-Screenshots bzw. eine gestaltete Preview für die nicht renderbare Tiertarif-Seite unter `public/references/` abgelegt.
+- Karten sind responsiv, verlinken auf die jeweiligen Seiten und öffnen externe Projekte in einem neuen Tab.
+- `npm run build` erfolgreich.
+
+## 2026-09-11 – Referenzbilder und Standortkorrektur
+- Die vier bereitgestellten Bilder aus `public/references/` direkt den passenden Referenzen zugeordnet.
+- Nicht mehr benötigte alte Preview-Dateien und die seaEQ-Referenz entfernt.
+- Pudelschulz-Link auf `https://pudelschulz.de/` korrigiert.
+- Standort im Footer auf „Österreich“ vereinheitlicht; „Wien“ wird auch bei vorhandenen gespeicherten Footer-Einstellungen nicht mehr angezeigt.
+- Tests und Build erfolgreich.
+
+## 2026-09-11 – Referenz-Slider
+- Referenzkarten durch einen großen Ein-Projekt-Slider mit Scroll-Snap ersetzt.
+- Pfeilnavigation, Positionspunkte und Touch-/Trackpad-Swiping ergänzt.
+- Desktop zeigt ein großes zweispaltiges Projektbild, mobil eine optimierte Bild-über-Text-Karte.
+- ESLint, Tests und Build erfolgreich.
+
+## 2026-09-11 – Referenz-Slider visuell überarbeitet
+- Slider auf eine webgerechte Karussell-Komposition mit eigenem Preview-Rahmen umgestellt.
+- Screenshots werden vollständig innerhalb eines Browser-Frames dargestellt, ohne ungewolltes Zuschneiden.
+- Browser-Leiste, Schatten, abgerundete Kanten, Farbflächen und dezente Hover-Animation ergänzt.
+- Mobile Darstellung auf kompakte, gut lesbare Bild/Text-Karten optimiert.
+- Build und ESLint erfolgreich.
+
+## 2026-09-11 – Levent-Elci-Farbpalette übertragen
+- Farbwerte aus dem bereitgestellten Levent-Code übernommen: Orange `#FF6B35`, Orange-Highlight `#FF8C42`, Schwarz `#0A0A0A`, Text `#232326`, Muted `#6B6B70`, Soft-Orange `#FFF5F0` und Linien `#ECECEF`.
+- Palette auf Hero, Buttons, Proof-Bar, Karten, Referenz-Slider, FAQ, Kontaktbereich und Footer angewendet.
+- Bestehende Digital-Perfect-Inhalte, Referenzen und Kontaktfokus unverändert beibehalten.
+- Build erfolgreich.
+
+## 2026-09-11 – Farbgewichtung nach Levent-Liveauftritt
+- Helle Flächen auf reines Weiß umgestellt.
+- Orange `#FF6B35` als kräftige Strukturfarbe für Rahmen, Trenner, Section-Kanten und Slider-Preview verwendet.
+- Soft-Orange nicht mehr als großflächigen Hintergrund verwendet; dunkle Kontrastflächen bleiben gezielt für Hero, Founder und Footer erhalten.
+- Aktuelle Levent-Seite zur visuellen Abwägung geprüft.
+
+## 2026-09-11 – Launch-Ready Abschnittswechsel
+- Videoaufzeichnung geprüft und Abschnittsrhythmus auf Schwarz/Weiß im Wechsel korrigiert.
+- Hero bleibt schwarz; Leistungen und FAQ sind jetzt schwarze Kontrastabschnitte, Referenzen, Ablauf und Kontakt bleiben weiß.
+- Weiße Schrift in schwarzen Abschnitten und dunkle Schrift in weißen Abschnitten explizit korrigiert.
+- Karten, Rahmen, Hover-Zustände und Akzentverläufe an den jeweiligen Hintergrund angepasst.
+- Build und ESLint erfolgreich.
+
+## 2026-09-11 – Kontrast- und Abschnittsfehler behoben
+- Proof-Leiste („Ein Ansprechpartner“, „Ein klarer Plan“, „Ein gemeinsames Ziel“) auf klar lesbare schwarze Schrift gesetzt.
+- Kundenstimmen („Vertrauen entsteht durch gute Arbeit.“) vor den Referenz-Slider verschoben.
+- Referenzbereich („Websites, die im Kopf bleiben.“) darunter platziert und als schwarzer Abschnitt mit weißer Überschrift gestaltet.
+- Kontakt-Infokarte typografisch stabilisiert.
+- Build und ESLint erfolgreich.
+
+## 2026-09-11 – Hero-Porträt sauber integriert
+- Porträt im Hero um eine weichgezeichnete, vergrößerte Hintergrundebene ergänzt.
+- Vordergrundbild mit transparenten seitlichen und unteren Verläufen integriert, damit es sauber in den schwarzen Hero übergeht.
+- Desktop- und Mobile-Positionierung separat optimiert.
+- Caption und Bild-Layer z-index-sicher gestapelt.
+- Build und ESLint erfolgreich.
+
+## 2026-09-11 – Hero-Rechtsfläche gestaltet
+- Leeren rechten Hero-Bereich als bewusstes Gestaltungselement ausgebaut.
+- Vertikale Akzentlinie, Index-Anzeige und kompakte Digital-Perfect-Leistungskarte ergänzt.
+- Die Elemente liegen über dem weich verlaufenden Bildhintergrund und füllen die rechte Fläche ohne den Hero-Text zu überlagern.
+- Build und ESLint erfolgreich.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
@@ -19,6 +19,8 @@ type NavLink = {
 type HeaderProps = {
   forceSolid?: boolean;
   solidBackgroundClassName?: string;
+  navigation?: NavLink[];
+  contactCta?: string;
 };
 
 const cleanNavCtaLabel = (value: unknown) => {
@@ -36,7 +38,7 @@ const cleanNavCtaLink = (value: unknown) => {
   return raw || "#kontakt";
 };
 
-const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) => {
+const Header = ({ forceSolid = false, solidBackgroundClassName, navigation, contactCta }: HeaderProps) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const headerRef = useRef<HTMLElement | null>(null);
@@ -177,8 +179,9 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
     setOpenMobileDropdowns((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const topLevelLinks = links.filter((l) => !l.parent_id);
-  const getChildren = (parentId: string) => links.filter((l) => l.parent_id === parentId);
+  const effectiveLinks = navigation ?? links;
+  const topLevelLinks = effectiveLinks.filter((l) => !l.parent_id);
+  const getChildren = (parentId: string) => effectiveLinks.filter((l) => l.parent_id === parentId);
 
   const desktopNavColor = forceSolid ? "var(--hero-headline)" : "var(--nav-text, var(--surface-page-foreground))";
   const desktopNavHoverColor = forceSolid ? "var(--theme-primary-hex)" : "var(--nav-hover-text, var(--theme-primary-hex))";
@@ -200,8 +203,8 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
   const navigationThemeSettings = ((settings.navigation_theme && typeof settings.navigation_theme === "object" && !Array.isArray(settings.navigation_theme))
     ? (settings.navigation_theme as Record<string, unknown>)
     : {}) as Record<string, unknown>;
-  const navCtaLabel = cleanNavCtaLabel(navigationThemeSettings.cta_label);
-  const navCtaLink = cleanNavCtaLink(navigationThemeSettings.cta_link);
+  const navCtaLabel = contactCta ?? cleanNavCtaLabel(navigationThemeSettings.cta_label);
+  const navCtaLink = contactCta ? "#kontakt" : cleanNavCtaLink(navigationThemeSettings.cta_link);
   // Header ist bewusst immer solide/hell (statt transparent über dem Hero und erst
   // nach dem Scrollen solide) - fixe Sichtbarkeit und Kontrast unabhängig vom Scroll-Stand.
   const headerClassName = forceSolid || isMobileOpen
@@ -215,7 +218,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
     <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${headerClassName}`} style={headerStyle}>
       <div className="section-container">
         <div className="flex items-center justify-between">
-          <Link to="/" className="relative z-10 flex items-center gap-3 group outline-none" onClick={() => setIsMobileOpen(false)}>
+          <a href="/" className="relative z-10 flex items-center gap-3 group outline-none" onClick={() => setIsMobileOpen(false)}>
             {!settings.use_text_logo && logoUrl ? (
               <img src={logoUrl} alt={brandName} className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
             ) : (
@@ -226,7 +229,7 @@ const Header = ({ forceSolid = false, solidBackgroundClassName }: HeaderProps) =
                 )}
               </span>
             )}
-          </Link>
+          </a>
 
           <nav className="hidden lg:flex items-center gap-8">
             {topLevelLinks.map((item) => {

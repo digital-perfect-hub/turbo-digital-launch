@@ -19,13 +19,13 @@ const resolveFooterHref = (item: FooterContactItem) => {
   return "";
 };
 
-const Footer = () => {
+const Footer = ({ navigation, description }: { navigation?: Array<{ label: string; url: string }>; description?: string } = {}) => {
   const { logoUrl, settings } = useGlobalTheme();
   const { getSetting, getJsonSetting } = useSiteSettings();
   const brandName = settings.company_name || "Digital-Perfect";
   const fontClass = settings.logo_font_family === "serif" ? "font-serif" : settings.logo_font_family === "mono" ? "font-mono" : "";
 
-  const navLinks = Array.isArray(settings.footer_nav_links) ? settings.footer_nav_links : [];
+  const navLinks = navigation ?? (Array.isArray(settings.footer_nav_links) ? settings.footer_nav_links : []);
   const legalLinks = Array.isArray(settings.footer_legal_links) ? settings.footer_legal_links : [];
   const footerNavTitle = getSetting("footer_nav_title", "Navigation");
   const footerLegalTitle = getSetting("footer_legal_title", "Rechtliches");
@@ -37,7 +37,7 @@ const Footer = () => {
     .map((item) => ({
       ...item,
       icon: item.icon || "mail",
-      value: item.value.trim(),
+      value: item.icon === "map-pin" && (item.label || "").trim().toLowerCase() === "standort" ? "Österreich" : item.value.trim(),
       label: item.label?.trim() || "",
       url: resolveFooterHref(item),
     }));
@@ -65,7 +65,7 @@ const Footer = () => {
               ) : (
                 <span
                   className={`text-3xl font-black tracking-tighter ${fontClass}`}
-                  style={{ color: settings.text_logo_color_hex === "#000000" || settings.text_logo_color_hex === "#0F172A" ? "var(--hero-headline)" : settings.text_logo_color_hex || "var(--hero-headline)" }}
+                  style={{ color: "#FFFFFF" }}
                 >
                   {brandName}
                   {settings.show_logo_dot !== false && (
@@ -76,7 +76,7 @@ const Footer = () => {
             </div>
 
             <p className="footer-muted mb-8 leading-relaxed">
-              {settings.footer_description || "Premium Webdesign, SEO und digitale Vertriebsmaschinen für Agenturen und Brands."}
+              {description ?? (settings.footer_description || "Premium Webdesign, SEO und digitale Vertriebsmaschinen für Agenturen und Brands.")}
             </p>
 
             {settings.show_socials !== false && (
@@ -96,9 +96,9 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="mb-6 text-lg font-bold">{footerNavTitle}</h4>
+            <h4 className="mb-6 text-lg font-bold" style={{ color: "var(--theme-primary-hex)" }}>{footerNavTitle}</h4>
             <ul className="footer-muted space-y-4">
-              {navLinks.map((link: any, idx: number) => (
+              {navLinks.map((link: { label: string; url: string }, idx: number) => (
                 <li key={idx}>
                   {link.url.startsWith("#") ? (
                     <button onClick={() => document.querySelector(link.url)?.scrollIntoView({ behavior: "smooth" })} className="footer-link outline-none">
@@ -115,9 +115,9 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="mb-6 text-lg font-bold">{footerLegalTitle}</h4>
+            <h4 className="mb-6 text-lg font-bold" style={{ color: "var(--theme-primary-hex)" }}>{footerLegalTitle}</h4>
             <ul className="footer-muted space-y-4">
-              {legalLinks.map((link: any, idx: number) => (
+              {legalLinks.map((link: { label: string; url: string }, idx: number) => (
                 <li key={idx}>
                   <Link to={link.url} className="footer-link">
                     {link.label}
@@ -133,7 +133,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="mb-6 text-lg font-bold">{footerContactTitle}</h4>
+            <h4 className="mb-6 text-lg font-bold" style={{ color: "var(--theme-primary-hex)" }}>{footerContactTitle}</h4>
             <ul className="footer-muted space-y-4">
               {contactItems.map((item, index) => {
                 const Icon = footerIconMap[item.icon || "mail"] || Mail;

@@ -36,6 +36,8 @@ import {
 } from "@/lib/homepage-section-order";
 import { createDefaultLoadingScreenConfig, parseHomepageSectionVisibility, parseLoadingScreenConfig } from "@/lib/site-ui-config";
 import type { HomepageSectionId } from "@/lib/homepage-section-styles";
+import ContactHomepage from "@/components/ContactHomepage";
+import { CONTACT_HOMEPAGE_KEY, resolveContactHomepage } from "@/lib/contact-homepage";
 
 const sectionRegistry: Record<HomepageSectionId, ComponentType> = {
   intro: IntroSection,
@@ -63,8 +65,10 @@ const Index = () => {
   const { hero, isLoading: isHeroLoading } = useHeroContent();
 
   const siteId = activeSiteId || DEFAULT_SITE_ID;
+  const contactPage = resolveContactHomepage(settings[CONTACT_HOMEPAGE_KEY], siteId);
   const { data: faqItemsForSchema = [] } = useQuery({
     queryKey: ["faq_items", siteId],
+    enabled: !contactPage.enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("faq_items")
@@ -117,9 +121,9 @@ const Index = () => {
   const sectionOrder = normalizeHomepageSectionOrder(settings.home_section_order || DEFAULT_HOMEPAGE_SECTION_ORDER);
   const sectionVisibility = parseHomepageSectionVisibility(settings.home_section_visibility);
   const loadingScreenConfig = parseLoadingScreenConfig(settings.loading_screen_config || createDefaultLoadingScreenConfig());
-  const { isReady: areCriticalAssetsReady } = useCriticalAssetPreload([logoUrl, ...getCriticalHeroImageUrls(hero)]);
+  const { isReady: areCriticalAssetsReady } = useCriticalAssetPreload(contactPage.enabled ? [logoUrl] : [logoUrl, ...getCriticalHeroImageUrls(hero)]);
 
-  const isBootstrapLoading = isLoading || isThemeLoading || isSiteSettingsLoading || isHeroLoading || !areCriticalAssetsReady;
+  const isBootstrapLoading = isLoading || isThemeLoading || isSiteSettingsLoading || (!contactPage.enabled && isHeroLoading) || !areCriticalAssetsReady;
 
   if (isBootstrapLoading) {
     return (
@@ -138,6 +142,8 @@ const Index = () => {
       />
     );
   }
+
+  if (contactPage.enabled) return <ContactHomepage content={contactPage} />;
 
   return (
     <>

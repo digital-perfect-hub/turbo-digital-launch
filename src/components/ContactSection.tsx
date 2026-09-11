@@ -13,6 +13,8 @@ import {
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { resolveHomepageSectionStyleVarsFromSettings } from "@/lib/homepage-section-styles";
+import type { ContactHomepageContent } from "@/lib/contact-homepage";
+import { Link } from "react-router-dom";
 
 const inputClass =
   "w-full rounded-[1.25rem] border border-border bg-surface px-5 py-4 text-base text-foreground outline-none transition-all placeholder:text-muted-foreground/60 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background";
@@ -75,7 +77,7 @@ const deriveServiceFromPackage = (selectedPackage: string): string | null => {
   return "Projektanfrage";
 };
 
-const ContactSection = () => {
+const ContactSection = ({ contactPage }: { contactPage?: ContactHomepageContent } = {}) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const ref = useRef(null);
@@ -85,14 +87,22 @@ const ContactSection = () => {
   const sectionStyleVars = resolveHomepageSectionStyleVarsFromSettings(settings, "contact");
 
   const content = useMemo(
-    () => mergeContactContent(getJsonSetting<ContactSectionContent>("contact_section_content", defaultContactSectionContent)),
-    [getJsonSetting],
+    () => contactPage ? {
+      ...defaultContactSectionContent,
+      labels: { ...defaultContactSectionContent.labels, service: "Dein Anliegen (optional)" },
+      panel_description: contactPage.contactText,
+      trust_signals: contactPage.contactSignals.map((signal) => ({ icon: "mail" as const, title: signal.title, text: signal.text })),
+      service_options: contactPage.serviceOptions,
+      budget_options: [],
+      submit_text: contactPage.primaryCta,
+    } : mergeContactContent(getJsonSetting<ContactSectionContent>("contact_section_content", defaultContactSectionContent)),
+    [getJsonSetting, contactPage],
   );
 
   const kicker =
-    getSetting("home_contact_kicker", defaultSiteText.home_contact_kicker).trim() || defaultSiteText.home_contact_kicker;
+    contactPage?.contactKicker ?? (getSetting("home_contact_kicker", defaultSiteText.home_contact_kicker).trim() || defaultSiteText.home_contact_kicker);
   const title =
-    getSetting("home_contact_title", defaultSiteText.home_contact_title).trim() || defaultSiteText.home_contact_title;
+    contactPage?.contactTitle ?? (getSetting("home_contact_title", defaultSiteText.home_contact_title).trim() || defaultSiteText.home_contact_title);
   const sectionDescription =
     getSetting("home_contact_description", defaultSiteText.home_contact_description).trim() ||
     defaultSiteText.home_contact_description;
@@ -124,8 +134,8 @@ const ContactSection = () => {
         company: formData.company || null,
         email: formData.email,
         phone: formData.phone || null,
-        service: deriveServiceFromPackage(formData.budget),
-        budget: formData.budget || null,
+        service: contactPage ? formData.service || null : deriveServiceFromPackage(formData.budget),
+        budget: contactPage ? null : formData.budget || null,
         website: formData.website || null,
         description: formData.description || null,
       });
@@ -155,7 +165,7 @@ const ContactSection = () => {
 
   if (isSubmitted) {
     return (
-      <section id="kontakt" className="homepage-style-scope surface-section-shell py-24 md:py-32" ref={ref} style={sectionStyleVars}>
+      <section id="kontakt" className={`${contactPage ? "contact-page-form" : "homepage-style-scope surface-section-shell"} py-24 md:py-32`} ref={ref} style={contactPage ? undefined : sectionStyleVars}>
         <div className="section-container text-center">
           <motion.div
             initial={{ scale: 0.86, opacity: 0 }}
@@ -172,11 +182,11 @@ const ContactSection = () => {
   }
 
   return (
-    <section id="kontakt" className="homepage-style-scope surface-section-shell relative overflow-hidden py-24 sm:py-32" ref={ref} style={sectionStyleVars}>
+    <section id="kontakt" className={`${contactPage ? "contact-page-form" : "homepage-style-scope surface-section-shell"} relative overflow-hidden py-24 sm:py-32`} ref={ref} style={contactPage ? undefined : sectionStyleVars}>
       <div className="section-container relative z-10">
         <div className="grid gap-12 xl:grid-cols-[0.9fr_1.1fr] xl:gap-20">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={contactPage ? false : { opacity: 0, x: -30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6 }}
             className="dark-panel-shell contact-info-panel relative self-start overflow-hidden rounded-[2.5rem] p-10 xl:sticky xl:top-32 md:p-14"
@@ -216,7 +226,7 @@ const ContactSection = () => {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={contactPage ? false : { opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="surface-card-shell contact-form-card relative overflow-hidden rounded-[2.5rem] border bg-card p-8 shadow-xl sm:p-12"
@@ -224,8 +234,10 @@ const ContactSection = () => {
             <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.name}</label>
+                  <label htmlFor="contact-name" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.name}</label>
                   <input
+                    id="contact-name"
+                    autoComplete="name"
                     required
                     type="text"
                     value={formData.name}
@@ -236,8 +248,10 @@ const ContactSection = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.company}</label>
+                  <label htmlFor="contact-company" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.company}</label>
                   <input
+                    id="contact-company"
+                    autoComplete="organization"
                     type="text"
                     value={formData.company}
                     onChange={(e) => update("company", e.target.value)}
@@ -249,8 +263,10 @@ const ContactSection = () => {
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.email}</label>
+                  <label htmlFor="contact-email" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.email}</label>
                   <input
+                    id="contact-email"
+                    autoComplete="email"
                     required
                     type="email"
                     value={formData.email}
@@ -261,8 +277,10 @@ const ContactSection = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.phone}</label>
+                  <label htmlFor="contact-phone" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.phone}</label>
                   <input
+                    id="contact-phone"
+                    autoComplete="tel"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => update("phone", e.target.value)}
@@ -272,9 +290,17 @@ const ContactSection = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
-                <select required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
+              {contactPage ? (
+                <div>
+                  <label htmlFor="contact-service" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.service}</label>
+                  <select id="contact-service" value={formData.service} onChange={(e) => update("service", e.target.value)} className={inputClass}>
+                    <option value="">{content.placeholders.service_placeholder}</option>
+                    {content.service_options.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </div>
+              ) : <div>
+                <label htmlFor="contact-budget" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.budget}</label>
+                <select id="contact-budget" required value={formData.budget} onChange={(e) => update("budget", e.target.value)} className={inputClass}>
                   <option value="" disabled>
                     {content.placeholders.budget_placeholder}
                   </option>
@@ -287,11 +313,13 @@ const ContactSection = () => {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   Wähle direkt dein Wunschpaket. Wenn du unsicher bist, nimm „Ich bin unsicher – bitte empfehlen“.
                 </p>
-              </div>
+              </div>}
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.website}</label>
+                <label htmlFor="contact-website" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.website}</label>
                 <input
+                  id="contact-website"
+                  autoComplete="url"
                   type="url"
                   value={formData.website}
                   onChange={(e) => update("website", e.target.value)}
@@ -301,8 +329,9 @@ const ContactSection = () => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">{content.labels.description}</label>
+                <label htmlFor="contact-description" className="mb-2 block text-sm font-semibold text-foreground">{content.labels.description}</label>
                 <textarea
+                  id="contact-description"
                   required
                   rows={4}
                   value={formData.description}
@@ -320,7 +349,7 @@ const ContactSection = () => {
                   onChange={(e) => update("privacy", e.target.checked)}
                   className="mt-1 h-5 w-5 rounded border-border text-primary focus:ring-primary"
                 />
-                <span className="text-sm leading-relaxed text-muted-foreground">{content.labels.privacy}</span>
+                <span className="text-sm leading-relaxed text-muted-foreground">{content.labels.privacy} <Link to="/datenschutz" className="underline underline-offset-2">Datenschutz lesen</Link></span>
               </label>
 
               <button

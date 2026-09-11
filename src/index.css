@@ -926,9 +926,9 @@
   }
 
   .homepage-style-scope .section-label {
-    background: var(--homepage-badge-bg, var(--surface-card));
-    color: var(--homepage-badge-text, var(--surface-card-text));
-    border-color: var(--surface-card-border);
+    background: var(--homepage-badge-bg, color-mix(in srgb, var(--theme-primary-hex, #FF6B2C) 12%, transparent));
+    color: var(--homepage-badge-text, var(--theme-primary-hex, #FF6B2C));
+    border-color: var(--homepage-badge-bg, color-mix(in srgb, var(--theme-primary-hex, #FF6B2C) 30%, transparent));
   }
 
   .homepage-style-scope .section-title,

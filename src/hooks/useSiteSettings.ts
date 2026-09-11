@@ -415,7 +415,7 @@ export const defaultContactSectionContent: ContactSectionContent = {
 
 export const defaultFooterContactItems: FooterContactItem[] = [
   { icon: "mail", label: "E-Mail", value: "info@digital-perfect.at", url: "mailto:info@digital-perfect.at" },
-  { icon: "map-pin", label: "Standort", value: "Wien, Österreich" },
+  { icon: "map-pin", label: "Standort", value: "Österreich" },
 ];
 
 export const defaultProductDetailContent: ProductDetailContent = {
