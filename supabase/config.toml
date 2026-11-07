@@ -1,5 +1,11 @@
 project_id = "wevlxnlaxyzsobkaeoyi"
 
+# Plattformprüfung "Verify JWT" der deployten Funktionen, im Dashboard abgelesen am 2026-11-07:
+# bei 10 Funktionen AUS, nur bei reset-tenant-user-password AN. Die Einträge spiegeln diesen
+# Live-Zustand, damit `supabase functions deploy` keine Einstellung verändert (ohne Eintrag gilt
+# der Standard "an"). Die Funktionen prüfen ihre Aufrufer selbst im Code (Nutzer-JWT mit
+# Rollenprüfung, Shared Secret) oder sind bewusst öffentlich (track-view, create-stripe-checkout).
+
 [functions.track-view]
 verify_jwt = false
 
@@ -13,6 +19,25 @@ verify_jwt = false
 [functions.hard-delete-auth-user]
 verify_jwt = false
 
+[functions.bootstrap-tenant]
+verify_jwt = false
+
+[functions.create-stripe-checkout]
+verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false
+
+[functions.manage-site-domain]
+verify_jwt = false
+
+[functions.verify-site-domain]
+verify_jwt = false
+
+# Einzige deployte Funktion mit eingeschalteter Plattformprüfung (Live-Zustand beibehalten).
+[functions.reset-tenant-user-password]
+verify_jwt = true
+
 [functions.send-lead-email]
 enabled = true
 verify_jwt = false
@@ -23,3 +48,8 @@ entrypoint = "./functions/send-lead-email/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/send-lead-email/*.html" ]
+
+# Im Repository vorhanden, aber nicht deployt (Stand 2026-11-07, Antwort 404):
+# create-stripe-billing-session, create-stripe-customer-portal, stripe-webhook.
+# Vor einem Deploy verify_jwt festlegen. stripe-webhook wird von Stripe ohne JWT aufgerufen und
+# braucht daher false.
