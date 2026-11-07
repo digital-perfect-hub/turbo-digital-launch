@@ -2,14 +2,15 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import SEO from "@/components/SEO";
 import { sanitizeRichHtml, stripHtmlToText } from "@/lib/content";
-import { type LegalPageSlug, useLegalPage } from "@/hooks/useLegalPages";
+import { type LegalPageRecord, type LegalPageSlug, legalPageDefaults, useLegalPage } from "@/hooks/useLegalPages";
 
 type LegalPageTemplateProps = {
   slug: LegalPageSlug;
 };
 
 const LegalPageTemplate = ({ slug }: LegalPageTemplateProps) => {
-  const { page, isLoading } = useLegalPage(slug);
+  const { data, isLoading } = useLegalPage(slug);
+  const page: LegalPageRecord = data ?? { id: `fallback-${slug}`, ...legalPageDefaults[slug] };
   const sanitizedBody = sanitizeRichHtml(page.body || "");
   const metaDescription = (page.seo_description || stripHtmlToText(page.body || "")).slice(0, 155);
 
