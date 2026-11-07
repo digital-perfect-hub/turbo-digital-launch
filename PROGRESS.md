@@ -6,6 +6,34 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-07 — Premium-Redesign Phase 2: Visual Experience (Branch design/premium-home, nur Vorschau)
+
+**Auslöser:** Auftrag „Phase 2: Visual Experience“. Konzept, Marke und Positionierung bleiben; die Seite wird visuell kräftiger und zeigt echte Creator-Studio-Ergebnisse statt Symbolbildern. Produktion, Creator Studio, Datenbank und Admin unverändert.
+
+### Erledigt
+- **Echte Maria-Videos:** Markus hat die Verwendung bestehender Maria-Noelle-Videos aus dem Creator-Studio-Verlauf ausdrücklich freigegeben. Zugriff über die angemeldete Sitzung von Markus im Browser (nur Lesen, keine Schlüssel, kein Token, keine Änderung im Studio). Gesichtet wurden 14 der Maria-Videos (Filter Creator „Maria Noelle“, Art Video); vier eingebunden (Wan 3.0: Sprung über den Alpen, Nahaufnahme im Studio; Kling v3.0 Pro: Trittsteine im Fluss; Kling v3.0 Standard: Waldweg). Modellangaben stammen aus den Auftragsdaten. Bewusst nicht verwendet: Badezimmer-Tanzclips, Clips mit überwiegend Rückansichten, der Produkt-Clip („Ultra PH-“), Produktionen mit „Laura“ im Titel sowie alle Medien anderer Creator (Laura Bellame, Maya MaBelle, Markus Schulz).
+- Web-Aufbereitung mit ffmpeg: 720 × 1280, H.264, ohne Ton, ohne Metadaten außer Technik, 1 bis 2 MB je Clip (zusammen rund 6 MB), dazu WebP-Poster und Standbilder (rund 0,5 MB) in `public/media/maria/`. Die Originale (bis 59 MB) liegen nicht im Repo.
+- **Hero:** `Reel.tsx` (`ReelPlayer`): Showreel aus vier Szenen. Telefon: Vollbild-Video mit Story-Balken, Szenenname und Modell, Text und Knöpfe darüber. Rechner: hohes Filmbild mit Eckmarken, Zeitmarke aus der Abspielzeit, Szenenwahl darunter, leichter Scroll-Versatz. Es läuft immer nur ein Video, das nächste lädt erst nach 45 % des aktuellen. Pause/Abspielen immer bedienbar; bei reduzierter Bewegung, Datenspar-Modus, langsamer Verbindung oder blockiertem Autoplay bleibt das Standbild.
+- **Kennzeichnung:** „KI-generiert in Creator Studio. Maria Noelle ist eine fiktive Figur.“ steht im Hero und unter dem Kontaktbogen.
+- **Studio-Abschnitt:** Kontaktbogen mit echten Szenen (Telefon: wischbar mit einrastenden Kacheln, Rechner: fünf Spalten mit Versatz). Videos laden erst in Bildschirmnähe und spielen nur, solange sichtbar (`LazyClip`). Der Studio-Monitor sitzt jetzt hier statt im Hero und zeigt Marias echte Szenen; Steckbriefe, Kosten und Termine bleiben als Beispieldaten gekennzeichnet.
+- **Ablauf:** Filmstreifen mit echten Szenenbildern statt reinem Text.
+- **Kontrast:** Orangefarbenes Farbband mit den Voreinstellungen der Kostenkontrolle (0,10 $ Bild, 2,00 $ Video, 10 $ Tag; Werte aus `CONTROL_SPECS`), helle Papierfläche für die Leistungen mit Icon-Karten statt Textzeilen, Projektkarten mit Browserrahmen und wischbarer Reihe am Telefon.
+- `FrameStill.tsx` (Symbolbilder) entfällt, weil nichts mehr darauf verweist.
+
+### Higgsfield
+- Keine neue Generierung. Der einzige Zugang wäre das Creator Studio (angemeldet) oder der API-Schlüssel des Servers; Letzteren nutze ich nicht. Ein zusätzlicher querformatiger Hero-Clip und einige Standbilder bräuchten eine Kostenfreigabe von Markus (Schätzung im Bericht).
+
+### Prüfung
+- Lokal im Browser (Desktop 1440, Mobile 390): kein horizontales Überlaufen, keine neuen Konsolenfehler, Szenenwechsel und Vorladen funktionieren. `tsc` zeigt nur die bekannten Fehler im Bestand, keine in den neuen Dateien. `vite build` erfolgreich.
+- Nicht geprüft: echte Geräte (iPhone/Safari-Autoplay), Lighthouse/Core Web Vitals.
+
+### Offen
+- Bildrechte/Nutzungsbedingungen von Higgsfield für Marketing-Nutzung der Ausgaben nicht geprüft.
+- Das Repository ist öffentlich: die Clips sind damit im Branch `design/premium-home` öffentlich abrufbar (so wie sie später auf der Seite öffentlich wären).
+- Texte weiter hartcodiert in `content.ts` (CMS-Anbindung, SEO-Metadaten außerhalb dieses Auftrags).
+
+---
+
 ## 2026-11-07 — Premium-Redesign Phase 1: neue Startseite (nur lokal, nichts veröffentlicht)
 
 **Auslöser:** Auftrag „Premium Redesign Phase 1“ (Sicherheitsmigration bewusst pausiert). Die Startseite soll Digital-Perfect als Software- und KI-Marke zeigen: Creator Studio vorn (ca. 60–70 %), Dienstleistungen und High-Risk-Fokus dahinter (ca. 30–40 %).
@@ -38,7 +66,16 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 - Der einzige GitHub-Webhook (an Coolify) hört nur auf `push`. Ein Push auf einen anderen Branch löst deshalb kein Deployment der Produktion aus.
 - Coolify-„Preview Deployments“ nutzen die Vorlage `{{pr_id}}.dev.digital-perfect.com`. Dafür fehlt der DNS-Eintrag (`*.dev.digital-perfect.com` ist nicht vorhanden, NXDOMAIN), außerdem fehlen `pull_request`-Ereignisse im Webhook. Beides wären Änderungen an der Produktionsinfrastruktur und wurden nicht vorgenommen.
 - Weitere Wege (GitHub Pages, Tunnel, zusätzliche Coolify-Anwendung) wären neue Infrastruktur und wurden nicht aufgebaut.
-- Der Branch `design/premium-home` liegt auf GitHub und kann in Coolify nach einer Entscheidung von Markus als eigene Anwendung oder Vorschau bereitgestellt werden.
+- Der Branch `design/premium-home` liegt auf GitHub. Markus hat danach eine eigene Coolify-Anwendung freigegeben (siehe unten).
+
+### Online-Vorschau eingerichtet und geprüft (2026-11-07)
+- **Adresse:** https://preview.digital-perfect.com, passwortgeschützt (HTTP Basic Auth, Benutzer `preview`). Das Passwort steht nur in der lokalen Datei `TURBO-DIGITAL-LAUNCH_Startseite-Vorschau/Vorschau-Zugang.txt` (außerhalb des Repos) und in Coolify, nie in Berichten oder im Repo.
+- **Coolify:** Projekt Digital-Perfect-Hub, neue Umgebung `preview`, eigene Anwendung „Digital-Perfect Premium-Vorschau temporaer design/premium-home“. Nixpacks, Branch `design/premium-home`, Commit fest auf `ed65819`, Auto-Deploy aus, Preview Deployments aus, Port 80. Install `bun install`, Build `sed -i '/SERVICE_ROLE_KEY/d' .env && bun run build` (entfernt die Zeile mit dem privilegierten Schlüssel aus der Build-Kopie der `.env`), Publish `/dist`. Keine eigenen Umgebungsvariablen. Die Produktionsanwendung (Umgebung `production`) wurde nicht verändert: letztes Deployment 2026-09-11 mit `b312415`, Bundle weiter `index-CRisdGjb.js`.
+- **DNS (von Markus gesetzt):** `A preview → 87.106.91.56`, nur DNS (nicht proxied), wie `prerender.digital-perfect.com`. Nach dem Eintrag wurde nur die Vorschau-Anwendung neu gestartet; danach gültiges Let's-Encrypt-Zertifikat für `preview.digital-perfect.com` (bis 2027-02-05, Erneuerung automatisch über Traefik).
+- **Prüfung online (Desktop 1440 px, Mobile 390 px):** ohne Zugang und mit falschem Passwort 401, mit Zugang 200, `http` leitet auf `https` weiter. Kein horizontales Überlaufen, Schriften Big Shoulders Display, JetBrains Mono und Inter geladen, 5 von 5 Bildern, alle Menüpunkte und CTAs springen zum Ziel, Studio-Monitor-Tabs funktionieren, mobiles Menü öffnet, schließt und springt. `/?design=classic` zeigt die bisherige Startseite. Keine Konsolen- oder Seitenfehler, keine fehlgeschlagenen Anfragen. Schreibende Anfragen waren nur zwei lesende RPC-Aufrufe (`resolve_site_by_hostname`, `get_public_support_settings`); kein `leads`-Insert, kein `track-view` (Cookie-Banner: nur essenzielle).
+- **Vorfall und Gegenmaßnahme:** Beim Prüfen hat das Playwright-Werkzeug einmal die Zugangsdaten (base64) in seiner Ausgabe angezeigt. Das Skript wurde gelöscht und das Passwort in Coolify ausgetauscht; das alte wird mit 401 abgelehnt. Der Austausch hat in der Vorschau-Anwendung einen zusätzlichen Build desselben Commits ausgelöst.
+- **Grenzen:** Die Vorschau nutzt die Produktions-Supabase. Ein Absenden des Formulars oder Zustimmen zu Analyse-Cookies würde echte Daten schreiben und ist technisch nicht gesperrt, nur organisatorisch. Kein `X-Robots-Tag` (Coolify-Labels schreibgeschützt); gegen Indexierung schützt das Passwort, denn alle Aufrufe ohne Zugang liefern 401.
+- **Aufräumen nach der Abnahme:** Anwendung in Coolify stoppen oder löschen (Umgebung `preview`) und den DNS-Eintrag `preview` entfernen.
 
 ---
 

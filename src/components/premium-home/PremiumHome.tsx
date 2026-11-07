@@ -1,7 +1,7 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, CheckCircle2, Menu, X } from "lucide-react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, ArrowUpRight, CheckCircle2, CreditCard, LifeBuoy, Menu, Code2, Search, TrendingUp, Workflow, X } from "lucide-react";
 import Footer from "@/components/Footer";
 import SupportWidget from "@/components/support/SupportWidget";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,11 +9,12 @@ import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { FrameStill } from "./FrameStill";
 import StudioMonitor from "./StudioMonitor";
+import { LazyClip, ReelPlayer, useMinWidth } from "./Reel";
 import {
   CONTACT_SHEET,
   CONTROL_SPECS,
+  COST_BAND,
   FOUNDER,
   INDUSTRIES,
   INDUSTRY_NOTE,
@@ -21,14 +22,25 @@ import {
   MODEL_FAMILIES,
   NAV_LINKS,
   PIPELINE,
+  PIPELINE_CAPTION,
   PROJECTS,
   SERVICES,
+  SHEET_CAPTION,
   STUDIO_POINTS,
   STUDIO_URL,
 } from "./content";
 import "@/styles/premium-home.css";
 
 const pad = (value: number) => String(value).padStart(2, "0");
+
+const SERVICE_ICONS = {
+  search: Search,
+  growth: TrendingUp,
+  care: LifeBuoy,
+  code: Code2,
+  flow: Workflow,
+  pay: CreditCard,
+} as const;
 
 const Reveal = ({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) => {
   const reduce = useReducedMotion();
@@ -43,21 +55,6 @@ const Reveal = ({ children, delay = 0, className }: { children: ReactNode; delay
       {children}
     </motion.div>
   );
-};
-
-// Laufender Timecode im Hero: 24 Bilder pro Sekunde, steht bei reduzierter Bewegung still.
-const Timecode = () => {
-  const reduce = useReducedMotion();
-  const [frames, setFrames] = useState(0);
-
-  useEffect(() => {
-    if (reduce) return;
-    const start = performance.now();
-    const timer = window.setInterval(() => setFrames(Math.floor(((performance.now() - start) / 1000) * 24)), 42);
-    return () => window.clearInterval(timer);
-  }, [reduce]);
-
-  return <span className="pm-tc">{`00:${pad(Math.floor(frames / 1440) % 60)}:${pad(Math.floor(frames / 24) % 60)}:${pad(frames % 24)}`}</span>;
 };
 
 // Laufzeitmarke am linken Rand: zeigt, wie weit man auf der Seite ist, als Timecode.
@@ -161,42 +158,50 @@ const PremiumNav = ({ brand }: { brand: string }) => {
   );
 };
 
-const Hero = () => (
-  <section className="pm-hero" aria-labelledby="pm-h1">
-    <div className="pm-hero__bg" aria-hidden="true">
-      <span className="pm-hero__glow" />
-      <span className="pm-hero__grid" />
-      <span className="pm-hero__scan" />
-    </div>
-    <div className="pm-hud" aria-hidden="true">
-      <span className="pm-hud__rec"><i />REC</span>
-      <Timecode />
-      <span className="pm-hud__fmt">9:16 · 24 FPS</span>
-    </div>
-    <div className="pm-wrap pm-hero__grid-layout">
-      <div className="pm-hero__copy">
-        <p className="pm-eyebrow">Digital-Perfect · Software &amp; KI aus Österreich</p>
-        <h1 id="pm-h1" className="pm-h1">
-          <span className="pm-line"><span>Ein Gesicht.</span></span>
-          <span className="pm-line"><span>Jede Szene.</span></span>
-          <span className="pm-line pm-line--accent"><span>Volle Kostenkontrolle.</span></span>
-        </h1>
-        <p className="pm-lead">
-          Creator Studio ist unser Produktionswerkzeug für KI-Figuren: Person einmal anlegen, Bilder und Videos erzeugen,
-          schneiden, planen und vor jedem bezahlten Auftrag sehen, was er kostet.
-        </p>
-        <div className="pm-cta">
-          <a className="pm-btn" href="#kontakt">Pilotzugang anfragen <ArrowRight size={18} aria-hidden="true" /></a>
-          <a className="pm-btn pm-btn--ghost" href="#ablauf">So arbeitet das Studio</a>
-        </div>
-        <p className="pm-note">Pilotphase: Zugang auf Anfrage, mit persönlicher Einführung.</p>
+// Hero: auf dem Telefon füllt das Showreel den ganzen Bildschirm, am Rechner steht es als hohes Filmbild neben dem Text.
+const Hero = () => {
+  const ref = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+  const desktop = useMinWidth(1024);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const stageY = useTransform(scrollYProgress, [0, 1], [0, -72]);
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, 40]);
+  const move = desktop && !reduce;
+
+  return (
+    <section ref={ref} className="pm-hero" aria-labelledby="pm-h1">
+      <div className="pm-hero__bg" aria-hidden="true">
+        <span className="pm-hero__glow" />
+        <span className="pm-hero__grid" />
+        <span className="pm-hero__scan" />
       </div>
-      <div className="pm-hero__stage">
-        <StudioMonitor />
+      <div className="pm-wrap pm-hero__grid-layout">
+        <motion.div className="pm-hero__copy" style={move ? { y: copyY } : undefined}>
+          <p className="pm-eyebrow">Digital-Perfect · Software &amp; KI aus Österreich</p>
+          <h1 id="pm-h1" className="pm-h1">
+            <span className="pm-line"><span>Ein Gesicht.</span></span>
+            <span className="pm-line"><span>Jede Szene.</span></span>
+            <span className="pm-line pm-line--accent"><span>Volle Kostenkontrolle.</span></span>
+          </h1>
+          <p className="pm-lead">
+            Creator Studio ist unser Produktionswerkzeug für KI-Figuren.{" "}
+            <span className="pm-lead__more">
+              Person einmal anlegen, Bilder und Videos erzeugen, schneiden, planen und vor jedem bezahlten Auftrag sehen, was er kostet.
+            </span>
+          </p>
+          <div className="pm-cta">
+            <a className="pm-btn" href="#kontakt">Pilotzugang anfragen <ArrowRight size={18} aria-hidden="true" /></a>
+            <a className="pm-btn pm-btn--ghost" href="#ablauf">So arbeitet das Studio</a>
+          </div>
+          <p className="pm-note">Pilotphase: Zugang auf Anfrage, mit persönlicher Einführung.</p>
+        </motion.div>
+        <motion.div className="pm-hero__stage" style={move ? { y: stageY } : undefined}>
+          <ReelPlayer />
+        </motion.div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const Ticker = () => (
   <div className="pm-ticker" role="group" aria-label="Über die Higgsfield-API angebundene Modelle">
@@ -231,16 +236,32 @@ const StudioSection = () => (
       </Reveal>
       <Reveal className="pm-sheet-wrap">
         <ul className="pm-sheet">
-          {CONTACT_SHEET.map((item, index) => (
-            <li key={`${item.title}-${index}`} className="pm-sheet__item">
+          {CONTACT_SHEET.map((item) => (
+            <li key={item.title} className="pm-sheet__item">
               <div className="pm-sheet__frame">
-                <FrameStill tone={item.tone} crop={item.crop} reticle />
+                {item.kind === "video" ? (
+                  <LazyClip src={item.src} poster={item.poster} label={`Maria Noelle, Szene ${item.title}`} />
+                ) : (
+                  <img src={item.poster} alt={`Maria Noelle, ${item.title}`} width={720} height={1280} loading="lazy" decoding="async" />
+                )}
               </div>
               <span className="pm-sheet__label">{item.title}</span>
+              <span className="pm-sheet__meta">{item.meta}</span>
             </li>
           ))}
         </ul>
-        <p className="pm-caption">Symbolische Darstellung: eine Identität, sechs Szenen. Echte Beispiele folgen mit den ersten Piloten.</p>
+        <p className="pm-caption">{SHEET_CAPTION}</p>
+      </Reveal>
+      <Reveal className="pm-ui">
+        <div className="pm-ui__lead">
+          <p className="pm-kicker">Die Oberfläche</p>
+          <h3 className="pm-h3">Alles an einem Ort: Creator, Szenen, Kosten, Planung.</h3>
+          <p className="pm-body">
+            Dieselbe Figur, die oben zu sehen ist, wird im Studio angelegt und verwaltet. Vor jedem bezahlten Auftrag
+            zeigt die Kostenvorschau, was er kostet.
+          </p>
+        </div>
+        <StudioMonitor />
       </Reveal>
       <div className="pm-points">
         {STUDIO_POINTS.map((point, index) => (
@@ -266,17 +287,41 @@ const PipelineSection = () => (
         <ol className="pm-strip">
           {PIPELINE.map((step, index) => (
             <li key={step.title} className="pm-frame">
-              <span className="pm-frame__no">{pad(index + 1)}</span>
-              <h3>{step.title}</h3>
-              <p>{step.text}</p>
-              {step.paid ? <span className="pm-frame__paid">Mit Kostenvorschau</span> : null}
+              <div className="pm-frame__img">
+                <img src={step.image} alt="" width={720} height={1280} loading="lazy" decoding="async" />
+                <span className="pm-frame__no">{pad(index + 1)}</span>
+              </div>
+              <div className="pm-frame__body">
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+                {step.paid ? <span className="pm-frame__paid">Mit Kostenvorschau</span> : null}
+              </div>
             </li>
           ))}
         </ol>
         <div className="pm-strip__rail" aria-hidden="true">
           <span>Kostenprüfung vor jedem bezahlten Auftrag</span>
         </div>
+        <p className="pm-caption">{PIPELINE_CAPTION}</p>
       </Reveal>
+    </div>
+  </section>
+);
+
+// Farbfläche als Taktwechsel: die Voreinstellungen der Kostenkontrolle, groß gesetzt.
+const CostBand = () => (
+  <section className="pm-band" aria-label="Voreinstellungen der Kostenkontrolle">
+    <div className="pm-wrap">
+      <p className="pm-band__kicker">Kostenkontrolle ab Werk</p>
+      <div className="pm-band__grid">
+        {COST_BAND.map((item, index) => (
+          <Reveal key={item.label} delay={index * 0.08} className="pm-band__item">
+            <p className="pm-band__value">{item.value}</p>
+            <p className="pm-band__label">{item.label}</p>
+            <p className="pm-band__note">{item.note}</p>
+          </Reveal>
+        ))}
+      </div>
     </div>
   </section>
 );
@@ -308,7 +353,7 @@ const ControlSection = () => (
 );
 
 const ServicesSection = () => (
-  <section id="leistungen" className="pm-section pm-section--alt" aria-labelledby="pm-services-title">
+  <section id="leistungen" className="pm-section pm-section--paper" aria-labelledby="pm-services-title">
     <div className="pm-wrap pm-services">
       <Reveal className="pm-services__lead">
         <p className="pm-kicker">Leistungen</p>
@@ -317,18 +362,22 @@ const ServicesSection = () => (
           Neben dem eigenen Produkt bauen und betreuen wir Websites, Shops und Plattformen, mit Schwerpunkt auf technischer SEO und Sichtbarkeit.
         </p>
       </Reveal>
-      <ul className="pm-rows">
-        {SERVICES.map((service, index) => (
-          <li key={service.title}>
-            <Reveal delay={index * 0.05} className="pm-row">
-              <h3>{service.title}</h3>
-              <p>{service.text}</p>
-              {"href" in service && service.href ? (
-                <Link to={service.href} className="pm-row__link">{service.hrefLabel} <ArrowRight size={15} aria-hidden="true" /></Link>
-              ) : null}
-            </Reveal>
-          </li>
-        ))}
+      <ul className="pm-cards">
+        {SERVICES.map((service, index) => {
+          const Icon = SERVICE_ICONS[service.icon];
+          return (
+            <li key={service.title}>
+              <Reveal delay={index * 0.05} className="pm-card">
+                <span className="pm-card__icon" aria-hidden="true"><Icon size={22} strokeWidth={1.7} /></span>
+                <h3>{service.title}</h3>
+                <p>{service.text}</p>
+                {"href" in service && service.href ? (
+                  <Link to={service.href} className="pm-card__link">{service.hrefLabel} <ArrowRight size={15} aria-hidden="true" /></Link>
+                ) : null}
+              </Reveal>
+            </li>
+          );
+        })}
       </ul>
     </div>
   </section>
@@ -378,6 +427,7 @@ const ProjectsSection = () => (
           <li key={project.name}>
             <Reveal delay={index * 0.06}>
               <a className="pm-project" href={project.href} target="_blank" rel="noopener noreferrer">
+                <span className="pm-project__chrome" aria-hidden="true"><i /><i /><i /><b>{project.host}</b></span>
                 <span className="pm-project__shot">
                   <img src={project.image} alt={`Startseite von ${project.name}`} loading="lazy" decoding="async" />
                 </span>
@@ -538,6 +588,7 @@ const PremiumHome = () => {
         <Ticker />
         <StudioSection />
         <PipelineSection />
+        <CostBand />
         <ControlSection />
         <ServicesSection />
         <IndustriesSection />

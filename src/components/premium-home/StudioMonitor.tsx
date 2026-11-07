@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { CalendarDays, Clapperboard, Coins, UserRound } from "lucide-react";
-import { FrameStill, type StillCrop, type StillTone } from "./FrameStill";
+import { REEL_SCENES } from "./content";
 
-// Vereinfachte Darstellung der Creator-Studio-Oberfläche mit Beispieldaten. Das sind keine Bildschirmfotos:
-// Farben, Begriffe und Funktionen entsprechen dem Produkt (Creator, Szenen, Kostenvorschau, Planung), die
-// Inhalte sind erfunden und als Beispiel gekennzeichnet.
+// Vereinfachte Darstellung der Creator-Studio-Oberfläche. Das sind keine Bildschirmfotos: Farben, Begriffe und
+// Funktionen entsprechen dem Produkt (Creator, Szenen, Kostenvorschau, Planung). Die Bilder und Videos der
+// Figur „Maria Noelle“ sind echte Ergebnisse aus Creator Studio; Steckbrieftext, Kostenwerte und Termine
+// sind Beispieldaten und als solche gekennzeichnet.
 
 type TabId = "creator" | "szenen" | "kosten" | "planung";
 
@@ -15,12 +16,12 @@ const TABS: Array<{ id: TabId; label: string; Icon: typeof UserRound }> = [
   { id: "planung", label: "Planung", Icon: CalendarDays },
 ];
 
-const SCENES: Array<{ title: string; meta: string; status: string; state: "done" | "run" | "wait"; tone: StillTone; crop: StillCrop }> = [
-  { title: "Dachterrasse, Nacht", meta: "Bild", status: "Fertig", state: "done", tone: "violet", crop: "mid" },
-  { title: "Neonpassage", meta: "Video, 8 s", status: "Fertig", state: "done", tone: "teal", crop: "wide" },
-  { title: "Studio, Gegenlicht", meta: "Video, 5 s", status: "Läuft", state: "run", tone: "ember", crop: "close" },
-  { title: "Café am Morgen", meta: "Bild", status: "Wartet auf Freigabe", state: "wait", tone: "dawn", crop: "mid" },
-];
+const SCENES = REEL_SCENES.map((scene) => ({
+  title: scene.title,
+  meta: `Video, ${scene.seconds} s`,
+  model: scene.model.split(" · ")[0],
+  thumb: scene.thumb,
+}));
 
 const WEEK = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const SLOTS: Record<number, Array<{ time: string; label: string }>> = {
@@ -34,33 +35,33 @@ const SLOTS: Record<number, Array<{ time: string; label: string }>> = {
 const CreatorPanel = () => (
   <div className="pm-mon__creator">
     <div className="pm-mon__master">
-      <FrameStill tone="ember" crop="close" reticle />
-      <span className="pm-mon__tag">Masterbild</span>
+      <img src={REEL_SCENES[1].thumb} alt="Maria Noelle, fiktive KI-Figur, Nahaufnahme" width={240} height={427} loading="lazy" decoding="async" />
+      <span className="pm-mon__tag">Nahaufnahme</span>
     </div>
     <div className="pm-mon__fields">
-      <p className="pm-mon__kicker">Creator · Beispiel</p>
-      <h3 className="pm-mon__name">Juno Ark</h3>
+      <p className="pm-mon__kicker">Creator · fiktive Figur</p>
+      <h3 className="pm-mon__name">Maria Noelle</h3>
       <dl className="pm-mon__dl">
         <div>
           <dt>Steckbrief</dt>
-          <dd>Fiktive Person, Anfang 30. Kurzes silbernes Haar, kleiner orangefarbener Ohrring, dunkle Technikjacke.</dd>
+          <dd>Beispieltext: Das Aussehen wird einmal beschrieben und mit Masterbild und Referenzpaket festgelegt.</dd>
         </div>
         <div>
           <dt>Format</dt>
           <dd>
             <span className="pm-chip">9:16</span>
-            <span className="pm-chip">10 s</span>
+            <span className="pm-chip">Video</span>
           </dd>
         </div>
         <div>
-          <dt>Referenzpaket</dt>
+          <dt>Szenen</dt>
           <dd className="pm-mon__pack">
-            {(["ember", "teal", "violet", "steel", "dawn"] as StillTone[]).map((tone, index) => (
-              <span key={tone} className="pm-mon__thumb">
-                <FrameStill tone={tone} crop={index % 2 ? "mid" : "close"} />
+            {SCENES.map((scene) => (
+              <span key={scene.title} className="pm-mon__thumb">
+                <img src={scene.thumb} alt="" width={240} height={427} loading="lazy" decoding="async" />
               </span>
             ))}
-            <span className="pm-mon__ok">5 von 5 freigegeben</span>
+            <span className="pm-mon__ok">4 Videos erzeugt</span>
           </dd>
         </div>
       </dl>
@@ -70,17 +71,16 @@ const CreatorPanel = () => (
 
 const ScenesPanel = () => (
   <div className="pm-mon__scenes">
-    <p className="pm-mon__kicker">Szenen · Juno Ark</p>
+    <p className="pm-mon__kicker">Szenen · Maria Noelle</p>
     <ul className="pm-mon__grid">
       {SCENES.map((scene) => (
-        <li key={scene.title} className={`pm-mon__scene pm-mon__scene--${scene.state}`}>
+        <li key={scene.title} className="pm-mon__scene pm-mon__scene--done">
           <div className="pm-mon__frame">
-            <FrameStill tone={scene.tone} crop={scene.crop} />
-            {scene.state === "run" ? <span className="pm-mon__progress" aria-hidden="true" /> : null}
+            <img src={scene.thumb} alt={`Szene ${scene.title}`} width={240} height={427} loading="lazy" decoding="async" />
           </div>
           <strong>{scene.title}</strong>
-          <span className="pm-mon__meta">{scene.meta}</span>
-          <span className={`pm-status pm-status--${scene.state}`}>{scene.status}</span>
+          <span className="pm-mon__meta">{`${scene.meta} · ${scene.model}`}</span>
+          <span className="pm-status pm-status--done">Fertig</span>
         </li>
       ))}
     </ul>
@@ -92,13 +92,13 @@ const CostPanel = () => (
     <p className="pm-mon__kicker">Kostenvorschau · Beispiel</p>
     <div className="pm-mon__dialog">
       <dl className="pm-mon__rows">
-        <div><dt>Auftrag</dt><dd>Video · 9:16 · 8 s</dd></div>
-        <div><dt>Modell</dt><dd>Kling v3.0</dd></div>
-        <div className="pm-mon__estimate"><dt>Geschätzte Kosten</dt><dd>1,20 $</dd></div>
+        <div><dt>Auftrag</dt><dd>Video · 9:16 · 15 s</dd></div>
+        <div><dt>Modell</dt><dd>Kling v3.0 Pro</dd></div>
+        <div className="pm-mon__estimate"><dt>Geschätzte Kosten</dt><dd>1,68 $</dd></div>
       </dl>
-      <div className="pm-meter" role="img" aria-label="Der Auftrag nutzt 60 Prozent des Limits pro Auftrag">
+      <div className="pm-meter" role="img" aria-label="Der Auftrag nutzt 84 Prozent des Limits pro Auftrag">
         <div className="pm-meter__head"><span>Limit pro Auftrag</span><span>2,00 $</span></div>
-        <div className="pm-meter__bar"><i style={{ width: "60%" }} /></div>
+        <div className="pm-meter__bar"><i style={{ width: "84%" }} /></div>
       </div>
       <div className="pm-meter" role="img" aria-label="Heute sind 34 Prozent des Tagesbudgets verbraucht">
         <div className="pm-meter__head"><span>Tagesbudget · heute 3,40 $</span><span>10,00 $</span></div>
@@ -197,7 +197,7 @@ const StudioMonitor = () => {
           </div>
         </div>
       </div>
-      <figcaption className="pm-mon__caption">Oberfläche vereinfacht dargestellt. Beispieldaten, keine Bildschirmfotos.</figcaption>
+      <figcaption className="pm-mon__caption">Oberfläche vereinfacht dargestellt, keine Bildschirmfotos. Die Szenen sind echte Ergebnisse, Steckbriefe, Kosten und Termine sind Beispieldaten.</figcaption>
     </figure>
   );
 };

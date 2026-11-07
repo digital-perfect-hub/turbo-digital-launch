@@ -24,14 +24,66 @@ export const MODEL_FAMILIES = [
   "Z-Image Turbo",
 ] as const;
 
-export const CONTACT_SHEET = [
-  { tone: "ember", crop: "close", title: "Masterbild" },
-  { tone: "teal", crop: "mid", title: "Neonpassage" },
-  { tone: "violet", crop: "wide", title: "Dachterrasse" },
-  { tone: "steel", crop: "mid", title: "Regen, Nacht" },
-  { tone: "dawn", crop: "close", title: "Café, früh" },
-  { tone: "ember", crop: "wide", title: "Studio" },
+// Echte Ergebnisse aus Creator Studio: Szenen der fiktiven Figur „Maria Noelle“, mit den Modellen erzeugt, die
+// im Auftragsverlauf stehen (Bild zu Video). Freigabe zur Verwendung auf der Startseite: Markus Schulz, 2026-11-07.
+// Die Dateien sind für das Web neu kodiert (720 × 1280, ohne Ton). Originale und Zugriffe bleiben im Studio.
+const MEDIA = "/media/maria";
+
+export const MARIA_DISCLOSURE = "KI-generiert in Creator Studio. Maria Noelle ist eine fiktive Figur.";
+
+export const REEL_SCENES = [
+  {
+    id: "luft",
+    label: "Luft",
+    title: "Sprung über den Alpen",
+    model: "Wan 3.0 · Bild zu Video",
+    seconds: 10,
+    src: `${MEDIA}/reel-luft.mp4`,
+    poster: `${MEDIA}/poster-luft.webp`,
+    thumb: `${MEDIA}/poster-luft-thumb.webp`,
+  },
+  {
+    id: "studio",
+    label: "Studio",
+    title: "Nahaufnahme im Studio",
+    model: "Wan 3.0 · Bild zu Video",
+    seconds: 9,
+    src: `${MEDIA}/reel-studio.mp4`,
+    poster: `${MEDIA}/poster-studio.webp`,
+    thumb: `${MEDIA}/poster-studio-thumb.webp`,
+  },
+  {
+    id: "fluss",
+    label: "Fluss",
+    title: "Trittsteine im Fluss",
+    model: "Kling v3.0 Pro · Bild zu Video",
+    seconds: 8,
+    src: `${MEDIA}/reel-fluss.mp4`,
+    poster: `${MEDIA}/poster-fluss.webp`,
+    thumb: `${MEDIA}/poster-fluss-thumb.webp`,
+  },
+  {
+    id: "wald",
+    label: "Wald",
+    title: "Waldweg im Gegenlicht",
+    model: "Kling v3.0 Standard · Bild zu Video",
+    seconds: 7,
+    src: `${MEDIA}/reel-wald.mp4`,
+    poster: `${MEDIA}/poster-wald.webp`,
+    thumb: `${MEDIA}/poster-wald-thumb.webp`,
+  },
 ] as const;
+
+// Kontaktbogen: dieselbe Person in fünf Szenen. Bei „video“ spielt die Kachel stumm, sobald sie sichtbar ist.
+export const CONTACT_SHEET = [
+  { title: "Luft", meta: "Video · Wan 3.0", kind: "video", src: REEL_SCENES[0].src, poster: `${MEDIA}/still-luft-gesicht.webp` },
+  { title: "Nahaufnahme", meta: "Standbild · Studio", kind: "still", poster: `${MEDIA}/poster-studio.webp` },
+  { title: "Studio", meta: "Video · Wan 3.0", kind: "video", src: REEL_SCENES[1].src, poster: `${MEDIA}/still-studio-lauf.webp` },
+  { title: "Fluss", meta: "Video · Kling v3.0 Pro", kind: "video", src: REEL_SCENES[2].src, poster: `${MEDIA}/still-fluss.webp` },
+  { title: "Wald", meta: "Video · Kling v3.0 Standard", kind: "video", src: REEL_SCENES[3].src, poster: REEL_SCENES[3].poster },
+] as const;
+
+export const SHEET_CAPTION = "Echte Ergebnisse aus Creator Studio: eine Figur, fünf Szenen, vier davon als Video. Maria Noelle ist eine fiktive KI-Figur.";
 
 export const STUDIO_POINTS = [
   {
@@ -56,27 +108,41 @@ export const PIPELINE = [
     title: "Creator anlegen",
     text: "Steckbrief, Masterbild und Referenzpaket legen die Identität fest.",
     paid: false,
+    image: `${MEDIA}/poster-studio.webp`,
   },
   {
     title: "Szenen erzeugen",
     text: "Bilder und Videos aus Vorlagen oder freiem Prompt, auch Bild zu Video.",
     paid: true,
+    image: `${MEDIA}/still-fluss.webp`,
   },
   {
     title: "Produzieren",
     text: "Szenen zu einer Produktion bündeln, mit Sprecherstimme und Musik.",
     paid: true,
+    image: `${MEDIA}/still-luft-gesicht.webp`,
   },
   {
     title: "Schneiden",
     text: "Im Editor kürzen, ordnen und als fertiges Video exportieren.",
     paid: false,
+    image: `${MEDIA}/still-studio-lauf.webp`,
   },
   {
     title: "Planen",
     text: "Beiträge im Kalender einplanen und die Warteschlange im Blick behalten.",
     paid: false,
+    image: `${MEDIA}/poster-wald.webp`,
   },
+] as const;
+
+export const PIPELINE_CAPTION = "Bilder: echte Szenen von Maria Noelle, erzeugt in Creator Studio.";
+
+// Voreinstellungen aus der Kostenkontrolle von Creator Studio (siehe CONTROL_SPECS), einstellbar je Workspace.
+export const COST_BAND = [
+  { value: "0,10 $", label: "Limit pro Bild", note: "Voreinstellung, einstellbar" },
+  { value: "2,00 $", label: "Limit pro Video", note: "Voreinstellung, einstellbar" },
+  { value: "10 $", label: "Tagesbudget", note: "Voreinstellung, mit Protokoll" },
 ] as const;
 
 export const CONTROL_SPECS = [
@@ -92,28 +158,34 @@ export const CONTROL_SPECS = [
 
 export const SERVICES = [
   {
+    icon: "search",
     title: "Technische SEO",
     text: "Crawling, Indexierung, Ladezeit und saubere Struktur, damit Inhalte überhaupt gefunden werden.",
   },
   {
+    icon: "growth",
     title: "Reichweite & Wachstum",
     text: "Inhalte, interne Verlinkung, lokale und KI-Sichtbarkeit. Ohne Ranking-Garantie, mit klaren Messpunkten.",
   },
   {
+    icon: "care",
     title: "Technische Betreuung",
     text: "Updates, Monitoring, Performance und schnelle Hilfe, wenn etwas ausfällt.",
   },
   {
+    icon: "code",
     title: "Webentwicklung, Shops & Plattformen",
     text: "Websites, Shops und Plattformen, individuell gebaut statt aus dem Baukasten.",
     href: "/webagentur-linz",
     hrefLabel: "Webagentur Linz ansehen",
   },
   {
+    icon: "flow",
     title: "Automatisierung",
     text: "Wiederkehrende Abläufe automatisieren: Formulare, Benachrichtigungen und Datenflüsse zwischen deinen Systemen.",
   },
   {
+    icon: "pay",
     title: "Zahlungsanbieter-Beratung",
     text: "Wir helfen bei der Auswahl passender Shop- und Zahlungsanbieter. Wir sind kein Zahlungsdienstleister und wickeln keine Zahlungen ab.",
   },
