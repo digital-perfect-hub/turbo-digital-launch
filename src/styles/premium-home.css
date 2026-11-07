@@ -171,7 +171,9 @@ body:has(.pm), body:has(.pm) #root { overflow-x: clip; }
 .pm-reel__base, .pm-reel__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 .pm-reel__video { opacity: 0; transition: opacity 0.7s var(--pm-ease); }
 .pm-reel__video.is-active { opacity: 1; }
-.pm-reel__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 11, 14, 0.86) 0, rgba(10, 11, 14, 0.18) 26%, rgba(10, 11, 14, 0) 38%, rgba(10, 11, 14, 0.8) 64%, #0a0b0e 100%); pointer-events: none; }
+/* Telefon: Text liegt über dem Bild, darum ist die Abdunklung hier stärker als am Rechner (Lesbarkeit vor Bildwirkung). */
+.pm-reel__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 11, 14, 0.88) 0, rgba(10, 11, 14, 0.5) 24%, rgba(10, 11, 14, 0.46) 38%, rgba(10, 11, 14, 0.72) 54%, rgba(10, 11, 14, 0.9) 72%, #0a0b0e 100%); pointer-events: none; }
+.pm-reel__model, .pm-hero .pm-eyebrow { text-shadow: 0 1px 14px rgba(10, 11, 14, 0.9); }
 .pm-reel__grain { position: absolute; inset: 0; background-image: var(--pm-grain); opacity: 0.08; mix-blend-mode: overlay; pointer-events: none; }
 .pm-reel__marks { display: none; }
 .pm-reel__top { position: absolute; z-index: 2; left: var(--pm-gutter); right: var(--pm-gutter); top: 84px; display: grid; gap: 8px; }
@@ -190,7 +192,7 @@ body:has(.pm), body:has(.pm) #root { overflow-x: clip; }
 .pm-reel__toggle:hover { border-color: var(--pm-orange); color: var(--pm-orange-hi); }
 .pm-reel__info { position: absolute; z-index: 2; left: var(--pm-gutter); right: var(--pm-gutter); top: 160px; }
 .pm-reel__scene { font: 800 1.45rem/1 var(--pm-display); letter-spacing: 0.02em; text-transform: uppercase; }
-.pm-reel__model { margin-top: 5px; font: 500 10.5px/1.4 var(--pm-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--pm-orange-hi); }
+.pm-reel__model { margin-top: 5px; font: 600 10.5px/1.4 var(--pm-mono); letter-spacing: 0.1em; text-transform: uppercase; color: #ffa069; }
 .pm-reel__ai { position: absolute; z-index: 2; left: var(--pm-gutter); right: var(--pm-gutter); bottom: 14px; font: 400 10.5px/1.45 var(--pm-mono); color: #aab0ba; }
 .pm-lead__more { display: none; }
 @media (min-width: 640px) { .pm-lead__more { display: inline; } }
