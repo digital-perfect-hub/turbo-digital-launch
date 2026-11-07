@@ -24,5 +24,7 @@ export const resolveSecretKey = (read: EnvReader, keyName = "default"): string |
   return read("SUPABASE_SERVICE_ROLE_KEY");
 };
 
-export const getSupabaseSecretKey = (keyName = "default"): string | undefined =>
-  resolveSecretKey((name) => Deno.env.get(name), keyName);
+export const getSupabaseSecretKey = (keyName = "default"): string | undefined => {
+  const runtime = (globalThis as { Deno?: { env: { get(name: string): string | undefined } } }).Deno;
+  return resolveSecretKey((name) => runtime?.env.get(name), keyName);
+};
