@@ -6,6 +6,42 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-07 — Premium-Redesign Phase 1: neue Startseite (nur lokal, nichts veröffentlicht)
+
+**Auslöser:** Auftrag „Premium Redesign Phase 1“ (Sicherheitsmigration bewusst pausiert). Die Startseite soll Digital-Perfect als Software- und KI-Marke zeigen: Creator Studio vorn (ca. 60–70 %), Dienstleistungen und High-Risk-Fokus dahinter (ca. 30–40 %).
+
+### Erledigt
+- Neue Komponentengruppe `src/components/premium-home/` (`PremiumHome.tsx`, `StudioMonitor.tsx`, `FrameStill.tsx`, `content.ts`) und `src/styles/premium-home.css`. Alle Stile hängen an `.pm`; die Farben folgen dem Creator-Studio-Designsystem (Anthrazit `#0b0c0f`, Orange `#ff6b2c`).
+- `src/pages/Index.tsx`: zeigt die Premium-Startseite nur für die Digital-Perfect-Site (`DEFAULT_SITE_ID`), analog zur Kontaktvariante vom 11.09. Mit `/?design=classic` bleibt die bisherige Startseite (Kontaktvariante bzw. CMS-Abschnitte) erreichbar. Mandanten sind nicht betroffen. FAQ-Schema wird in der Premium-Variante nicht ausgegeben, weil sie keine sichtbare FAQ hat.
+- Lead-Formular der Premium-Startseite schreibt dieselben Felder in dieselbe Tabelle `leads` wie `ContactSection`.
+- Branch `design/premium-home` baut auf `main` (b312415) auf und enthält bewusst nichts aus `phase1/security-legal` (Schlüsselumstellung der Edge Functions, `config.toml`, Secret-Skripte, Rechtsseiten-Fix). Diese Änderungen bleiben getrennt auf `phase1/security-legal` und sind unveröffentlicht. Die Premium-Startseite braucht davon nichts.
+
+### Bewusste Entscheidungen
+- Keine echten Creator-Studio-Screenshots oder Ergebnisbilder verfügbar (Repo enthält nur Icons). Darum: vereinfachte Oberflächen-Darstellung mit Beispieldaten und grafische Symbolbilder (gleiche gesichtslose Silhouette mit orangefarbenem Ohrring in wechselnden Szenen). Beides ist auf der Seite als Darstellung bzw. Beispiel gekennzeichnet. Keine bezahlte Generierung.
+- Nur belegte Aussagen: Modelle und Funktionsumfang aus README/PROJEKTSTATUS von Creator Studio. Nicht behauptet: Kundenzahlen, Lip-Sync, automatisches Veröffentlichen, Ranking- oder Rechtsgarantien. Status „Pilotphase, Zugang auf Anfrage“ steht sichtbar auf der Seite.
+- Zahlungsanbieter-Beratung ausdrücklich ohne Zahlungsabwicklung formuliert; Branchenblock mit „Erfahrung, keine Garantien. Keine Rechtsberatung.“
+- Neue Schriften nur für diese Seite: Big Shoulders Display (Überschriften) und JetBrains Mono (Beschriftungen) über Google Fonts, wie schon Inter und Plus Jakarta Sans.
+
+### Prüfung
+- Browser (Desktop 1440 px, Mobile 390 px): kein horizontales Überlaufen, mobiles Menü, Studio-Monitor-Tabs, sticky Leistungsspalte geprüft. Keine neuen Konsolenfehler durch die Seite.
+- `tsc`: 108 Fehler gesamt wie im Bestand, keine in den neuen Dateien. ESLint auf den neuen Dateien und `Index.tsx` sauber. Ein `vite build` erfolgreich.
+- Nicht geprüft: echte Geräte, Lighthouse/Core Web Vitals, Prerender-Weg über den Cloudflare-Worker, Absenden des Formulars (würde einen Lead in die Produktivdatenbank schreiben).
+
+### Offen vor Veröffentlichung
+- Texte der Premium-Startseite stehen in `premium-home/content.ts`, nicht im Admin-CMS. Die Regel „Texte über Admin bearbeitbar“ ist damit noch nicht erfüllt (Entscheidung nötig: eigener Content-Schlüssel analog `home_contact_page`).
+- Navigation und Footer-Inhalt kommen teils aus dem CMS: Footer-Text nennt noch „Premium Webdesign, SEO und digitale Vertriebsmaschinen“. Meta-Title/-Description der Startseite („SEO & Webdesign Agentur Linz“) passen nicht zur neuen Positionierung, wurden aber nicht geändert (SEO-Entscheidung).
+- Echte Screenshots und Beispielergebnisse aus Creator Studio sowie ein Hero-Video (Higgsfield, bezahlt, nur nach Freigabe und Kostenangabe) würden die Darstellung ersetzen.
+- Google Fonts werden von Google geladen (wie bisher); für die Datenschutzprüfung ggf. selbst hosten.
+
+### Online-Vorschau: Befund zur vorhandenen Infrastruktur (2026-11-07, nur gelesen, nichts geändert)
+- Es gibt keine Staging- oder Vorschau-Umgebung. Coolify führt für das Projekt „Digital-Perfect-Hub“ nur die Umgebung `production` mit der Anwendung „Digital-Perfect-Hub Main (Frontend)“. Sie baut den Branch `main` des Repos und bedient `digital-perfect.com`, `www`, `media-bro.com`, `www.media-bro.com` und `dev.digital-perfect.com`. `dev.digital-perfect.com` ist also nur ein weiterer Domainname der Produktion (gleiches Bundle), keine Testumgebung.
+- Der einzige GitHub-Webhook (an Coolify) hört nur auf `push`. Ein Push auf einen anderen Branch löst deshalb kein Deployment der Produktion aus.
+- Coolify-„Preview Deployments“ nutzen die Vorlage `{{pr_id}}.dev.digital-perfect.com`. Dafür fehlt der DNS-Eintrag (`*.dev.digital-perfect.com` ist nicht vorhanden, NXDOMAIN), außerdem fehlen `pull_request`-Ereignisse im Webhook. Beides wären Änderungen an der Produktionsinfrastruktur und wurden nicht vorgenommen.
+- Weitere Wege (GitHub Pages, Tunnel, zusätzliche Coolify-Anwendung) wären neue Infrastruktur und wurden nicht aufgebaut.
+- Der Branch `design/premium-home` liegt auf GitHub und kann in Coolify nach einer Entscheidung von Markus als eigene Anwendung oder Vorschau bereitgestellt werden.
+
+---
+
 ## 2026-09-11 — Kontaktorientierte Startseite im Stil der Referenzseite
 
 **Auslöser:** Analyse der beiden Bildschirmaufnahmen und der Live-Seiten von Digital-Perfect und LeventElci.de. Die neue Startseite soll Levents klare Editorial-Struktur und persönliche Ansprache aufnehmen, die Digital-Perfect-Farben behalten und Preise/Produkte zunächst vollständig aus dem Einstieg entfernen.

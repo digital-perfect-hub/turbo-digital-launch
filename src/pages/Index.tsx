@@ -1,4 +1,5 @@
 import { useMemo, type ComponentType } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_SITE_ID } from "@/lib/site";
@@ -37,6 +38,7 @@ import {
 import { createDefaultLoadingScreenConfig, parseHomepageSectionVisibility, parseLoadingScreenConfig } from "@/lib/site-ui-config";
 import type { HomepageSectionId } from "@/lib/homepage-section-styles";
 import ContactHomepage from "@/components/ContactHomepage";
+import PremiumHome from "@/components/premium-home/PremiumHome";
 import { CONTACT_HOMEPAGE_KEY, resolveContactHomepage } from "@/lib/contact-homepage";
 
 const sectionRegistry: Record<HomepageSectionId, ComponentType> = {
@@ -64,11 +66,16 @@ const Index = () => {
   const { settings, isLoading: isSiteSettingsLoading } = useSiteSettings();
   const { hero, isLoading: isHeroLoading } = useHeroContent();
 
+  const location = useLocation();
+
   const siteId = activeSiteId || DEFAULT_SITE_ID;
   const contactPage = resolveContactHomepage(settings[CONTACT_HOMEPAGE_KEY], siteId);
+  // Premium-Startseite: nur für die Digital-Perfect-Site. Mit ?design=classic bleibt die bisherige Startseite
+  // (Kontaktvariante bzw. Abschnittsrenderer aus dem CMS) erreichbar, Mandanten sind nicht betroffen.
+  const usePremiumHome = siteId === DEFAULT_SITE_ID && new URLSearchParams(location.search).get("design") !== "classic";
   const { data: faqItemsForSchema = [] } = useQuery({
     queryKey: ["faq_items", siteId],
-    enabled: !contactPage.enabled,
+    enabled: !contactPage.enabled && !usePremiumHome,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("faq_items")
@@ -121,9 +128,9 @@ const Index = () => {
   const sectionOrder = normalizeHomepageSectionOrder(settings.home_section_order || DEFAULT_HOMEPAGE_SECTION_ORDER);
   const sectionVisibility = parseHomepageSectionVisibility(settings.home_section_visibility);
   const loadingScreenConfig = parseLoadingScreenConfig(settings.loading_screen_config || createDefaultLoadingScreenConfig());
-  const { isReady: areCriticalAssetsReady } = useCriticalAssetPreload(contactPage.enabled ? [logoUrl] : [logoUrl, ...getCriticalHeroImageUrls(hero)]);
+  const { isReady: areCriticalAssetsReady } = useCriticalAssetPreload(contactPage.enabled || usePremiumHome ? [logoUrl] : [logoUrl, ...getCriticalHeroImageUrls(hero)]);
 
-  const isBootstrapLoading = isLoading || isThemeLoading || isSiteSettingsLoading || (!contactPage.enabled && isHeroLoading) || !areCriticalAssetsReady;
+  const isBootstrapLoading = isLoading || isThemeLoading || isSiteSettingsLoading || (!contactPage.enabled && !usePremiumHome && isHeroLoading) || !areCriticalAssetsReady;
 
   if (isBootstrapLoading) {
     return (
@@ -140,6 +147,15 @@ const Index = () => {
           text_color: themeSettings.loader_loader_text_hex ?? themeSettings.loader_text_hex ?? loadingScreenConfig.text_color,
         }}
       />
+    );
+  }
+
+  if (usePremiumHome) {
+    return (
+      <>
+        <SEO structuredData={structuredData} />
+        <PremiumHome />
+      </>
     );
   }
 
