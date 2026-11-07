@@ -221,7 +221,7 @@ Deno.serve(async (request) => {
     const sharedSecret = (Deno.env.get("SITEMAP_SHARED_SECRET") || "").trim();
     const incomingSecret = (request.headers.get("x-sitemap-secret") || "").trim();
     const supabaseUrl = (Deno.env.get("SUPABASE_URL") || "").trim();
-    const serviceRoleKey = (getSupabaseSecretKey() || "").trim();
+    const serviceRoleKey = (getSupabaseSecretKey("default", { allowLegacyFallback: false }) || "").trim();
 
     if (!sharedSecret) return jsonResponse({ error: "Missing SITEMAP_SHARED_SECRET." }, 500);
     if (!supabaseUrl || !serviceRoleKey) return jsonResponse({ error: "Missing Supabase function secrets." }, 500);

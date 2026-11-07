@@ -27,6 +27,13 @@ describe("resolveSecretKey", () => {
     expect(resolveSecretKey(read, "billing")).toBe("b");
   });
 
+  it("ohne Rückfall: nutzt den neuen Schlüssel, liefert aber nie den Legacy-Schlüssel", () => {
+    const strict = { allowLegacyFallback: false };
+    expect(resolveSecretKey(env({ SUPABASE_SECRET_KEYS: '{"default":"neu"}', SUPABASE_SERVICE_ROLE_KEY: "legacy" }), "default", strict)).toBe("neu");
+    expect(resolveSecretKey(env({ SUPABASE_SERVICE_ROLE_KEY: "legacy" }), "default", strict)).toBeUndefined();
+    expect(resolveSecretKey(env({ SUPABASE_SECRET_KEYS: "kein json", SUPABASE_SERVICE_ROLE_KEY: "legacy" }), "default", strict)).toBeUndefined();
+  });
+
   it("liefert nichts, wenn keine Variable gesetzt ist", () => {
     expect(resolveSecretKey(env({}))).toBeUndefined();
   });

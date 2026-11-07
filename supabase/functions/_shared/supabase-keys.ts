@@ -10,7 +10,11 @@
 
 type EnvReader = (name: string) => string | undefined;
 
-export const resolveSecretKey = (read: EnvReader, keyName = "default"): string | undefined => {
+// allowLegacyFallback: false verhindert den stillen Rückfall. Fehlt der neue Schlüssel, liefert der Helper
+// nichts und die Funktion meldet den Fehler, statt unbemerkt mit dem Legacy-Schlüssel weiterzuarbeiten.
+type SecretKeyOptions = { allowLegacyFallback?: boolean };
+
+export const resolveSecretKey = (read: EnvReader, keyName = "default", options: SecretKeyOptions = {}): string | undefined => {
   const raw = read("SUPABASE_SECRET_KEYS");
   if (raw) {
     try {
@@ -21,10 +25,11 @@ export const resolveSecretKey = (read: EnvReader, keyName = "default"): string |
       // Ungültiges JSON: auf den Legacy-Schlüssel zurückfallen.
     }
   }
+  if (options.allowLegacyFallback === false) return undefined;
   return read("SUPABASE_SERVICE_ROLE_KEY");
 };
 
-export const getSupabaseSecretKey = (keyName = "default"): string | undefined => {
+export const getSupabaseSecretKey = (keyName = "default", options: SecretKeyOptions = {}): string | undefined => {
   const runtime = (globalThis as { Deno?: { env: { get(name: string): string | undefined } } }).Deno;
-  return resolveSecretKey((name) => runtime?.env.get(name), keyName);
+  return resolveSecretKey((name) => runtime?.env.get(name), keyName, options);
 };
