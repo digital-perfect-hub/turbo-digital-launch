@@ -31,6 +31,26 @@ const MEDIA = "/media/maria";
 
 export const MARIA_DISCLOSURE = "KI-generiert in Creator Studio. Maria Noelle ist eine fiktive Figur.";
 
+// Hero-Film für den Rechner (16:9, 8 s, ohne Ton): Startbild mit Grok Image 2.0, daraus Bild zu Video mit Kling 3.0 Pro.
+// Beides am 2026-11-07 in Creator Studio mit Maria Noelle erzeugt (Kostenvorschau Studio: 0,09 $ Bild, 0,90 $ Video).
+export const HERO_FILM = {
+  title: "Dämmerung auf dem Dach",
+  model: "Kling v3.0 Pro · Bild zu Video",
+  seconds: 8,
+  src: `${MEDIA}/hero-dach.mp4`,
+  poster: `${MEDIA}/hero-dach-poster.webp`,
+} as const;
+
+// Neue Standbilder derselben Figur (Grok Image 2.0, 2026-11-07): je anderer Ort, anderes Licht, andere Kleidung.
+// „dach“ ist ein Hochformat-Ausschnitt aus dem Hero-Film.
+export const STILLS = {
+  cafe: { title: "Café am Fenster", src: `${MEDIA}/still-cafe.webp` },
+  donau: { title: "Donau-Promenade", src: `${MEDIA}/still-donau.webp`, thumb: `${MEDIA}/still-donau-thumb.webp` },
+  neon: { title: "Neonnacht", src: `${MEDIA}/still-neon.webp`, thumb: `${MEDIA}/still-neon-thumb.webp` },
+  see: { title: "Frühnebel am See", src: `${MEDIA}/still-see.webp`, thumb: `${MEDIA}/still-see-thumb.webp` },
+  dach: { title: HERO_FILM.title, src: `${MEDIA}/still-dach.webp`, thumb: `${MEDIA}/still-dach-thumb.webp` },
+} as const;
+
 export const REEL_SCENES = [
   {
     id: "luft",
@@ -77,7 +97,7 @@ export const REEL_SCENES = [
 // Kontaktbogen: dieselbe Person in fünf Szenen. Bei „video“ spielt die Kachel stumm, sobald sie sichtbar ist.
 export const CONTACT_SHEET = [
   { title: "Luft", meta: "Video · Wan 3.0", kind: "video", src: REEL_SCENES[0].src, poster: `${MEDIA}/still-luft-gesicht.webp` },
-  { title: "Nahaufnahme", meta: "Standbild · Studio", kind: "still", poster: `${MEDIA}/poster-studio.webp` },
+  { title: "Café", meta: "Standbild · Grok Image 2.0", kind: "still", poster: STILLS.cafe.src },
   { title: "Studio", meta: "Video · Wan 3.0", kind: "video", src: REEL_SCENES[1].src, poster: `${MEDIA}/still-studio-lauf.webp` },
   { title: "Fluss", meta: "Video · Kling v3.0 Pro", kind: "video", src: REEL_SCENES[2].src, poster: `${MEDIA}/still-fluss.webp` },
   { title: "Wald", meta: "Video · Kling v3.0 Standard", kind: "video", src: REEL_SCENES[3].src, poster: REEL_SCENES[3].poster },
@@ -114,25 +134,25 @@ export const PIPELINE = [
     title: "Szenen erzeugen",
     text: "Bilder und Videos aus Vorlagen oder freiem Prompt, auch Bild zu Video.",
     paid: true,
-    image: `${MEDIA}/still-fluss.webp`,
+    image: STILLS.donau.src,
   },
   {
     title: "Produzieren",
     text: "Szenen zu einer Produktion bündeln, mit Sprecherstimme und Musik.",
     paid: true,
-    image: `${MEDIA}/still-luft-gesicht.webp`,
+    image: STILLS.neon.src,
   },
   {
     title: "Schneiden",
     text: "Im Editor kürzen, ordnen und als fertiges Video exportieren.",
     paid: false,
-    image: `${MEDIA}/still-studio-lauf.webp`,
+    image: STILLS.dach.src,
   },
   {
     title: "Planen",
     text: "Beiträge im Kalender einplanen und die Warteschlange im Blick behalten.",
     paid: false,
-    image: `${MEDIA}/poster-wald.webp`,
+    image: STILLS.see.src,
   },
 ] as const;
 

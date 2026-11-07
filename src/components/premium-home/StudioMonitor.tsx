@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { CalendarDays, Clapperboard, Coins, UserRound } from "lucide-react";
-import { REEL_SCENES } from "./content";
+import { REEL_SCENES, STILLS } from "./content";
 
 // Vereinfachte Darstellung der Creator-Studio-Oberfläche. Das sind keine Bildschirmfotos: Farben, Begriffe und
 // Funktionen entsprechen dem Produkt (Creator, Szenen, Kostenvorschau, Planung). Die Bilder und Videos der
@@ -16,12 +16,13 @@ const TABS: Array<{ id: TabId; label: string; Icon: typeof UserRound }> = [
   { id: "planung", label: "Planung", Icon: CalendarDays },
 ];
 
-const SCENES = REEL_SCENES.map((scene) => ({
-  title: scene.title,
-  meta: `Video, ${scene.seconds} s`,
-  model: scene.model.split(" · ")[0],
-  thumb: scene.thumb,
-}));
+// Echte Ergebnisse vom 2026-11-07: ein Video (Hero-Film) und drei Bilder derselben Figur.
+const SCENES = [
+  { title: STILLS.dach.title, meta: "Video, 8 s", model: "Kling 3.0 Pro", thumb: STILLS.dach.thumb },
+  { title: STILLS.donau.title, meta: "Bild, 9:16", model: "Grok Image 2.0", thumb: STILLS.donau.thumb },
+  { title: STILLS.neon.title, meta: "Bild, 9:16", model: "Grok Image 2.0", thumb: STILLS.neon.thumb },
+  { title: STILLS.see.title, meta: "Bild, 2:3", model: "Grok Image 2.0", thumb: STILLS.see.thumb },
+];
 
 const WEEK = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const SLOTS: Record<number, Array<{ time: string; label: string }>> = {
@@ -51,6 +52,7 @@ const CreatorPanel = () => (
           <dd>
             <span className="pm-chip">9:16</span>
             <span className="pm-chip">Video</span>
+            <span className="pm-chip">Bild</span>
           </dd>
         </div>
         <div>
@@ -61,7 +63,7 @@ const CreatorPanel = () => (
                 <img src={scene.thumb} alt="" width={240} height={427} loading="lazy" decoding="async" />
               </span>
             ))}
-            <span className="pm-mon__ok">4 Videos erzeugt</span>
+            <span className="pm-mon__ok">4 Szenen erzeugt</span>
           </dd>
         </div>
       </dl>

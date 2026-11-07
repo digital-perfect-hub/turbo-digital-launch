@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, RotateCcw } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
-import { MARIA_DISCLOSURE, REEL_SCENES } from "./content";
+import { HERO_FILM, MARIA_DISCLOSURE, REEL_SCENES } from "./content";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -195,6 +195,121 @@ export const ReelPlayer = () => {
       </div>
       <p className="pm-sr" aria-live="polite">{`Szene ${active + 1} von ${total}: ${scene.title}. ${MARIA_DISCLOSURE}`}</p>
     </div>
+  );
+};
+
+/**
+ * Hero-Film für den Rechner: ein 16:9-Film füllt den Hero, der Text liegt links auf der dunklen Bildhälfte.
+ * Der Film läuft einmal (8 s) und bleibt dann auf dem letzten Bild stehen, es gibt keinen Schnitt zurück an den Anfang.
+ * Bei reduzierter Bewegung, Datenspar-Modus oder blockiertem Autoplay bleibt das erste Bild stehen und der Film wird erst
+ * auf Knopfdruck geladen. Abspielen, Pause und Wiederholen sind immer bedienbar. Wird nur ab 1024 px Breite gerendert.
+ * Gibt zwei Geschwister zurück: die Bildebene hinter dem Hero-Text und die Bedienleiste darüber (sonst nicht klickbar).
+ */
+export const HeroFilm = () => {
+  const reduce = useReducedMotion();
+  const [lite] = useState(prefersLiteMedia);
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const [visible, setVisible] = useState(true);
+  const [ended, setEnded] = useState(false);
+  const [ready, setReady] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const clock = useRef<HTMLSpanElement>(null);
+
+  const wanted = choice ?? (!reduce && !lite);
+  const running = wanted && visible && !ended;
+
+  useEffect(() => {
+    const node = root.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.12 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const element = video.current;
+    if (!element) return;
+    if (running) {
+      const attempt = element.play();
+      if (attempt) {
+        attempt.catch((error: DOMException) => {
+          if (error?.name === "NotAllowedError") setChoice(false);
+        });
+      }
+    } else {
+      element.pause();
+    }
+  }, [running]);
+
+  // Zeitmarke direkt aus der Abspielzeit, ohne React-Neuzeichnen.
+  useEffect(() => {
+    let frame = 0;
+    const tick = () => {
+      const element = video.current;
+      if (element && clock.current) clock.current.textContent = timecode(element.currentTime);
+      frame = window.requestAnimationFrame(tick);
+    };
+    if (running) frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [running]);
+
+  const toggle = () => {
+    if (ended) {
+      const element = video.current;
+      if (element) element.currentTime = 0;
+      if (clock.current) clock.current.textContent = timecode(0);
+      setEnded(false);
+      setChoice(true);
+      return;
+    }
+    setChoice(!wanted);
+  };
+
+  const label = ended ? "Film noch einmal abspielen" : wanted ? "Film anhalten" : "Film abspielen";
+
+  return (
+    <>
+      <div className="pm-film" ref={root} role="group" aria-roledescription="Film" aria-label="Beispielfilm aus Creator Studio">
+        <img
+          className="pm-film__poster"
+          src={HERO_FILM.poster}
+          alt=""
+          width={1920}
+          height={1080}
+          decoding="async"
+          {...({ fetchpriority: "high" } as Record<string, string>)}
+        />
+        <video
+          ref={video}
+          className={`pm-film__video${ready ? " is-ready" : ""}`}
+          src={HERO_FILM.src}
+          poster={HERO_FILM.poster}
+          muted
+          playsInline
+          preload={wanted ? "auto" : "none"}
+          onPlaying={() => setReady(true)}
+          onEnded={() => setEnded(true)}
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        <span className="pm-film__shade" aria-hidden="true" />
+        <span className="pm-film__grain" aria-hidden="true" />
+        <p className="pm-sr">{`${HERO_FILM.title}. ${MARIA_DISCLOSURE}`}</p>
+      </div>
+      <div className="pm-film__hud">
+        <p className="pm-film__scene">{HERO_FILM.title}</p>
+        <p className="pm-film__model">{HERO_FILM.model}</p>
+        <p className="pm-film__ai">{MARIA_DISCLOSURE}</p>
+        <div className="pm-film__ctl">
+          <span className="pm-film__rec" aria-hidden="true"><i />REC</span>
+          <span className="pm-film__tc" ref={clock} aria-hidden="true">{timecode(0)}</span>
+          <button type="button" className="pm-film__toggle" onClick={toggle} aria-label={label}>
+            {ended ? <RotateCcw size={16} aria-hidden="true" /> : wanted ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 

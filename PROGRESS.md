@@ -6,6 +6,31 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-07 — Higgsfield-Medien (Kostenfreigabe A+B, max. 5,00 USD) und Desktop-Hero-Film (Branch design/premium-home, nur Vorschau)
+
+**Auslöser:** Ausdrückliche Kostenfreigabe von Markus: Paket A (16:9-Startbild plus ca. 8-s-Video, Maria Noelle) und Paket B (vier neue Maria-Bilder), Gesamtlimit 5,00 USD inkl. Wiederholungen, Einzelbild höchstens 0,10 USD, Kostenvorschau vor jedem Auftrag, keine Änderung der Studio-Budgeteinstellungen. Paket C ausdrücklich nicht freigegeben.
+
+### Erzeugt (im Creator Studio, Creator Maria Noelle, angemeldete Sitzung von Markus)
+- Fünf Bilder mit Grok Image 2.0, je Kostenvorschau und Studio-Schätzung 0,09 $: Donau-Promenade (9:16), Café am Fenster (3:4), Neonnacht (9:16), Frühnebel am See (2:3), Hero-Startbild Dach (16:9). Referenzen je Bild: Master, 3/4, Ganzkörper (bei fünf Referenzen lag die Schätzung bei 0,11 $, also über dem Bildlimit; die Auswahl wurde nur für diese Bilder reduziert, keine Studio-Einstellung geändert).
+- Ein Video mit Kling 3.0 Pro (Bild zu Video aus dem Hero-Startbild), 8 s, 1920 × 1080, ohne Ton: Kostenvorschau und Studio-Schätzung 0,90 $.
+- Summe laut Studio: 1,35 $ (Kopfzeile „Heute geschätzt“ und Bibliothek). Das Studio kennt den von Higgsfield tatsächlich abgerechneten Betrag nicht (Feld „Abgerechnet laut Higgsfield“ war leer und blieb leer); die Abrechnung lässt sich nur im Higgsfield-Konto prüfen.
+- Keine Wiederholungen nötig, keine weiteren Aufträge. Es wurden keine Studio-Einstellungen geändert.
+
+### Nutzungsbedingungen Higgsfield (gelesen 2026-11-07)
+- Terms of Use („Last updated: October 23, 2026“, Abschnitt 4.4): Higgsfield beansprucht kein Eigentum an Outputs und schränkt die kommerzielle Nutzung nicht ein, ohne Bindung an einen Tarif. Pflichten: Outputs nicht für KI-Training verwenden (5.2 iv), nicht als menschlich erzeugt ausgeben (5.2 xi, 11.7), KI-Kennzeichnung, wo gesetzlich verlangt (5.5). Die Seite trägt die Kennzeichnung „KI-generiert in Creator Studio. Maria Noelle ist eine fiktive Figur.“
+- Offen/unklar: Drittmodell-Richtlinien (Abschnitt 8: bei Konflikt gilt die strengere, Anbieter werden nicht genannt), Wasserzeichen-Regel nur im Help Center, Abgrenzung App-Betrieb und „service bureau“ (1.2 vs. 11.5), Freistellung nur im Enterprise-Tarif laut Help Center. Gilt für die schon eingebundenen Maria-Clips gleichermaßen.
+
+### Umgesetzt
+- **Desktop-Hero (ab 1024 px):** `HeroFilm` in `Reel.tsx`: 16:9-Film füllt den Hero, linke Bildhälfte dunkel für den Text, Abdunklung von links, oben (Navigation) und unten (Übergang zum Modellband). Der Film läuft einmal (8 s) und bleibt auf dem letzten Bild stehen. Bedienleiste unten rechts mit Szenenname, Modell, KI-Kennzeichnung, Zeitmarke und Abspielen/Pause/Wiederholen. Bei reduzierter Bewegung, Datenspar-Modus oder blockiertem Autoplay bleibt das erste Bild und der Film wird erst auf Knopfdruck geladen. Unter 1024 px unverändert: Vollbild-Showreel aus den vier Hochformat-Szenen.
+- **Neue Motive statt Wiederholung:** Kontaktbogen (Kachel „Café“ statt doppeltem „Nahaufnahme“-Standbild), Studio-Monitor (Szenen: Dach, Donau, Neon, See), Ablauf-Filmstreifen (Donau, Neon, Hochformat-Ausschnitt aus dem Hero-Film, See; Schritt 1 bleibt die Nahaufnahme).
+- Medien in `public/media/maria/`: `hero-dach.mp4` (2,3 MB, H.264, ohne Ton), `hero-dach-poster.webp`, `still-{cafe,donau,neon,see,dach}.webp` plus `-thumb`. Originale (Download-Ordner) nicht im Repo.
+
+### Prüfung
+- Lokal im Browser (Desktop 1440 und 1024, Mobile 390): kein horizontales Überlaufen, keine Konsolenfehler, Film läuft einmal und bleibt stehen, Abbruch-Requests beim Szenenwechsel sind harmlos. `eslint` ohne Fehler, `vite build` erfolgreich.
+- Nicht geprüft: echte Geräte (iPhone/Safari), Lighthouse/Core Web Vitals.
+
+---
+
 ## 2026-11-07 — Premium-Redesign Phase 2: Visual Experience (Branch design/premium-home, nur Vorschau)
 
 **Auslöser:** Auftrag „Phase 2: Visual Experience“. Konzept, Marke und Positionierung bleiben; die Seite wird visuell kräftiger und zeigt echte Creator-Studio-Ergebnisse statt Symbolbildern. Produktion, Creator Studio, Datenbank und Admin unverändert.

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import StudioMonitor from "./StudioMonitor";
-import { LazyClip, ReelPlayer, useMinWidth } from "./Reel";
+import { HeroFilm, LazyClip, ReelPlayer, useMinWidth } from "./Reel";
 import {
   CONTACT_SHEET,
   CONTROL_SPECS,
@@ -158,23 +158,24 @@ const PremiumNav = ({ brand }: { brand: string }) => {
   );
 };
 
-// Hero: auf dem Telefon füllt das Showreel den ganzen Bildschirm, am Rechner steht es als hohes Filmbild neben dem Text.
+// Hero: auf dem Telefon füllt das Showreel (vier Hochformat-Szenen) den ganzen Bildschirm, am Rechner füllt ein
+// 16:9-Film den Hero und der Text liegt links darüber.
 const Hero = () => {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const desktop = useMinWidth(1024);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const stageY = useTransform(scrollYProgress, [0, 1], [0, -72]);
   const copyY = useTransform(scrollYProgress, [0, 1], [0, 40]);
   const move = desktop && !reduce;
 
   return (
-    <section ref={ref} className="pm-hero" aria-labelledby="pm-h1">
+    <section ref={ref} className={`pm-hero${desktop ? " pm-hero--film" : ""}`} aria-labelledby="pm-h1">
       <div className="pm-hero__bg" aria-hidden="true">
         <span className="pm-hero__glow" />
         <span className="pm-hero__grid" />
         <span className="pm-hero__scan" />
       </div>
+      {desktop ? <HeroFilm /> : null}
       <div className="pm-wrap pm-hero__grid-layout">
         <motion.div className="pm-hero__copy" style={move ? { y: copyY } : undefined}>
           <p className="pm-eyebrow">Digital-Perfect · Software &amp; KI aus Österreich</p>
@@ -195,9 +196,11 @@ const Hero = () => {
           </div>
           <p className="pm-note">Pilotphase: Zugang auf Anfrage, mit persönlicher Einführung.</p>
         </motion.div>
-        <motion.div className="pm-hero__stage" style={move ? { y: stageY } : undefined}>
-          <ReelPlayer />
-        </motion.div>
+        {desktop ? null : (
+          <div className="pm-hero__stage">
+            <ReelPlayer />
+          </div>
+        )}
       </div>
     </section>
   );
