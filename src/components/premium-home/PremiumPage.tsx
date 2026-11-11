@@ -7,10 +7,10 @@ import { AuditTerminal, DiscreetNote, PillarCards } from "./OpsSection";
 import { Clip } from "./media";
 import { requestInterest } from "./AppShell";
 import { PremiumContact, PremiumShell } from "./Shell";
-import { CostSection, FounderSection } from "./PremiumHome";
+import { CostSection } from "./PremiumHome";
 import { StudioSteps } from "./StudioSteps";
 import { CreatorGallery, FreeWorlds } from "./Showcase";
-import { AI_NOTE, CREATORS, PROJECTS } from "./content";
+import { AI_NOTE, CREATORS, FOUNDER, PROJECTS } from "./content";
 import type { PremiumPageData } from "./pages";
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -44,6 +44,18 @@ const CardsVisual = () => (
       </figure>
     ))}
   </div>
+);
+
+// Wer antwortet: der Gründer mit Bild (Kontakt).
+const PersonVisual = () => (
+  <figure className="pv-person">
+    <img src={FOUNDER.image} alt={`${FOUNDER.name}, Gründer von Digital-Perfect`} loading="eager" decoding="async" />
+    <figcaption>
+      <strong>{FOUNDER.name}</strong>
+      <span>{FOUNDER.role}</span>
+      <em>Antwortet auf jede Anfrage selbst.</em>
+    </figcaption>
+  </figure>
 );
 
 // Nachgestellte KI-Antwort (KI-Sichtbarkeit): Frage, Antwortzeilen, hervorgehobene Nennung. Reine Illustration.
@@ -268,6 +280,8 @@ export const ProjectsPage = () => (
       kicker="Projekte"
       lines={["Websites, die", "online sind"]}
       lead="Keine Entwürfe, keine Mockups. Diese vier Projekte haben wir gebaut oder betreuen sie, und du kannst jedes selbst ansehen."
+      visual={<CardsVisual />}
+      modifier="cards"
     />
     <section id="mehr" className="pm-section pm-light" aria-label="Projekte">
       <div className="pm-wrap">
@@ -321,9 +335,9 @@ export const ContactPage = () => (
       kicker="Kontakt"
       lines={["Schreib uns.", "Wir antworten persönlich"]}
       lead="Ob Pilotzugang zu Creator Studio oder ein Projekt für dein Unternehmen: Ein paar Sätze reichen. Du bekommst eine Antwort mit einem klaren nächsten Schritt."
+      visual={<PersonVisual />}
     />
     <PremiumContact title="Worum geht es?" />
-    <FounderSection />
   </PremiumShell>
 );
 
