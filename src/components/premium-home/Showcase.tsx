@@ -7,7 +7,7 @@ import { requestInterest } from "./AppShell";
 import { AI_NOTE, CREATORS, WORLDS } from "./content";
 
 /**
- * Creator-Galerie: drei Figuren aus unserem eigenen Studio. Oben wählt man die Figur, die Bühne zeigt ihre Szenen
+ * Creator-Galerie: vier Figuren aus unserem eigenen Studio. Oben wählt man die Figur, die Bühne zeigt ihre Szenen
  * als Kartenstapel (die nächste Szene liegt schon dahinter), rechts stehen alle Szenen zum Anklicken. Videos laufen
  * stumm und schalten am Ende zur nächsten Szene weiter, Bilder nach ein paar Sekunden.
  */
@@ -50,11 +50,11 @@ export const CreatorGallery = () => {
         <div className="pv-head">
           <Reveal>
             <p className="pm-kicker">Echte Beispiele aus unserem Studio</p>
-            <h2 id="pv-gal-title" className="pm-h2">Drei Creator. Immer dieselbe Person.</h2>
+            <h2 id="pv-gal-title" className="pm-h2">Vier Creator. Immer dieselbe Person.</h2>
           </Reveal>
           <Reveal delay={0.08}>
             <p className="pm-body">
-              Maria, Laura und Maya gibt es nicht. Wir haben sie in Creator Studio angelegt und seitdem immer wieder neu
+              Maria, Laura, Maya und Leon gibt es nicht. Wir haben sie in Creator Studio angelegt und seitdem immer wieder neu
               fotografiert und gefilmt. Klick dich durch: anderer Ort, andere Kleidung, anderes Licht. Das Gesicht bleibt.
             </p>
           </Reveal>

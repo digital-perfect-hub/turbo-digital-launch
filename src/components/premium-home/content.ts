@@ -28,7 +28,7 @@ export const MODEL_FAMILIES = [
 // (Bild zu Video bzw. Text zu Video). Für das Web neu kodiert, ohne Ton. Originale bleiben im Studio.
 const M = "/media/studio";
 
-export const AI_NOTE = "KI-generiert in Creator Studio. Maria, Laura und Maya sind fiktive KI-Figuren.";
+export const AI_NOTE = "KI-generiert in Creator Studio. Maria, Laura, Maya und Leon sind fiktive KI-Figuren.";
 
 export type Film = {
   id: string;
@@ -50,7 +50,7 @@ const film = (file: string, tag: string, who: string, title: string): Film => ({
   poster: `${M}/${file}.webp`,
 });
 
-// Hero am Rechner: fünf Filme im Querformat (1920 × 1080, je ca. 8 s). Sie blenden ineinander über und laufen endlos.
+// Hero am Rechner: fünf Filme im Querformat (1600 × 900, je ca. 8 s). Sie blenden ineinander über und laufen endlos.
 export const HERO_WIDE: Film[] = [
   film("hero-maria-see", "Creator", "Maria Noelle", "Abend am Bergsee"),
   film("world-vulkan", "Freies Video", "Ohne Creator", "Vulkan in der Dämmerung"),
@@ -133,6 +133,17 @@ export const CREATORS = [
       clip("maya-kueche", "Frisch aus der Küche"),
       still("maya-garten", "Im Garten"),
       still("maya-lesen", "Lesestunde am Fenster"),
+    ],
+  },
+  {
+    id: "leon",
+    name: "Leon Marlow",
+    line: "Sport, Reisen, Alltag",
+    about: "Leon ist unser jüngster Creator: kurzes dunkles Haar, graugrüne Augen, Dreitagebart. Angelegt, Referenzbilder erzeugt und noch am selben Abend in drei Szenen fotografiert.",
+    scenes: [
+      still("leon-cafe", "Espresso in der Altstadt"),
+      still("leon-kueste", "Abend an der Küste"),
+      still("leon-gym", "Nach dem Training"),
     ],
   },
 ] as const;
