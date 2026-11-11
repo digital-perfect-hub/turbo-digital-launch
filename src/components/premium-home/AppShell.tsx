@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ElementType, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowUpRight, Bot, Command, CornerDownLeft, FolderKanban, Home, LayoutTemplate, Search, Send, Sparkles, Gauge } from "lucide-react";
+import { ArrowUpRight, Bot, Command, CornerDownLeft, FolderKanban, Home, Layers, LayoutTemplate, Search, Send, Sparkles, Gauge } from "lucide-react";
 import { STUDIO_URL } from "./content";
 
 // App-Schale der Premium-Seiten: Befehlspalette (Strg/⌘ + K) und auf dem Telefon eine Tab-Leiste wie in einer App.
@@ -51,9 +51,11 @@ export const CommandPalette = ({ open, onClose }: { open: boolean; onClose: () =
       { id: "web", group: "Seiten", label: "Webdesign & Entwicklung", hint: "Websites, Shops, Plattformen", icon: LayoutTemplate, run: () => navigate("/webdesign") },
       { id: "seo", group: "Seiten", label: "Technische SEO", hint: "Crawling, Indexierung, Ladezeit", icon: Gauge, run: () => navigate("/technische-seo") },
       { id: "geo", group: "Seiten", label: "KI-Sichtbarkeit (GEO)", hint: "ChatGPT, Perplexity, Google AI", icon: Bot, run: () => navigate("/ki-sichtbarkeit") },
-      { id: "projekte", group: "Seiten", label: "Projekte", hint: "Ausgewählte Arbeiten", icon: FolderKanban, run: () => navigate("/#projekte") },
+      { id: "leistungen", group: "Seiten", label: "Leistungen", hint: "Alles im Überblick", icon: Layers, run: () => navigate("/leistungen") },
+      { id: "projekte", group: "Seiten", label: "Projekte", hint: "Websites, die wir gebaut haben", icon: FolderKanban, run: () => navigate("/projekte") },
+      { id: "kontakt", group: "Seiten", label: "Kontakt", hint: "Anfrage senden", icon: Send, run: () => navigate("/kontakt") },
       { id: "pilot", group: "Aktionen", label: "Pilotzugang anfragen", hint: "Creator Studio testen", icon: Send, run: contact("Creator Studio: Pilotzugang") },
-      { id: "projekt", group: "Aktionen", label: "Projekt anfragen", hint: "Website, Shop, SEO, KI-Sichtbarkeit", icon: Send, run: contact("Webentwicklung, Shop oder Plattform") },
+      { id: "projekt", group: "Aktionen", label: "Projekt anfragen", hint: "Website, Shop, SEO, KI-Sichtbarkeit", icon: Send, run: contact("Webdesign oder Webentwicklung") },
       { id: "app", group: "Aktionen", label: "Creator Studio öffnen", hint: "studio.digital-perfect.com", icon: ArrowUpRight, run: () => window.open(STUDIO_URL, "_blank", "noopener,noreferrer") },
     ];
   }, [navigate]);
@@ -174,8 +176,8 @@ export const usePaletteHotkey = (setOpen: (updater: (value: boolean) => boolean)
 const DOCK = [
   { to: "/", label: "Start", icon: Home },
   { to: "/creator-studio", label: "Studio", icon: Sparkles },
-  { to: "/webdesign", label: "Web", icon: LayoutTemplate },
-  { to: "/ki-sichtbarkeit", label: "KI & SEO", icon: Bot },
+  { to: "/leistungen", label: "Leistungen", icon: Layers },
+  { to: "/projekte", label: "Projekte", icon: FolderKanban },
 ] as const;
 
 // Telefon: Tab-Leiste unten, sobald der Seitenkopf verlassen ist. Am Kontaktformular verschwindet sie wieder.
@@ -204,7 +206,7 @@ export const MobileDock = () => {
     <nav className={`pm-dock${on ? " is-on" : ""}`} aria-label="Schnellnavigation" aria-hidden={!on}>
       {DOCK.map((item) => {
         const Icon = item.icon;
-        const current = pathname === item.to || (item.to === "/ki-sichtbarkeit" && pathname === "/technische-seo");
+        const current = pathname === item.to || (item.to === "/leistungen" && ["/webdesign", "/technische-seo", "/ki-sichtbarkeit"].includes(pathname));
         return (
           <Link key={item.to} to={item.to} className={current ? "is-active" : undefined} tabIndex={on ? 0 : -1} aria-current={current ? "page" : undefined}>
             <Icon size={19} aria-hidden="true" />

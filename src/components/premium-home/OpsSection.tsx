@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import { ArrowRight, Bot, Gauge, LayoutTemplate, Lock, ShieldCheck } from "lucide-react";
-import { Decrypt, Reveal, useInViewOnce } from "./motion";
+import { Decrypt, Depth, Reveal, useInViewOnce } from "./motion";
 import { requestInterest } from "./AppShell";
 import { AUDIT_LINES, DISCREET_NOTE, MORE_SERVICES, PILLARS } from "./content";
 
@@ -48,7 +48,7 @@ export const PillarCards = () => (
       const Icon = PILLAR_ICONS[pillar.code];
       return (
         <li key={pillar.title}>
-          <Reveal delay={index * 0.07}>
+          <Depth delay={index * 0.07}>
             <Link to={pillar.href} className="pm-mod">
               <div className="pm-mod__top">
                 <span className="pm-mod__icon" aria-hidden="true"><Icon size={20} strokeWidth={1.7} /></span>
@@ -58,7 +58,7 @@ export const PillarCards = () => (
               <p>{pillar.text}</p>
               <span className="pm-mod__link">{pillar.cta} <ArrowRight size={15} aria-hidden="true" /></span>
             </Link>
-          </Reveal>
+          </Depth>
         </li>
       );
     })}
@@ -78,11 +78,12 @@ export const OpsServices = () => (
     <div className="pm-wrap">
       <div className="pm-ops__head">
         <Reveal className="pm-ops__lead">
-          <p className="pm-kicker">Agentur · Web, SEO, KI-Sichtbarkeit</p>
+          <p className="pm-kicker">Unsere Leistungen für Unternehmen</p>
           <Decrypt as="h2" className="pm-h2" text="Gefunden werden. Von Menschen, Google und KI." />
           <p className="pm-body">
-            Neben dem eigenen Produkt bauen wir Websites, die schnell laden, sauber gefunden werden und auch in den Antworten von
-            ChatGPT, Perplexity und Google auftauchen. Technik zuerst, Versprechen zuletzt.
+            Digital-Perfect ist auch Agentur. Wir gestalten und bauen Websites, die schnell laden, bei Google gefunden werden und
+            in den Antworten von ChatGPT, Perplexity und Googles KI auftauchen. Du bekommst klare Schritte und ehrliche Zahlen
+            statt großer Versprechen.
           </p>
           <ul className="pm-ops__more">
             {MORE_SERVICES.map((item) => (
@@ -90,14 +91,15 @@ export const OpsServices = () => (
             ))}
           </ul>
           <div className="pm-cta">
-            <a className="pm-btn" href="#kontakt" onClick={() => requestInterest("Webentwicklung, Shop oder Plattform")}>
+            <a className="pm-btn" href="#kontakt" onClick={() => requestInterest("Webdesign oder Webentwicklung")}>
               Projekt anfragen <ArrowRight size={18} aria-hidden="true" />
             </a>
+            <Link className="pm-btn pm-btn--ghost" to="/leistungen">Alle Leistungen</Link>
           </div>
         </Reveal>
-        <Reveal delay={0.1}>
+        <Depth delay={0.1}>
           <AuditTerminal />
-        </Reveal>
+        </Depth>
       </div>
       <PillarCards />
       <DiscreetNote />

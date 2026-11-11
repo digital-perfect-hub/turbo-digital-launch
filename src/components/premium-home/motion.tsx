@@ -88,3 +88,20 @@ export const Decrypt = ({ text, className, as: Tag = "span" }: { text: string; c
     </Tag>
   );
 };
+
+// Fährt aus der Tiefe nach vorn: klein, leicht gekippt und unscharf, dann an seinen Platz. Für Bühnen, Karten und Fenster.
+export const Depth = ({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) => {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      className={className}
+      style={{ transformPerspective: 1400, willChange: "transform, opacity" }}
+      initial={reduce ? false : { opacity: 0, scale: 0.86, y: 64, rotateX: 14, filter: "blur(10px)" }}
+      whileInView={{ opacity: 1, scale: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "0px 0px -10% 0px" }}
+      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};

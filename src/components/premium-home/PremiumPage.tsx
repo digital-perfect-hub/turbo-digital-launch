@@ -1,17 +1,38 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronDown, Sparkles } from "lucide-react";
 import SEO from "@/components/SEO";
-import { Reveal } from "./motion";
+import { Depth, Reveal } from "./motion";
 import { AuditTerminal, DiscreetNote, PillarCards } from "./OpsSection";
-import { ReelPlayer } from "./Reel";
+import { Clip } from "./media";
 import { requestInterest } from "./AppShell";
 import { PremiumContact, PremiumShell } from "./Shell";
-import { CostSection, JourneySection, SheetSection } from "./PremiumHome";
-import { PROJECTS } from "./content";
+import { CostSection, FounderSection } from "./PremiumHome";
+import { StudioSteps } from "./StudioSteps";
+import { CreatorGallery, FreeWorlds } from "./Showcase";
+import { AI_NOTE, CREATORS, PROJECTS } from "./content";
 import type { PremiumPageData } from "./pages";
 
 const pad = (value: number) => String(value).padStart(2, "0");
+const ORG = { "@type": "Organization", name: "Digital-Perfect", url: "https://digital-perfect.com" };
+
+// Telefonrahmen im Kopf der Creator-Studio-Seite: die Videos von Maria und Laura laufen nacheinander.
+const PHONE_SCENES = [...CREATORS[0].scenes, ...CREATORS[1].scenes].filter((item) => item.kind === "video");
+const ScenePhone = () => {
+  const [index, setIndex] = useState(0);
+  const item = PHONE_SCENES[index];
+  return (
+    <figure className="pv-phone">
+      <div className="pv-phone__screen">
+        <Clip key={item.id} src={item.src} poster={item.poster} label={item.title} eager loop={false} onEnded={() => setIndex((value) => (value + 1) % PHONE_SCENES.length)} />
+      </div>
+      <figcaption>
+        <strong>{item.title}</strong>
+        <span>{AI_NOTE}</span>
+      </figcaption>
+    </figure>
+  );
+};
 
 // Drei Projekt-Screenshots als schwebender Fächer (Webdesign).
 const CardsVisual = () => (
@@ -82,8 +103,50 @@ const Faq = ({ title, items }: { title: string; items: PremiumPageData["faq"] })
   );
 };
 
+// Kopf aller Unterseiten: Brotkrumen, Überschrift, Einleitung, Knöpfe und rechts ein Bild zum Thema.
+const SubHero = ({
+  crumb,
+  kicker,
+  lines,
+  lead,
+  visual,
+  children,
+  modifier,
+}: {
+  crumb: string;
+  kicker: string;
+  lines: string[];
+  lead: string;
+  visual?: ReactNode;
+  children?: ReactNode;
+  modifier?: string;
+}) => (
+  <section className={`pm-sub${modifier ? ` pm-sub--${modifier}` : ""}${visual ? "" : " pv-sub--plain"}`} aria-labelledby="pm-h1">
+    <div className="pm-sub__bg" aria-hidden="true" />
+    <div className="pm-wrap pm-sub__grid">
+      <div className="pm-sub__copy">
+        <nav className="pm-crumb" aria-label="Brotkrumen">
+          <Link to="/">Start</Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{crumb}</span>
+        </nav>
+        <p className="pm-eyebrow">{kicker}</p>
+        <h1 id="pm-h1" className="pm-h1 pm-h1--sub">
+          {lines.map((line, index) => (
+            <span key={line} className={`pm-line${index === lines.length - 1 && lines.length > 1 ? " pm-line--accent" : ""}`}><span>{line}</span></span>
+          ))}
+        </h1>
+        <p className="pm-lead">{lead}</p>
+        {children}
+      </div>
+      {visual ? <Depth className="pm-sub__visual">{visual}</Depth> : null}
+    </div>
+  </section>
+);
+
 const PremiumPage = ({ page }: { page: PremiumPageData }) => {
   const isStudio = page.slug === "creator-studio";
+  const name = page.kicker.split(" · ")[0];
   const structuredData = [
     {
       "@context": "https://schema.org",
@@ -97,66 +160,51 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
     {
       "@context": "https://schema.org",
       "@type": isStudio ? "SoftwareApplication" : "Service",
-      name: isStudio ? "Creator Studio" : page.kicker.split(" · ")[0],
+      name: isStudio ? "Creator Studio" : name,
       description: page.seoDescription,
-      provider: { "@type": "Organization", name: "Digital-Perfect", url: "https://digital-perfect.com" },
+      provider: ORG,
       ...(isStudio ? { applicationCategory: "MultimediaApplication", operatingSystem: "Web" } : { areaServed: "AT" }),
     },
   ];
 
+  const visual =
+    page.visual === "reel" ? <ScenePhone /> : page.visual === "terminal" ? <AuditTerminal /> : page.visual === "cards" ? <CardsVisual /> : <AnswerVisual />;
+
   return (
     <PremiumShell>
       <SEO title={page.seoTitle} description={page.seoDescription} structuredData={structuredData} />
-      <section className={`pm-sub pm-sub--${page.visual}`} aria-labelledby="pm-h1">
-        <div className="pm-sub__bg" aria-hidden="true" />
-        <div className="pm-wrap pm-sub__grid">
-          <div className="pm-sub__copy">
-            <nav className="pm-crumb" aria-label="Brotkrumen">
-              <Link to="/">Start</Link>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">{page.kicker.split(" · ")[0]}</span>
-            </nav>
-            <p className="pm-eyebrow">{page.kicker}</p>
-            <h1 id="pm-h1" className="pm-h1 pm-h1--sub">
-              {page.h1.map((line, index) => (
-                <span key={line} className={`pm-line${index === page.h1.length - 1 ? " pm-line--accent" : ""}`}><span>{line}</span></span>
-              ))}
-            </h1>
-            <p className="pm-lead">{page.lead}</p>
-            <div className="pm-cta">
-              <a className="pm-btn" href="#kontakt" onClick={() => requestInterest(page.interest)}>
-                {page.cta} <ArrowRight size={18} aria-hidden="true" />
-              </a>
-              <a className="pm-btn pm-btn--ghost" href="#mehr">Mehr erfahren</a>
-            </div>
-          </div>
-          <div className="pm-sub__visual">
-            {page.visual === "reel" ? <div className="pm-sub__reel"><ReelPlayer /></div> : null}
-            {page.visual === "terminal" ? <AuditTerminal /> : null}
-            {page.visual === "cards" ? <CardsVisual /> : null}
-            {page.visual === "answer" ? <AnswerVisual /> : null}
-          </div>
+      <SubHero crumb={name} kicker={page.kicker} lines={page.h1} lead={page.lead} visual={visual} modifier={page.visual}>
+        <div className="pm-cta">
+          <a className="pm-btn" href="#kontakt" onClick={() => requestInterest(page.interest)}>
+            {page.cta} <ArrowRight size={18} aria-hidden="true" />
+          </a>
+          <a className="pm-btn pm-btn--ghost" href="#mehr">Mehr erfahren</a>
         </div>
-      </section>
+      </SubHero>
 
-      {isStudio ? <JourneySection id="mehr" /> : null}
-      {isStudio ? <SheetSection /> : null}
+      {isStudio ? <StudioSteps id="mehr" /> : null}
+      {isStudio ? <CreatorGallery /> : null}
+      {isStudio ? <FreeWorlds /> : null}
 
-      <section id={isStudio ? "funktionen" : "mehr"} className={`pm-section${isStudio ? " pm-light" : " pm-light"}`} aria-labelledby="pm-intro-title">
+      <section id={isStudio ? "funktionen" : "mehr"} className="pm-section pm-light" aria-labelledby="pm-intro-title">
         <div className="pm-wrap">
-          <Reveal>
-            <p className="pm-kicker">{isStudio ? "Funktionen" : "Leistung"}</p>
-            <h2 id="pm-intro-title" className="pm-h2">{page.introTitle}</h2>
-            <p className="pm-body pm-body--wide">{page.introText}</p>
-          </Reveal>
+          <div className="pv-head">
+            <Reveal>
+              <p className="pm-kicker">{isStudio ? "Funktionen" : "Leistung"}</p>
+              <h2 id="pm-intro-title" className="pm-h2">{page.introTitle}</h2>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <p className="pm-body">{page.introText}</p>
+            </Reveal>
+          </div>
           <ul className={`pm-tiles${page.tiles.length > 6 ? " pm-tiles--four" : ""}`}>
             {page.tiles.map((tile, index) => (
               <li key={tile.title}>
-                <Reveal delay={(index % 3) * 0.06} className="pm-tile">
+                <Depth delay={(index % 3) * 0.06} className="pm-tile">
                   <span className="pm-tile__no" aria-hidden="true">{pad(index + 1)}</span>
                   <h3>{tile.title}</h3>
                   <p>{tile.text}</p>
-                </Reveal>
+                </Depth>
               </li>
             ))}
           </ul>
@@ -166,7 +214,7 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
       {isStudio ? <CostSection /> : null}
 
       {page.steps.length ? (
-        <section className="pm-section" aria-labelledby="pm-steps-title">
+        <section className="pm-section pv-flow" aria-labelledby="pm-steps-title">
           <div className="pm-wrap">
             <Reveal>
               <p className="pm-kicker">Ablauf</p>
@@ -175,15 +223,15 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
             <ol className="pm-flow">
               {page.steps.map((step, index) => (
                 <li key={step.title}>
-                  <Reveal delay={index * 0.07} className="pm-flow__item">
+                  <Depth delay={index * 0.07} className="pm-flow__item">
                     <span className="pm-flow__no" aria-hidden="true">{pad(index + 1)}</span>
                     <h3>{step.title}</h3>
                     <p>{step.text}</p>
-                  </Reveal>
+                  </Depth>
                 </li>
               ))}
             </ol>
-            {page.slug === "webdesign" ? <DiscreetNote /> : null}
+            {page.discreet ? <DiscreetNote /> : null}
           </div>
         </section>
       ) : null}
@@ -195,7 +243,7 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
           <div className="pm-ops__bg" aria-hidden="true" />
           <div className="pm-wrap">
             <Reveal>
-              <p className="pm-kicker">Gehört zusammen</p>
+              <p className="pm-kicker">{page.slug === "leistungen" ? "Im Detail" : "Gehört zusammen"}</p>
               <h2 className="pm-h2">Web, SEO und KI-Sichtbarkeit aus einer Hand.</h2>
             </Reveal>
             <PillarCards />
@@ -207,5 +255,76 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
     </PremiumShell>
   );
 };
+
+// „Projekte“: die vier Websites, die online sind, jede groß mit Bild, kurzer Beschreibung und Link.
+export const ProjectsPage = () => (
+  <PremiumShell>
+    <SEO
+      title="Projekte: Websites und Portale von Digital-Perfect"
+      description="Ausgewählte Projekte von Digital-Perfect: Vergleichsportale, ein Magazin und ein SEO-Projekt. Alle online und zum Ansehen verlinkt."
+    />
+    <SubHero
+      crumb="Projekte"
+      kicker="Projekte"
+      lines={["Websites, die", "online sind"]}
+      lead="Keine Entwürfe, keine Mockups. Diese vier Projekte haben wir gebaut oder betreuen sie, und du kannst jedes selbst ansehen."
+    />
+    <section id="mehr" className="pm-section pm-light" aria-label="Projekte">
+      <div className="pm-wrap">
+        <ol className="pv-cases">
+          {PROJECTS.map((project, index) => (
+            <li key={project.name} className="pv-case">
+              <Depth className="pv-case__shot">
+                <a className="pm-project" href={project.href} target="_blank" rel="noopener noreferrer" aria-label={`${project.name} öffnen`}>
+                  <span className="pm-project__chrome" aria-hidden="true"><i /><i /><i /><b>{project.host}</b></span>
+                  <span className="pm-project__shot">
+                    <img src={project.image} alt={`Startseite von ${project.name}`} loading={index === 0 ? "eager" : "lazy"} decoding="async" />
+                  </span>
+                </a>
+              </Depth>
+              <Reveal className="pv-case__copy" delay={0.08}>
+                <p className="pm-kicker">{`${pad(index + 1)} · ${project.kind}`}</p>
+                <h2 className="pm-h3">{project.name}</h2>
+                <p className="pm-body">{project.text}</p>
+                <a className="pm-textlink" href={project.href} target="_blank" rel="noopener noreferrer">
+                  {project.host} ansehen <ArrowUpRight size={16} aria-hidden="true" />
+                </a>
+              </Reveal>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+    <section className="pm-section pm-ops" aria-label="Leistungen">
+      <div className="pm-ops__bg" aria-hidden="true" />
+      <div className="pm-wrap">
+        <Reveal>
+          <p className="pm-kicker">Was wir dafür tun</p>
+          <h2 className="pm-h2">Web, SEO und KI-Sichtbarkeit aus einer Hand.</h2>
+        </Reveal>
+        <PillarCards />
+      </div>
+    </section>
+    <PremiumContact title="Dein Projekt als Nächstes?" interest="Webdesign oder Webentwicklung" />
+  </PremiumShell>
+);
+
+// „Kontakt“: das Anfrageformular steht ganz oben, darunter, wer antwortet.
+export const ContactPage = () => (
+  <PremiumShell>
+    <SEO
+      title="Kontakt: Anfrage an Digital-Perfect"
+      description="Schreib Digital-Perfect: Pilotzugang zu Creator Studio, Website, SEO oder KI-Sichtbarkeit. Du bekommst eine persönliche Antwort vom Gründer."
+    />
+    <SubHero
+      crumb="Kontakt"
+      kicker="Kontakt"
+      lines={["Schreib uns.", "Wir antworten persönlich"]}
+      lead="Ob Pilotzugang zu Creator Studio oder ein Projekt für dein Unternehmen: Ein paar Sätze reichen. Du bekommst eine Antwort mit einem klaren nächsten Schritt."
+    />
+    <PremiumContact title="Worum geht es?" />
+    <FounderSection />
+  </PremiumShell>
+);
 
 export default PremiumPage;

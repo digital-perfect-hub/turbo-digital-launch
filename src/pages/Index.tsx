@@ -153,7 +153,11 @@ const Index = () => {
   if (usePremiumHome) {
     return (
       <>
-        <SEO structuredData={structuredData} />
+        <SEO
+          title="Creator Studio, Webdesign & SEO aus Linz | Digital-Perfect"
+          description="Digital-Perfect entwickelt Creator Studio für KI-Creator, Bilder und Videos und baut Websites, die bei Google und in KI-Antworten gefunden werden."
+          structuredData={structuredData}
+        />
         <PremiumHome />
       </>
     );

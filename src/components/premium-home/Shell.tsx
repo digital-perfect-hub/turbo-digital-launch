@@ -12,6 +12,7 @@ import { Reveal } from "./motion";
 import { CommandPalette, INTEREST_EVENT, MobileDock, requestInterest, scrollToId, takePendingInterest, usePaletteHotkey } from "./AppShell";
 import { INTEREST_OPTIONS, NAV_LINKS, STUDIO_URL } from "./content";
 import "@/styles/premium-home.css";
+import "@/styles/premium-v5.css";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -107,7 +108,7 @@ const PremiumNav = ({ brand, onPalette }: { brand: string; onPalette: () => void
           <a className="pm-nav__app" href={STUDIO_URL} rel="noopener noreferrer">
             Zur App <ArrowUpRight size={14} aria-hidden="true" />
           </a>
-          <a className="pm-btn pm-btn--sm" href="#kontakt" onClick={() => requestInterest("Creator Studio: Pilotzugang")}>Pilot anfragen</a>
+          <a className="pm-btn pm-btn--sm" href="#kontakt" onClick={() => requestInterest("Creator Studio: Pilotzugang")}>Pilotzugang</a>
           <button
             type="button"
             className="pm-nav__toggle"

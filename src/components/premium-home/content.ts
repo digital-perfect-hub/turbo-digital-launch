@@ -1,4 +1,4 @@
-// Inhalte der Premium-Startseite. Nur belegte Aussagen: Funktionsumfang und Modelle stammen aus der
+// Inhalte der Premium-Seiten. Nur belegte Aussagen: Funktionsumfang und Modelle stammen aus der
 // Creator-Studio-Dokumentation (README, PROJEKTSTATUS), die Leistungen aus der Strategie von Digital-Perfect.
 // Nicht behauptet werden: Kundenzahlen, Lip-Sync, automatisches Veröffentlichen, Ranking- oder Rechtsgarantien.
 
@@ -6,10 +6,9 @@ export const STUDIO_URL = "https://studio.digital-perfect.com";
 
 export const NAV_LINKS = [
   { label: "Creator Studio", href: "/creator-studio" },
-  { label: "Webdesign", href: "/webdesign" },
-  { label: "Technische SEO", href: "/technische-seo" },
-  { label: "KI-Sichtbarkeit", href: "/ki-sichtbarkeit" },
-  { label: "Projekte", href: "/#projekte" },
+  { label: "Leistungen", href: "/leistungen" },
+  { label: "Projekte", href: "/projekte" },
+  { label: "Kontakt", href: "/kontakt" },
 ] as const;
 
 // Modellfamilien, die Creator Studio über die Higgsfield-API anspricht (README, Auswahl).
@@ -24,146 +23,218 @@ export const MODEL_FAMILIES = [
   "Z-Image Turbo",
 ] as const;
 
-// Echte Ergebnisse aus Creator Studio: Szenen der fiktiven Figur „Maria Noelle“, mit den Modellen erzeugt, die
-// im Auftragsverlauf stehen (Bild zu Video). Stand der Clips: 2026-11-11 (MiniMax H3), Dach-Film 2026-11-07 (Kling 3.0 Pro). Freigabe zur Verwendung auf der Startseite: Markus Schulz, 2026-11-07.
-// Die Dateien sind für das Web neu kodiert (720 × 1280, ohne Ton). Originale und Zugriffe bleiben im Studio.
-const MEDIA = "/media/maria";
+// Alle Medien wurden am 2026-11-11 in Creator Studio erzeugt (Freigabe Markus Schulz, Budget 20 USD):
+// Startbilder mit Grok Imagine Image 2.0 aus den Referenzbildern der Creator, Videos mit MiniMax H3
+// (Bild zu Video bzw. Text zu Video). Für das Web neu kodiert, ohne Ton. Originale bleiben im Studio.
+const M = "/media/studio";
 
-export const MARIA_DISCLOSURE = "KI-generiert in Creator Studio. Maria Noelle ist eine fiktive Figur.";
+export const AI_NOTE = "KI-generiert in Creator Studio. Maria, Laura und Maya sind fiktive KI-Figuren.";
 
-// Hero-Film für den Rechner (16:9, 8 s, ohne Ton): Startbild mit Grok Image 2.0, daraus Bild zu Video mit Kling 3.0 Pro.
-// Beides am 2026-11-07 in Creator Studio mit Maria Noelle erzeugt (Kostenvorschau Studio: 0,09 $ Bild, 0,90 $ Video).
-export const HERO_FILM = {
-  title: "Dämmerung auf dem Dach",
-  model: "Kling v3.0 Pro · Bild zu Video",
-  seconds: 8,
-  src: `${MEDIA}/hero-dach.mp4`,
-  poster: `${MEDIA}/hero-dach-poster.webp`,
-} as const;
+export type Film = {
+  id: string;
+  /** „Creator“ oder „Freies Video“ */
+  tag: string;
+  /** Name der Figur oder „Ohne Creator“ */
+  who: string;
+  title: string;
+  src: string;
+  poster: string;
+};
 
-// Neue Standbilder derselben Figur (Grok Image 2.0, 2026-11-07): je anderer Ort, anderes Licht, andere Kleidung.
-// „dach“ ist ein Hochformat-Ausschnitt aus dem Hero-Film.
-export const STILLS = {
-  cafe: { title: "Café am Fenster", src: `${MEDIA}/still-cafe.webp` },
-  donau: { title: "Donau-Promenade", src: `${MEDIA}/still-donau.webp`, thumb: `${MEDIA}/still-donau-thumb.webp` },
-  neon: { title: "Neonnacht", src: `${MEDIA}/still-neon.webp`, thumb: `${MEDIA}/still-neon-thumb.webp` },
-  see: { title: "Frühnebel am See", src: `${MEDIA}/still-see.webp`, thumb: `${MEDIA}/still-see-thumb.webp` },
-  dach: { title: HERO_FILM.title, src: `${MEDIA}/still-dach.webp`, thumb: `${MEDIA}/still-dach-thumb.webp` },
-} as const;
-
-// Filme für den Hero am Rechner (16:9, je 8 s, ohne Ton). Sie wechseln automatisch und laufen endlos.
-// „Meer“ und „Loft“: Startbild Grok Image 2.0, Video MiniMax H3 (Bild zu Video), am 2026-11-11 in Creator Studio erzeugt.
-export const HERO_FILMS = [
-  {
-    title: "Abend am Meer",
-    model: "MiniMax H3 · Bild zu Video",
-    seconds: 8,
-    src: `${MEDIA}/hero-meer.mp4`,
-    poster: `${MEDIA}/hero-meer-poster.webp`,
-  },
-  {
-    title: "Nacht im Loft",
-    model: "MiniMax H3 · Bild zu Video",
-    seconds: 8,
-    src: `${MEDIA}/hero-loft.mp4`,
-    poster: `${MEDIA}/hero-loft-poster.webp`,
-  },
-  HERO_FILM,
-] as const;
-
-// Fünf Hochformat-Szenen (720 × 1280, je ca. 6 s, ohne Ton), am 2026-11-11 in Creator Studio erzeugt:
-// Startbild Grok Image 2.0 mit Master, 3/4-Ansicht und Tattoo-Referenz, daraus Video mit MiniMax H3 (Bild zu Video).
-const scene = (id: string, label: string, title: string) => ({
-  id,
-  label,
+const film = (file: string, tag: string, who: string, title: string): Film => ({
+  id: file,
+  tag,
+  who,
   title,
-  model: "MiniMax H3 · Bild zu Video",
-  seconds: 6,
-  src: `${MEDIA}/reel-${id}.mp4`,
-  poster: `${MEDIA}/poster-${id}.webp`,
-  thumb: `${MEDIA}/poster-${id}-thumb.webp`,
+  src: `${M}/${file}.mp4`,
+  poster: `${M}/${file}.webp`,
 });
 
-export const REEL_SCENES = [
-  scene("studio", "Studio", "Lachen im Studio"),
-  scene("cafe", "Café", "Cappuccino am Fenster"),
-  scene("gipfel", "Gipfel", "Morgen über den Wolken"),
-  scene("fluss", "Fluss", "Abend am Gebirgsfluss"),
-  scene("wald", "Wald", "Waldweg im Gegenlicht"),
+// Hero am Rechner: fünf Filme im Querformat (1920 × 1080, je ca. 8 s). Sie blenden ineinander über und laufen endlos.
+export const HERO_WIDE: Film[] = [
+  film("hero-maria-see", "Creator", "Maria Noelle", "Abend am Bergsee"),
+  film("world-vulkan", "Freies Video", "Ohne Creator", "Vulkan in der Dämmerung"),
+  film("hero-laura-neon", "Creator", "Laura Bellame", "Neonnacht in der Stadt"),
+  film("world-alpen", "Freies Video", "Ohne Creator", "Alpen im Morgenlicht"),
+  film("hero-maria-loft", "Creator", "Maria Noelle", "Nacht im Loft"),
+];
+
+// Hero am Telefon: dieselbe Idee im Hochformat (720 × 1280).
+export const HERO_TALL: Film[] = [
+  film("maria-cafe", "Creator", "Maria Noelle", "Cappuccino am Fenster"),
+  film("world-vulkan-tall", "Freies Video", "Ohne Creator", "Vulkan in der Dämmerung"),
+  film("laura-strand", "Creator", "Laura Bellame", "Abend am Strand"),
+  film("world-alpen-tall", "Freies Video", "Ohne Creator", "Alpen im Morgenlicht"),
+  film("maria-gipfel", "Creator", "Maria Noelle", "Morgen über den Wolken"),
+];
+
+export type Scene = {
+  id: string;
+  title: string;
+  kind: "video" | "bild";
+  /** Video (mp4) oder Bild (webp) */
+  src: string;
+  poster: string;
+  thumb: string;
+};
+
+const clip = (file: string, title: string): Scene => ({
+  id: file,
+  title,
+  kind: "video",
+  src: `${M}/${file}.mp4`,
+  poster: `${M}/${file}.webp`,
+  thumb: `${M}/${file}-thumb.webp`,
+});
+
+const still = (file: string, title: string): Scene => ({
+  id: file,
+  title,
+  kind: "bild",
+  src: `${M}/${file}.webp`,
+  poster: `${M}/${file}.webp`,
+  thumb: `${M}/${file}-thumb.webp`,
+});
+
+// Die Beispiel-Creator aus unserem eigenen Studio. Jede Szene stammt aus denselben Referenzbildern der Figur.
+export const CREATORS = [
+  {
+    id: "maria",
+    name: "Maria Noelle",
+    line: "Reisen, Mode, Alltag",
+    about: "Maria ist unsere erste Figur. Braune Wellen, blaue Augen, Sommersprossen. In jeder Szene wiederzuerkennen, egal ob Café, Berggipfel oder Fotostudio.",
+    scenes: [
+      clip("maria-cafe", "Cappuccino am Fenster"),
+      clip("maria-studio", "Lachen im Studio"),
+      clip("maria-gipfel", "Morgen über den Wolken"),
+      clip("maria-altstadt", "Abend in der Altstadt"),
+      still("maria-see", "Abend am Bergsee"),
+      still("maria-loft", "Nacht im Loft"),
+    ],
+  },
+  {
+    id: "laura",
+    name: "Laura Bellame",
+    line: "Fitness, Business, Lifestyle",
+    about: "Laura hat langes schwarzes Haar und helle blaue Augen. Sie zeigt, wie dieselbe Figur vom Fitnessstudio ins Büro und an den Strand wechselt.",
+    scenes: [
+      clip("laura-strand", "Abend am Strand"),
+      clip("laura-gym", "Morgens im Studio"),
+      clip("laura-buero", "Arbeitstag im Büro"),
+      still("laura-neon", "Neonnacht in der Stadt"),
+    ],
+  },
+  {
+    id: "maya",
+    name: "Maya MaBelle",
+    line: "Kochen, Garten, Zuhause",
+    about: "Maya ist älter als Maria und Laura und steht für ruhigere Themen: Küche, Garten, ein gutes Buch. Auch das geht mit einem Creator.",
+    scenes: [
+      clip("maya-kueche", "Frisch aus der Küche"),
+      still("maya-garten", "Im Garten"),
+      still("maya-lesen", "Lesestunde am Fenster"),
+    ],
+  },
 ] as const;
 
-// Kontaktbogen: dieselbe Person in fünf Szenen. Jede Kachel spielt stumm, sobald sie sichtbar ist.
-export const CONTACT_SHEET = REEL_SCENES.map((item) => ({
-  title: item.label,
-  meta: "Video · MiniMax H3",
-  kind: "video" as const,
-  src: item.src,
-  poster: item.poster,
-}));
-
-export const SHEET_CAPTION = "Echte Ergebnisse aus Creator Studio: eine Figur, fünf Szenen, alle als Video. Maria Noelle ist eine fiktive KI-Figur.";
-
-export const STUDIO_POINTS = [
+// Freie Videos ohne Creator: ein Satz genügt. Die Beschreibungen geben den englischen Prompt sinngemäß wieder.
+export const WORLDS = [
   {
-    label: "Identität",
-    title: "Wiedererkennbar statt zufällig",
-    text: "Steckbrief, Masterbild und Referenzpaket halten Gesicht, Haare und Stil zusammen, auch über viele Aufträge hinweg.",
+    id: "vulkan",
+    title: "Vulkan in der Dämmerung",
+    prompt: "Drohnenflug über einen aktiven Vulkan in der Dämmerung, glühende Lavaströme, Rauch von unten beleuchtet",
+    src: `${M}/world-vulkan.mp4`,
+    poster: `${M}/world-vulkan.webp`,
+    thumb: `${M}/world-vulkan-thumb.webp`,
   },
   {
-    label: "Produktion",
-    title: "Szenen statt Einzelbilder",
-    text: "Aus Szenen werden Produktionen mit Stimme und Musik. Im Editor wird geschnitten und exportiert.",
+    id: "alpen",
+    title: "Alpen im Morgenlicht",
+    prompt: "Drohnenflug über die Schweizer Alpen bei Sonnenaufgang, Gletscher, türkiser Bergsee, Nebel im Tal",
+    src: `${M}/world-alpen.mp4`,
+    poster: `${M}/world-alpen.webp`,
+    thumb: `${M}/world-alpen-thumb.webp`,
   },
   {
-    label: "Kontrolle",
-    title: "Kosten, bevor sie entstehen",
-    text: "Jeder bezahlte Auftrag zeigt vorab, was er kostet. Limits und Tagesbudget bremsen, bevor es teuer wird.",
-  },
-] as const;
-
-export const PIPELINE = [
-  {
-    title: "Creator anlegen",
-    text: "Steckbrief, Masterbild und Referenzpaket legen die Identität fest.",
-    paid: false,
-    image: `${MEDIA}/poster-studio.webp`,
+    id: "wasserfall",
+    title: "Wasserfall im Canyon",
+    prompt: "Kamerafahrt um einen riesigen Wasserfall in einem moosgrünen Canyon, Gischt mit Regenbogen",
+    src: `${M}/world-wasserfall.mp4`,
+    poster: `${M}/world-wasserfall.webp`,
+    thumb: `${M}/world-wasserfall-thumb.webp`,
   },
   {
-    title: "Szenen erzeugen",
-    text: "Bilder und Videos aus Vorlagen oder freiem Prompt, auch Bild zu Video.",
-    paid: true,
-    image: STILLS.donau.src,
+    id: "polarlicht",
+    title: "Polarlicht über dem Fjord",
+    prompt: "Polarlichter in Grün und Violett über einem stillen Fjord, kleine rote Hütte mit warmem Licht",
+    src: `${M}/world-polarlicht.mp4`,
+    poster: `${M}/world-polarlicht.webp`,
+    thumb: `${M}/world-polarlicht-thumb.webp`,
   },
   {
-    title: "Produzieren",
-    text: "Szenen zu einer Produktion bündeln, mit Sprecherstimme und Musik.",
-    paid: true,
-    image: STILLS.neon.src,
-  },
-  {
-    title: "Schneiden",
-    text: "Im Editor kürzen, ordnen und als fertiges Video exportieren.",
-    paid: false,
-    image: STILLS.dach.src,
-  },
-  {
-    title: "Planen",
-    text: "Beiträge im Kalender einplanen und die Warteschlange im Blick behalten.",
-    paid: false,
-    image: STILLS.see.src,
+    id: "planet",
+    title: "Filmszene: Roter Planet",
+    prompt: "Ein Astronaut geht über einen roten Wüstenplaneten auf eine leuchtende Station zu, Staub, zwei Monde",
+    src: `${M}/world-planet.mp4`,
+    poster: `${M}/world-planet.webp`,
+    thumb: `${M}/world-planet-thumb.webp`,
   },
 ] as const;
 
-export const PIPELINE_CAPTION = "Bilder: echte Szenen von Maria Noelle, erzeugt in Creator Studio.";
+// So arbeitest du im Studio: sieben Schritte, so wie die App sie wirklich anbietet (Stand November 2026).
+// Planung für Instagram, TikTok, X und Reddit; direktes Veröffentlichen gibt es nur für Instagram und ist in Erprobung.
+export const STEPS = [
+  {
+    key: "creator",
+    tab: "Creator",
+    title: "Creator erstellen",
+    text: "Du beschreibst deine Figur mit eigenen Worten: Alter, Haare, Augen, Stil. Das Studio macht daraus ein Hauptbild und fünf Ansichten, an denen sich später alles orientiert.",
+  },
+  {
+    key: "bilder",
+    tab: "Bilder",
+    title: "Neue Bilder derselben Person",
+    text: "Schreib, was du sehen willst, zum Beispiel „im Café, beiger Mantel“. Heraus kommt ein neues Bild von genau deiner Figur. So oft du willst.",
+  },
+  {
+    key: "szenen",
+    tab: "Szenen",
+    title: "Szenen gestalten",
+    text: "Für ein längeres Video legst du Szenen an: Was passiert, was trägt sie, wie bewegt sie sich. Auf Wunsch mit Sprecherstimme und Musik.",
+  },
+  {
+    key: "videos",
+    tab: "Videos",
+    title: "Videos aus Bildern und Szenen",
+    text: "Ein Klick macht aus einem Bild ein Video. Du wählst Länge und Format und siehst vorher, was es kostet.",
+  },
+  {
+    key: "frei",
+    tab: "Frei",
+    title: "Freie Videos ohne Creator",
+    text: "Nicht jedes Video braucht eine Person. Beschreib eine Landschaft oder eine Filmszene in einem Satz, oder starte mit einem eigenen Bild.",
+  },
+  {
+    key: "schnitt",
+    tab: "Schnitt",
+    title: "Clips zusammenschneiden",
+    text: "Im eingebauten Editor kürzt du Clips, bringst sie in Reihenfolge, legst Musik darunter und exportierst ein fertiges Video.",
+  },
+  {
+    key: "posten",
+    tab: "Posten",
+    title: "Planen, posten oder herunterladen",
+    text: "Fertige Inhalte planst du im Kalender für Instagram, TikTok, X und Reddit ein oder lädst sie herunter. Direktes Posten auf Instagram testen wir gerade.",
+  },
+] as const;
 
-// Voreinstellungen aus der Kostenkontrolle von Creator Studio (siehe CONTROL_SPECS), einstellbar je Workspace.
+// Voreinstellungen aus der Kostenkontrolle von Creator Studio, einstellbar je Workspace.
 export const COST_BAND = [
   { value: "0,10 $", label: "Limit pro Bild", note: "Voreinstellung, einstellbar" },
   { value: "2,00 $", label: "Limit pro Video", note: "Voreinstellung, einstellbar" },
   { value: "10 $", label: "Tagesbudget", note: "Voreinstellung, mit Protokoll" },
 ] as const;
 
-// Kosten, einfach erklärt. Zahlen sind die Voreinstellungen von Creator Studio und je Workspace änderbar.
 export const COST_POINTS = [
   { title: "Preis vor dem Start", text: "Bevor ein Bild oder Video erzeugt wird, siehst du, was es kostet. Erst dein Klick startet den Auftrag." },
   { title: "Grenzen, die du setzt", text: "Ein Limit pro Bild, pro Video und pro Tag. Wird es erreicht, stoppt das Studio, statt weiter Geld auszugeben." },
@@ -171,69 +242,26 @@ export const COST_POINTS = [
   { title: "Für Teams gemacht", text: "Workspaces, Rollen und Einladungen, wenn mehrere Personen an denselben Creatorn arbeiten." },
 ] as const;
 
-// Der Weg in Creator Studio, in sieben einfachen Schritten. Nur vorhandene Funktionen (siehe PROJEKTSTATUS des Studios):
-// Planung für Instagram, TikTok, X und Reddit; direktes Veröffentlichen gibt es nur für Instagram und ist in Erprobung.
-export const JOURNEY = [
-  { title: "Creator anlegen", text: "Gib deiner Figur ein Gesicht: Steckbrief schreiben, Masterbild erzeugen, fertig ist die Grundlage.", image: `${MEDIA}/poster-studio.webp`, tag: "Start" },
-  { title: "Konsistente Bilder", text: "Ein Referenzpaket hält Gesicht, Haare und Stil fest. Jedes neue Bild zeigt dieselbe Person.", image: STILLS.cafe.src, tag: "Bilder" },
-  { title: "Szenen bauen", text: "Neuer Ort, neues Licht, neues Outfit. Aus Vorlagen oder mit deinen eigenen Worten.", image: STILLS.donau.src, tag: "Szenen" },
-  { title: "Videos erzeugen", text: "Aus einem Bild wird ein Video. Du wählst Modell, Länge und Format und siehst vorher den Preis.", image: STILLS.neon.src, tag: "Videos" },
-  { title: "Clips schneiden", text: "Im Editor kürzen, ordnen, Musik darunterlegen und als fertiges MP4 exportieren.", image: STILLS.dach.src, tag: "Schnitt" },
-  { title: "Beiträge planen", text: "Kalender und Warteschlange für Instagram, TikTok, X und Reddit. Du behältst den Überblick.", image: STILLS.see.src, tag: "Planung" },
-  { title: "Posten oder herunterladen", text: "Fertige Bilder und Videos lädst du herunter und postest sie selbst. Direktes Veröffentlichen auf Instagram ist in Erprobung.", image: `${MEDIA}/poster-fluss.webp`, tag: "Fertig" },
-] as const;
-
-// Die drei Service-Säulen (30 % der Seite), je mit eigener Unterseite.
+// Die drei Service-Säulen, je mit eigener Unterseite.
 export const PILLARS = [
-  { code: "WEB", title: "Webdesign & Entwicklung", text: "Schnelle, eigenständige Websites, Shops und Plattformen. Individuell gebaut, sauber im Code, leicht zu pflegen.", href: "/webdesign", cta: "Webdesign ansehen" },
-  { code: "SEO", title: "Technische SEO", text: "Crawling, Indexierung, Ladezeit und Struktur. Die Grundlage, damit Inhalte überhaupt gefunden werden.", href: "/technische-seo", cta: "Technische SEO ansehen" },
+  { code: "WEB", title: "Webdesign & Entwicklung", text: "Eigenständige Websites, Shops und Plattformen. Individuell gestaltet, sauber gebaut, leicht zu pflegen.", href: "/webdesign", cta: "Webdesign ansehen" },
+  { code: "SEO", title: "Technische SEO", text: "Crawling, Indexierung, Ladezeit und Struktur. Die Grundlage, damit Google deine Inhalte überhaupt findet.", href: "/technische-seo", cta: "Technische SEO ansehen" },
   { code: "GEO", title: "KI-Sichtbarkeit", text: "Damit ChatGPT, Perplexity und Googles KI-Antworten dein Unternehmen kennen, verstehen und nennen.", href: "/ki-sichtbarkeit", cta: "KI-Sichtbarkeit ansehen" },
 ] as const;
 
-export const MORE_SERVICES = ["Technische Betreuung & Monitoring", "Automatisierung von Abläufen", "Beratung zu Shop- und Zahlungsanbietern"] as const;
+// Weitere Leistungen, die es ohne eigene Unterseite gibt.
+export const MORE_SERVICES = ["SEO & lokale Sichtbarkeit", "Technische Betreuung & Monitoring", "Automatisierung von Abläufen"] as const;
 
-export const DISCREET_NOTE = "Wir betreuen auch Projekte in anspruchsvollen Branchen, in denen Werberichtlinien und Anbieterwahl besondere Sorgfalt verlangen. Diskret und auf Anfrage.";
-
-export const SERVICES = [
-  {
-    icon: "search",
-    code: "SEO.CRAWL",
-    title: "Technische SEO",
-    text: "Crawling, Indexierung, Ladezeit und saubere Struktur, damit Inhalte überhaupt gefunden werden.",
-  },
-  {
-    icon: "growth",
-    code: "REACH.GROW",
-    title: "Reichweite & Wachstum",
-    text: "Inhalte, interne Verlinkung, lokale und KI-Sichtbarkeit. Ohne Ranking-Garantie, mit klaren Messpunkten.",
-  },
-  {
-    icon: "care",
-    code: "OPS.WATCH",
-    title: "Technische Betreuung",
-    text: "Updates, Monitoring, Performance und schnelle Hilfe, wenn etwas ausfällt.",
-  },
-  {
-    icon: "code",
-    code: "BUILD.SHOP",
-    title: "Webentwicklung, Shops & Plattformen",
-    text: "Websites, Shops und Plattformen, individuell gebaut statt aus dem Baukasten.",
-    href: "/webagentur-linz",
-    hrefLabel: "Webagentur Linz ansehen",
-  },
-  {
-    icon: "flow",
-    code: "AUTO.FLOW",
-    title: "Automatisierung",
-    text: "Wiederkehrende Abläufe automatisieren: Formulare, Benachrichtigungen und Datenflüsse zwischen deinen Systemen.",
-  },
-  {
-    icon: "pay",
-    code: "PAY.ROUTE",
-    title: "Zahlungsanbieter-Beratung",
-    text: "Wir helfen bei der Auswahl passender Shop- und Zahlungsanbieter. Wir sind kein Zahlungsdienstleister und wickeln keine Zahlungen ab.",
-  },
+export const SERVICE_LIST = [
+  { title: "Premium-Webdesign", text: "Ein Auftritt, der nach dir aussieht und nicht nach Baukasten. Gestaltet für das Handy zuerst." },
+  { title: "Webentwicklung", text: "Websites, Shops und Plattformen mit eigener Logik, Kundenkonten und Verwaltungsbereich." },
+  { title: "Technische SEO", text: "Wir räumen auf, was Suchmaschinen bremst: Ladezeit, Struktur, Indexierung, strukturierte Daten." },
+  { title: "SEO & lokale Sichtbarkeit", text: "Inhalte, interne Verlinkung und saubere Unternehmensangaben, damit dich Menschen in deiner Region finden." },
+  { title: "KI-Sichtbarkeit (GEO)", text: "Wir sorgen dafür, dass KI-Assistenten deine Inhalte lesen können und dein Unternehmen richtig einordnen." },
+  { title: "Technik & Automatisierung", text: "Formulare, Benachrichtigungen und Datenflüsse zwischen deinen Systemen. Dazu Betreuung und Monitoring." },
 ] as const;
+
+export const DISCREET_NOTE = "Wir betreuen auch anspruchsvolle Projekte und Branchen, in denen Werberichtlinien und Anbieterwahl besondere Sorgfalt verlangen. Diskret und auf Anfrage.";
 
 // Beispielablauf eines technischen Audits für das Terminal im Service-Teil (Ablauf, keine Ergebnisse).
 export const AUDIT_LINES = [
@@ -253,6 +281,7 @@ export const PROJECTS = [
     kind: "Vergleichsportal Tierversicherung",
     image: "/references/digital-perfect-referenz-tierversicherungs-vergleich-tiertarif-com.webp",
     href: "https://tiertarif.com",
+    text: "Ein Vergleichsportal mit eigenem Rechner, redaktionellen Inhalten und sauberer Technik für Suchmaschinen.",
   },
   {
     name: "RankScout",
@@ -260,6 +289,7 @@ export const PROJECTS = [
     kind: "Vergleichsportal Versicherungen",
     image: "/references/digital-perfect-referenz-rank-scout-vergleichsportal-fuer-versicherungen.webp",
     href: "https://rank-scout.com",
+    text: "Plattform mit vielen Vergleichsseiten, die aus einer gemeinsamen Datenbasis entstehen und sich zentral pflegen lassen.",
   },
   {
     name: "Pudel Schulz",
@@ -267,6 +297,7 @@ export const PROJECTS = [
     kind: "Hundemagazin",
     image: "/references/digital-perfect-referenz-pudelschulz-de-hundemagazin.webp",
     href: "https://pudelschulz.de",
+    text: "Ein Magazin rund um den Pudel: schnelle Seiten, klare Struktur, Inhalte im Mittelpunkt.",
   },
   {
     name: "Kraftstamm",
@@ -274,6 +305,7 @@ export const PROJECTS = [
     kind: "SEO-Projekt, Österreich",
     image: "/references/digital-perfect-seo-referenz-kraftstamm-oesterreich.webp",
     href: "https://kraftstamm.at",
+    text: "Technische und inhaltliche Suchmaschinenoptimierung für einen österreichischen Anbieter.",
   },
 ] as const;
 
@@ -286,11 +318,10 @@ export const FOUNDER = {
 
 export const INTEREST_OPTIONS = [
   "Creator Studio: Pilotzugang",
+  "Webdesign oder Webentwicklung",
   "Technische SEO",
+  "SEO & lokale Sichtbarkeit",
   "KI-Sichtbarkeit (GEO)",
-  "Webentwicklung, Shop oder Plattform",
-  "Technische Betreuung",
-  "Automatisierung",
-  "Zahlungsanbieter-Beratung",
+  "Technik & Automatisierung",
   "Etwas anderes",
 ] as const;

@@ -11,6 +11,8 @@ export type PremiumPageData = {
   lead: string;
   cta: string;
   visual: "reel" | "terminal" | "cards" | "answer";
+  /** Zeigt den dezenten Hinweis auf anspruchsvolle Branchen. */
+  discreet?: boolean;
   introTitle: string;
   introText: string;
   tiles: { title: string; text: string }[];
@@ -29,37 +31,79 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     seoDescription:
       "Creator Studio von Digital-Perfect: KI-Creator anlegen, konsistente Bilder und Videos erzeugen, Clips schneiden und Beiträge planen. Mit Kostenvorschau vor jedem Auftrag.",
     kicker: "Creator Studio",
-    h1: ["Deine KI-Creatorin.", "Von der Idee", "bis zum Post."],
-    lead: "Creator Studio ist ein Werkzeug für KI-Persönlichkeiten: einmal anlegen, dann Bilder, Szenen und Videos erzeugen, schneiden und planen. Dieselbe Person, jedes Mal.",
+    h1: ["Creator Studio.", "Ein Werkzeug für", "Bilder, Videos, Posts"],
+    lead: "Du erfindest eine Person und machst mit ihr immer neue Bilder und Videos. Dazu kommen freie Videos ohne Person, ein Schnittprogramm und ein Kalender für deine Beiträge. Alles läuft im Browser.",
     cta: "Pilotzugang anfragen",
     visual: "reel",
-    introTitle: "Alles, was eine KI-Creatorin braucht. In einem Werkzeug.",
-    introText: "Statt fünf Programme zu verbinden, arbeitest du in einer Oberfläche. Jede Funktion baut auf derselben Identität auf.",
+    introTitle: "Was alles drinsteckt.",
+    introText: "Statt fünf Programme zu verbinden, arbeitest du in einer Oberfläche. Hier steht, was Creator Studio heute kann.",
     tiles: [
-      { title: "Identität, die hält", text: "Steckbrief, Masterbild und Referenzpaket legen Gesicht, Haare und besondere Merkmale fest. Neue Bilder starten immer von dort." },
-      { title: "Bilder in Serie", text: "Neue Orte, Outfits und Stimmungen aus Vorlagen oder eigenen Worten. Ansehen, vergrößern, herunterladen." },
-      { title: "Videos aus Bildern", text: "Ein Bild wird zum Video. Mehrere KI-Modelle stehen zur Wahl, Länge und Format bestimmst du." },
-      { title: "Produktionen", text: "Mehrere Szenen zu einem Video bündeln, mit Sprecherstimme und Musik." },
-      { title: "Editor", text: "Clips kürzen, teilen, ordnen, Musik darunterlegen und als MP4 exportieren. Ohne Zusatzprogramm." },
-      { title: "Planung", text: "Kalender, Zeitpläne und Warteschlange für Instagram, TikTok, X und Reddit." },
-      { title: "Team", text: "Workspaces, Rollen und Einladungen, wenn mehrere an denselben Creatorn arbeiten." },
-      { title: "Kosten im Blick", text: "Kostenvorschau vor jedem bezahlten Auftrag, Limits pro Bild und Video, Tagesbudget mit Protokoll." },
+      { title: "Creator, die gleich bleiben", text: "Ein Steckbrief, ein Hauptbild und fünf Ansichten legen fest, wie deine Figur aussieht. Jedes neue Bild geht von dort aus." },
+      { title: "Bilder in Serie", text: "Neuer Ort, neues Outfit, neue Stimmung. Du schreibst es in eigenen Worten oder nimmst eine Vorlage." },
+      { title: "Videos aus Bildern", text: "Aus jedem Bild wird auf Wunsch ein Video. Mehrere KI-Modelle stehen zur Wahl, Länge und Format bestimmst du." },
+      { title: "Freie Videos", text: "Videos ohne Person: aus einem Satz oder aus einem eigenen Bild. Für Landschaften, Produkte, Filmszenen." },
+      { title: "Szenen und Produktionen", text: "Mehrere Szenen werden zu einem längeren Video, auf Wunsch mit Sprecherstimme und Musik." },
+      { title: "Schnittprogramm", text: "Clips kürzen, teilen, ordnen, Musik darunterlegen und als MP4 exportieren. Ohne Zusatzprogramm." },
+      { title: "Kalender", text: "Beiträge für Instagram, TikTok, X und Reddit einplanen und die Warteschlange im Blick behalten." },
+      { title: "Kosten und Team", text: "Preis vor jedem Auftrag, Limits und Tagesbudget. Dazu Workspaces mit Rollen, wenn mehrere mitarbeiten." },
     ],
     stepsTitle: "",
     steps: [],
     faqTitle: "Häufige Fragen zu Creator Studio",
     faq: [
       { q: "Brauche ich Vorkenntnisse?", a: "Nein. Du beschreibst deine Figur in eigenen Worten, das Studio führt dich Schritt für Schritt vom ersten Bild bis zum fertigen Video." },
-      { q: "Sieht meine Creatorin wirklich immer gleich aus?", a: "Dafür gibt es Masterbild und Referenzpaket: Jede neue Szene nutzt dieselben Referenzen. KI bleibt KI, deshalb prüfst du jedes Ergebnis selbst, bevor du es verwendest." },
+      { q: "Sieht mein Creator wirklich immer gleich aus?", a: "Dafür gibt es das Hauptbild und fünf Ansichten: Jede neue Szene nutzt dieselben Referenzbilder. KI bleibt KI, deshalb prüfst du jedes Ergebnis selbst, bevor du es verwendest." },
+      { q: "Kann mein Creator Tattoos haben?", a: "Im Moment nicht. Tattoos landen bei heutigen KI-Modellen nicht zuverlässig an derselben Stelle, deshalb unterstützt das Studio sie bewusst nicht. Narben, Muttermale und Piercings kannst du angeben." },
+      { q: "Geht es auch ohne Creator?", a: "Ja. Freie Videos entstehen aus einem Satz oder aus einem eigenen Bild, ganz ohne Person. Sie landen in derselben Bibliothek und lassen sich schneiden und einplanen." },
       { q: "Postet das Studio automatisch?", a: "Nein. Du planst Beiträge im Kalender, lädst fertige Bilder und Videos herunter und postest sie selbst. Direktes Veröffentlichen auf Instagram ist in Erprobung und passiert nie ohne deine Freigabe." },
       { q: "Was kostet die KI-Erzeugung?", a: "Die KI-Kosten laufen über dein eigenes Higgsfield-Konto. Vor jedem bezahlten Auftrag siehst du eine Kostenvorschau, Limits und ein Tagesbudget verhindern Überraschungen." },
       { q: "Wie bekomme ich Zugang?", a: "Creator Studio ist in der Pilotphase. Schreib uns kurz, was du vorhast, und du bekommst einen Zugang mit persönlicher Einführung." },
     ],
     contactTitle: "Pilotzugang anfragen.",
   },
+  leistungen: {
+    slug: "leistungen",
+    interest: "Webdesign oder Webentwicklung",
+    seoTitle: "Leistungen: Webdesign, SEO & KI-Sichtbarkeit | Digital-Perfect",
+    seoDescription:
+      "Digital-Perfect gestaltet und entwickelt Websites und macht sie sichtbar: technische SEO, lokale Sichtbarkeit, KI-Suchmaschinenoptimierung (GEO) und Automatisierung aus einer Hand.",
+    kicker: "Leistungen",
+    h1: ["Eine Website,", "die gefunden wird.", "Und Kunden bringt"],
+    lead: "Wir gestalten und entwickeln Websites und sorgen dafür, dass sie gefunden werden: bei Google, in deiner Region und in den Antworten von KI-Assistenten. Alles aus einer Hand, mit einem festen Ansprechpartner.",
+    cta: "Projekt anfragen",
+    visual: "terminal",
+    discreet: true,
+    introTitle: "Was wir für dich tun.",
+    introText: "Sechs Leistungen, die ineinandergreifen. Du kannst sie einzeln beauftragen oder zusammen.",
+    tiles: [
+      { title: "Premium-Webdesign", text: "Ein Auftritt, der nach dir aussieht und nicht nach Baukasten. Zuerst für das Handy gestaltet, weil dort die meisten Besucher sind." },
+      { title: "Webentwicklung", text: "Websites, Shops und Plattformen mit eigener Logik, Kundenkonten und einem Verwaltungsbereich, den du selbst bedienst." },
+      { title: "Technische SEO", text: "Wir räumen auf, was Suchmaschinen bremst: Ladezeit, Seitenstruktur, Indexierung und strukturierte Daten." },
+      { title: "SEO & lokale Sichtbarkeit", text: "Inhalte, interne Verlinkung und saubere Unternehmensangaben, damit dich Menschen in deiner Region finden." },
+      { title: "KI-Sichtbarkeit (GEO)", text: "Immer mehr Menschen fragen ChatGPT statt Google. Wir sorgen dafür, dass KI-Assistenten deine Inhalte lesen können und dein Unternehmen richtig einordnen." },
+      { title: "Technik & Automatisierung", text: "Formulare, Benachrichtigungen und Datenflüsse zwischen deinen Systemen. Dazu laufende Betreuung und Monitoring." },
+    ],
+    stepsTitle: "So arbeiten wir zusammen.",
+    steps: [
+      { title: "Erstgespräch", text: "Kostenlos. Du erzählst, was du vorhast, wir sagen ehrlich, was sinnvoll ist." },
+      { title: "Bestandsaufnahme", text: "Wir sehen uns deine Website, deine Sichtbarkeit und deine Technik an." },
+      { title: "Angebot", text: "Du bekommst ein Angebot, in dem klar steht, was enthalten ist." },
+      { title: "Umsetzung", text: "Wir setzen um und zeigen dir Zwischenstände, bevor etwas online geht." },
+      { title: "Betreuung", text: "Auf Wunsch bleiben wir dran: Technik, Inhalte, Messung." },
+    ],
+    faqTitle: "Häufige Fragen zu unseren Leistungen",
+    faq: [
+      { q: "Kann ich auch nur eine einzelne Leistung beauftragen?", a: "Ja. Viele Kunden starten mit einem technischen Audit oder einer neuen Website und entscheiden danach, wie es weitergeht." },
+      { q: "Was kostet die Zusammenarbeit?", a: "Das hängt vom Umfang ab. Nach dem kostenlosen Erstgespräch bekommst du ein klares Angebot, in dem steht, was enthalten ist." },
+      { q: "Garantiert ihr Rankings oder Nennungen in KI-Antworten?", a: "Nein. Das kann niemand seriös garantieren. Wir beheben, was im Weg steht, und zeigen mit festen Messpunkten, was sich verändert hat." },
+      { q: "Betreut ihr auch anspruchsvolle Branchen?", a: "Ja. Wir betreuen auch Projekte, bei denen Werberichtlinien und die Wahl der Anbieter besondere Sorgfalt verlangen. Diskret und auf Anfrage." },
+      { q: "Mit wem arbeite ich zusammen?", a: "Direkt mit dem Gründer. Es gibt kein Vertriebsteam und keine wechselnden Ansprechpartner." },
+    ],
+    contactTitle: "Erzähl uns von deinem Vorhaben.",
+  },
   webdesign: {
     slug: "webdesign",
-    interest: "Webentwicklung, Shop oder Plattform",
+    interest: "Webdesign oder Webentwicklung",
     seoTitle: "Webdesign & Webentwicklung aus Linz: schnell, individuell | Digital-Perfect",
     seoDescription:
       "Webdesign und Webentwicklung von Digital-Perfect aus Linz: individuelle Websites, Shops und Plattformen, die schnell laden, gefunden werden und sich selbst pflegen lassen.",
@@ -68,6 +112,7 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     lead: "Wir gestalten und entwickeln Websites, Shops und Plattformen, die zu deinem Unternehmen passen. Individuell gebaut, auf dem Handy zuerst gedacht, von Anfang an für Suchmaschinen und KI lesbar.",
     cta: "Projekt anfragen",
     visual: "cards",
+    discreet: true,
     introTitle: "Schön allein reicht nicht.",
     introText: "Eine gute Website sieht hochwertig aus, lädt schnell und führt Besucher ohne Umwege zur Anfrage. Darauf bauen wir.",
     tiles: [
