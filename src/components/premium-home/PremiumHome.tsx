@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ArrowUpRight, CheckCircle2, CreditCard, LifeBuoy, Menu, Code2, Search, TrendingUp, Workflow, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Menu, Search, X } from "lucide-react";
 import Footer from "@/components/Footer";
 import SupportWidget from "@/components/support/SupportWidget";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,20 +11,20 @@ import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import StudioMonitor from "./StudioMonitor";
 import { HeroFilm, LazyClip, ReelPlayer, useMinWidth } from "./Reel";
+import { Reveal } from "./motion";
+import { OpsIndustries, OpsServices } from "./OpsSection";
+import { CommandPalette, INTEREST_EVENT, MobileDock, requestInterest, SPY_IDS, usePaletteHotkey, useScrollSpy } from "./AppShell";
 import {
   CONTACT_SHEET,
   CONTROL_SPECS,
   COST_BAND,
   FOUNDER,
-  INDUSTRIES,
-  INDUSTRY_NOTE,
   INTEREST_OPTIONS,
   MODEL_FAMILIES,
   NAV_LINKS,
   PIPELINE,
   PIPELINE_CAPTION,
   PROJECTS,
-  SERVICES,
   SHEET_CAPTION,
   STUDIO_POINTS,
   STUDIO_URL,
@@ -32,30 +32,6 @@ import {
 import "@/styles/premium-home.css";
 
 const pad = (value: number) => String(value).padStart(2, "0");
-
-const SERVICE_ICONS = {
-  search: Search,
-  growth: TrendingUp,
-  care: LifeBuoy,
-  code: Code2,
-  flow: Workflow,
-  pay: CreditCard,
-} as const;
-
-const Reveal = ({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) => {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      className={className}
-      initial={reduce ? false : { opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -8% 0px" }}
-      transition={{ duration: 0.8, ease: [0.2, 0, 0, 1], delay }}
-    >
-      {children}
-    </motion.div>
-  );
-};
 
 // Laufzeitmarke am linken Rand: zeigt, wie weit man auf der Seite ist, als Timecode.
 const PlayheadRail = () => {
@@ -93,7 +69,7 @@ const PlayheadRail = () => {
   );
 };
 
-const PremiumNav = ({ brand }: { brand: string }) => {
+const PremiumNav = ({ brand, active, onPalette }: { brand: string; active: string | null; onPalette: () => void }) => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -124,15 +100,25 @@ const PremiumNav = ({ brand }: { brand: string }) => {
           <span className="pm-logo__dot">.</span>
         </a>
         <nav className="pm-nav__links" aria-label="Hauptnavigation">
-          {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href}>{link.label}</a>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const current = active === link.href.slice(1) || (link.href === "#studio" && active === "kontrolle");
+            return (
+              <a key={link.href} href={link.href} className={current ? "is-active" : undefined} aria-current={current ? "location" : undefined}>
+                {link.label}
+              </a>
+            );
+          })}
         </nav>
         <div className="pm-nav__actions">
+          <button type="button" className="pm-nav__cmd" onClick={onPalette} aria-label="Befehlspalette öffnen (Strg + K)">
+            <Search size={14} aria-hidden="true" />
+            <span>Suchen</span>
+            <kbd>Ctrl K</kbd>
+          </button>
           <a className="pm-nav__app" href={STUDIO_URL} rel="noopener noreferrer">
             Zur App <ArrowUpRight size={14} aria-hidden="true" />
           </a>
-          <a className="pm-btn pm-btn--sm" href="#kontakt">Pilot anfragen</a>
+          <a className="pm-btn pm-btn--sm" href="#kontakt" onClick={() => requestInterest("Creator Studio: Pilotzugang")}>Pilot anfragen</a>
           <button
             type="button"
             className="pm-nav__toggle"
@@ -191,7 +177,9 @@ const Hero = () => {
             </span>
           </p>
           <div className="pm-cta">
-            <a className="pm-btn" href="#kontakt">Pilotzugang anfragen <ArrowRight size={18} aria-hidden="true" /></a>
+            <a className="pm-btn" href="#kontakt" onClick={() => requestInterest("Creator Studio: Pilotzugang")}>
+              Pilotzugang anfragen <ArrowRight size={18} aria-hidden="true" />
+            </a>
             <a className="pm-btn pm-btn--ghost" href="#ablauf">So arbeitet das Studio</a>
           </div>
           <p className="pm-note">Pilotphase: Zugang auf Anfrage, mit persönlicher Einführung.</p>
@@ -339,7 +327,9 @@ const ControlSection = () => (
           KI-Produktion kostet Geld pro Auftrag. Creator Studio zeigt die Kosten vorher, setzt Grenzen und führt Protokoll.
           Das ist kein Zusatz, sondern der Grund, warum wir das Werkzeug gebaut haben.
         </p>
-        <a className="pm-btn" href="#kontakt">Pilotzugang anfragen <ArrowRight size={18} aria-hidden="true" /></a>
+        <a className="pm-btn" href="#kontakt" onClick={() => requestInterest("Creator Studio: Pilotzugang")}>
+          Pilotzugang anfragen <ArrowRight size={18} aria-hidden="true" />
+        </a>
       </Reveal>
       <Reveal className="pm-spec" delay={0.1}>
         <dl>
@@ -351,69 +341,6 @@ const ControlSection = () => (
           ))}
         </dl>
       </Reveal>
-    </div>
-  </section>
-);
-
-const ServicesSection = () => (
-  <section id="leistungen" className="pm-section pm-section--paper" aria-labelledby="pm-services-title">
-    <div className="pm-wrap pm-services">
-      <Reveal className="pm-services__lead">
-        <p className="pm-kicker">Leistungen</p>
-        <h2 id="pm-services-title" className="pm-h2">Und für alles drumherum: Technik, die Anfragen bringt.</h2>
-        <p className="pm-body">
-          Neben dem eigenen Produkt bauen und betreuen wir Websites, Shops und Plattformen, mit Schwerpunkt auf technischer SEO und Sichtbarkeit.
-        </p>
-      </Reveal>
-      <ul className="pm-cards">
-        {SERVICES.map((service, index) => {
-          const Icon = SERVICE_ICONS[service.icon];
-          return (
-            <li key={service.title}>
-              <Reveal delay={index * 0.05} className="pm-card">
-                <span className="pm-card__icon" aria-hidden="true"><Icon size={22} strokeWidth={1.7} /></span>
-                <h3>{service.title}</h3>
-                <p>{service.text}</p>
-                {"href" in service && service.href ? (
-                  <Link to={service.href} className="pm-card__link">{service.hrefLabel} <ArrowRight size={15} aria-hidden="true" /></Link>
-                ) : null}
-              </Reveal>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  </section>
-);
-
-const IndustriesSection = () => (
-  <section id="branchen" className="pm-section pm-industries" aria-labelledby="pm-industries-title">
-    <div className="pm-wrap">
-      <Reveal>
-        <p className="pm-kicker">Branchen mit Regeln</p>
-        <h2 id="pm-industries-title" className="pm-h2">Wo andere an Sperren scheitern, fangen wir an zu planen.</h2>
-        <p className="pm-body pm-body--wide">
-          CBD, legales Cannabis und Dating-Plattformen kämpfen mit Werbeverboten, Plattformregeln und abgelehnten Zahlungsanbietern.
-          Dort liegt unser Schwerpunkt bei technischer Betreuung, SEO und Reichweite.
-        </p>
-      </Reveal>
-      <div className="pm-dossiers">
-        {INDUSTRIES.map((industry, index) => (
-          <Reveal key={industry.title} delay={index * 0.08}>
-            <article className="pm-dossier">
-              <p className="pm-dossier__tag">{industry.tag}</p>
-              <h3>{industry.title}</h3>
-              <p>{industry.text}</p>
-              <ul className="pm-chips">
-                {industry.scope.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          </Reveal>
-        ))}
-      </div>
-      <p className="pm-industries__note">{INDUSTRY_NOTE}</p>
     </div>
   </section>
 );
@@ -475,6 +402,16 @@ const PremiumContact = () => {
   const [sent, setSent] = useState(false);
 
   const update = (field: string, value: string | boolean) => setForm((previous) => ({ ...previous, [field]: value }));
+
+  // Vorauswahl aus Buttons und Befehlspalette ("Pilot anfragen", "Projekt anfragen").
+  useEffect(() => {
+    const onInterest = (event: Event) => {
+      const option = (event as CustomEvent<string>).detail;
+      if ((INTEREST_OPTIONS as readonly string[]).includes(option)) setForm((previous) => ({ ...previous, service: option }));
+    };
+    window.addEventListener(INTEREST_EVENT, onInterest);
+    return () => window.removeEventListener(INTEREST_EVENT, onInterest);
+  }, []);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -540,21 +477,27 @@ const PremiumContact = () => {
                   <input required type="email" autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
                 </label>
               </div>
-              <div className="pm-form__two">
-                <label>
-                  <span>Unternehmen (optional)</span>
-                  <input autoComplete="organization" value={form.company} onChange={(e) => update("company", e.target.value)} />
-                </label>
-                <label>
-                  <span>Worum geht es?</span>
-                  <select value={form.service} onChange={(e) => update("service", e.target.value)}>
-                    <option value="">Bitte wählen</option>
-                    {INTEREST_OPTIONS.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <fieldset className="pm-form__topics">
+                <legend>Worum geht es?</legend>
+                <div className="pm-form__chips">
+                  {INTEREST_OPTIONS.map((option) => (
+                    <label key={option} className={`pm-topic${form.service === option ? " is-on" : ""}`}>
+                      <input
+                        type="radio"
+                        name="pm-topic"
+                        value={option}
+                        checked={form.service === option}
+                        onChange={() => update("service", option)}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <label>
+                <span>Unternehmen (optional)</span>
+                <input autoComplete="organization" value={form.company} onChange={(e) => update("company", e.target.value)} />
+              </label>
               <label>
                 <span>Deine Nachricht</span>
                 <textarea required rows={4} value={form.description} onChange={(e) => update("description", e.target.value)} />
@@ -580,12 +523,17 @@ const PremiumContact = () => {
 const PremiumHome = () => {
   const { settings } = useGlobalTheme();
   const brand = settings.company_name || "Digital-Perfect";
+  const active = useScrollSpy(SPY_IDS);
+  const [palette, setPalette] = useState(false);
+  usePaletteHotkey(setPalette);
 
   return (
     <div className="pm">
       <a className="pm-skip" href="#inhalt">Zum Inhalt springen</a>
-      <PremiumNav brand={brand} />
+      <PremiumNav brand={brand} active={active} onPalette={() => setPalette(true)} />
       <PlayheadRail />
+      <CommandPalette open={palette} onClose={() => setPalette(false)} />
+      <MobileDock active={active} />
       <main id="inhalt">
         <Hero />
         <Ticker />
@@ -593,8 +541,8 @@ const PremiumHome = () => {
         <PipelineSection />
         <CostBand />
         <ControlSection />
-        <ServicesSection />
-        <IndustriesSection />
+        <OpsServices />
+        <OpsIndustries />
         <ProjectsSection />
         <FounderSection />
         <PremiumContact />

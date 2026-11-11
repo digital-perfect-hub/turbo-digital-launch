@@ -179,21 +179,25 @@ export const CONTROL_SPECS = [
 export const SERVICES = [
   {
     icon: "search",
+    code: "SEO.CRAWL",
     title: "Technische SEO",
     text: "Crawling, Indexierung, Ladezeit und saubere Struktur, damit Inhalte überhaupt gefunden werden.",
   },
   {
     icon: "growth",
+    code: "REACH.GROW",
     title: "Reichweite & Wachstum",
     text: "Inhalte, interne Verlinkung, lokale und KI-Sichtbarkeit. Ohne Ranking-Garantie, mit klaren Messpunkten.",
   },
   {
     icon: "care",
+    code: "OPS.WATCH",
     title: "Technische Betreuung",
     text: "Updates, Monitoring, Performance und schnelle Hilfe, wenn etwas ausfällt.",
   },
   {
     icon: "code",
+    code: "BUILD.SHOP",
     title: "Webentwicklung, Shops & Plattformen",
     text: "Websites, Shops und Plattformen, individuell gebaut statt aus dem Baukasten.",
     href: "/webagentur-linz",
@@ -201,14 +205,27 @@ export const SERVICES = [
   },
   {
     icon: "flow",
+    code: "AUTO.FLOW",
     title: "Automatisierung",
     text: "Wiederkehrende Abläufe automatisieren: Formulare, Benachrichtigungen und Datenflüsse zwischen deinen Systemen.",
   },
   {
     icon: "pay",
+    code: "PAY.ROUTE",
     title: "Zahlungsanbieter-Beratung",
     text: "Wir helfen bei der Auswahl passender Shop- und Zahlungsanbieter. Wir sind kein Zahlungsdienstleister und wickeln keine Zahlungen ab.",
   },
+] as const;
+
+// Beispielablauf eines technischen Audits für das Terminal im Service-Teil (Ablauf, keine Ergebnisse).
+export const AUDIT_LINES = [
+  { kind: "cmd", text: "$ dp audit --ziel shop --markt high-risk" },
+  { kind: "step", text: "› crawling ........ seiten, weiterleitungen" },
+  { kind: "step", text: "› indexierung ..... was google wirklich sieht" },
+  { kind: "step", text: "› ladezeit ........ core web vitals messen" },
+  { kind: "step", text: "› zahlungswege .... passende anbieter abgleichen" },
+  { kind: "step", text: "› plattformregeln . risiken markieren" },
+  { kind: "done", text: "✓ bericht: konkrete schritte, keine garantien" },
 ] as const;
 
 export const INDUSTRIES = [

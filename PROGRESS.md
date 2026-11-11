@@ -6,6 +6,21 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-11 — Premium-Startseite v3: App-Gefühl und „Deep-Web“-Service-Teil (Branch design/premium-home, nur Vorschau)
+
+**Auftrag Markus:** Premium-Startseite konsequent verbessern (70 % Creator Studio, 30 % Webdesign/SEO mit High-Risk-Wirkung), Webapp-Gefühl, Mobile First; direkt umsetzen, kein Push/Deploy.
+
+- **App-Schale** (`premium-home/AppShell.tsx`): aktive Sektion in der Navigation (Scrollspy), Befehlspalette mit Strg/⌘ + K und Suchfeld im Kopf (ab 1180 px), auf dem Telefon eine Tab-Leiste unten (ab Ende des Hero, verschwindet am Formular; Support-Knopf wird darüber gehoben).
+- **Service-Teil als dunkle Ops-Konsole** (`premium-home/OpsSection.tsx`): ersetzt die helle Papierfläche. Überschrift „entschlüsselt“ sich beim Sichtbarwerden, Terminal tippt einen Beispielablauf eines Audits (ausdrücklich als Beispiel, keine Garantien), sechs Leistungen als Module mit Code (`SVC/01 · SEO.CRAWL`). Inhalte und Link „Webagentur Linz“ unverändert.
+- **Branchen als Dossiers:** Aktennummer, „Restricted“-Stempel, geschwärzte Schwerpunkte, die sich beim Sichtbarwerden freilegen. Hinweis „keine Garantien, keine Rechtsberatung, kein Zahlungsdienstleister“ bleibt.
+- **Formular:** Thema als Auswahlchips statt Dropdown. Buttons und Befehlspalette wählen das Thema vor („Pilot anfragen“, „Projekt anfragen“). Gleiche Felder in `leads` wie vorher.
+- Gemeinsame Bausteine in `premium-home/motion.tsx` (Reveal, Decrypt, useInViewOnce). Reduzierte Bewegung wird respektiert, Screenreader lesen die fertigen Überschriften.
+- **Geprüft:** `tsc` ohne Fehler in premium-home, ESLint 0 Fehler (nur Fast-Refresh-Hinweise), `vite build` grün, Browser lokal Desktop 1440 und Telefon 390 (kein seitliches Überlaufen, Palette und Vorauswahl funktionieren). Screenshots `v3-*` in `TURBO-DIGITAL-LAUNCH_Startseite-Vorschau/`.
+- **Lokal:** `.env.local` (ignoriert) mit dem öffentlichen Publishable Key, weil die `.env` noch den seit 11.11. deaktivierten Legacy-Schlüssel enthält und die Seite lokal sonst bei 99 % hängen bleibt.
+- **Stand:** Commit und Vorschau-Deploy nach GO von Markus (11.11.), Live unverändert; Markus' eigene uncommittete Änderungen (Header.tsx, ContactHomepage.tsx, index.css, contact-homepage.css, src.zip) nicht mit einchecken.
+
+---
+
 ## 2026-11-07 — Higgsfield-Medien (Kostenfreigabe A+B, max. 5,00 USD) und Desktop-Hero-Film (Branch design/premium-home, nur Vorschau)
 
 **Auslöser:** Ausdrückliche Kostenfreigabe von Markus: Paket A (16:9-Startbild plus ca. 8-s-Video, Maria Noelle) und Paket B (vier neue Maria-Bilder), Gesamtlimit 5,00 USD inkl. Wiederholungen, Einzelbild höchstens 0,10 USD, Kostenvorschau vor jedem Auftrag, keine Änderung der Studio-Budgeteinstellungen. Paket C ausdrücklich nicht freigegeben.
