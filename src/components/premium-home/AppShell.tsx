@@ -1,36 +1,28 @@
 import { useEffect, useMemo, useRef, useState, type ElementType, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { ArrowUpRight, Boxes, Command, CornerDownLeft, Film, FolderKanban, Search, Send, ShieldHalf, Sparkles, Terminal } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowUpRight, Bot, Command, CornerDownLeft, FolderKanban, Home, LayoutTemplate, Search, Send, Sparkles, Gauge } from "lucide-react";
 import { STUDIO_URL } from "./content";
 
-// App-Schale der Premium-Startseite: aktive Sektion (Scrollspy), Befehlspalette (Strg/⌘ + K) und auf dem Telefon
-// eine Tab-Leiste wie in einer App. Alles nur Navigation, keine Daten.
-
-export const SPY_IDS = ["studio", "ablauf", "kontrolle", "leistungen", "branchen", "projekte", "kontakt"] as const;
+// App-Schale der Premium-Seiten: Befehlspalette (Strg/⌘ + K) und auf dem Telefon eine Tab-Leiste wie in einer App.
+// Alles nur Navigation, keine Daten.
 
 // Vorauswahl im Anfrageformular, z. B. aus der Befehlspalette oder einem Button ("Pilotzugang", "Projekt").
 export const INTEREST_EVENT = "pm:interest";
+let pendingInterest: string | null = null;
 export const requestInterest = (option: string) => {
+  pendingInterest = option;
   window.dispatchEvent(new CustomEvent(INTEREST_EVENT, { detail: option }));
 };
+export const takePendingInterest = () => {
+  const value = pendingInterest;
+  pendingInterest = null;
+  return value;
+};
 
-export const useScrollSpy = (ids: readonly string[]) => {
-  const [active, setActive] = useState<string | null>(null);
-  useEffect(() => {
-    const elements = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => Boolean(el));
-    if (!elements.length || !("IntersectionObserver" in window)) return;
-    const visible = new Map<string, boolean>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => visible.set(entry.target.id, entry.isIntersecting));
-        const current = ids.find((id) => visible.get(id));
-        setActive(current ?? null);
-      },
-      { rootMargin: "-42% 0px -52% 0px" },
-    );
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [ids]);
-  return active;
+export const scrollToId = (id: string) => {
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  return Boolean(target);
 };
 
 type PaletteItem = {
@@ -42,58 +34,29 @@ type PaletteItem = {
   run: () => void;
 };
 
-const go = (hash: string) => {
-  const target = document.getElementById(hash);
-  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-  history.replaceState(null, "", `#${hash}`);
-};
-
 export const CommandPalette = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
-  const items = useMemo<PaletteItem[]>(
-    () => [
-      { id: "studio", group: "Springen", label: "Creator Studio", hint: "KI-Figuren, Szenen, Videos", icon: Sparkles, run: () => go("studio") },
-      { id: "ablauf", group: "Springen", label: "Ablauf", hint: "Vom Steckbrief zum Reel", icon: Film, run: () => go("ablauf") },
-      { id: "kontrolle", group: "Springen", label: "Kostenkontrolle", hint: "Vorschau, Limits, Tagesbudget", icon: ShieldHalf, run: () => go("kontrolle") },
-      { id: "leistungen", group: "Springen", label: "Leistungen", hint: "SEO, Shops, Betreuung", icon: Terminal, run: () => go("leistungen") },
-      { id: "branchen", group: "Springen", label: "Branchen mit Regeln", hint: "CBD, Cannabis, Dating", icon: Boxes, run: () => go("branchen") },
-      { id: "projekte", group: "Springen", label: "Projekte", hint: "Ausgewählte Arbeiten", icon: FolderKanban, run: () => go("projekte") },
-      {
-        id: "pilot",
-        group: "Aktionen",
-        label: "Pilotzugang anfragen",
-        hint: "Creator Studio testen",
-        icon: Send,
-        run: () => {
-          requestInterest("Creator Studio: Pilotzugang");
-          go("kontakt");
-        },
-      },
-      {
-        id: "projekt",
-        group: "Aktionen",
-        label: "Projekt anfragen",
-        hint: "Website, Shop, SEO",
-        icon: Send,
-        run: () => {
-          requestInterest("Webentwicklung, Shop oder Plattform");
-          go("kontakt");
-        },
-      },
-      {
-        id: "app",
-        group: "Aktionen",
-        label: "Creator Studio öffnen",
-        hint: "studio.digital-perfect.com",
-        icon: ArrowUpRight,
-        run: () => window.open(STUDIO_URL, "_blank", "noopener,noreferrer"),
-      },
-    ],
-    [],
-  );
+  const items = useMemo<PaletteItem[]>(() => {
+    const contact = (interest: string) => () => {
+      requestInterest(interest);
+      scrollToId("kontakt");
+    };
+    return [
+      { id: "home", group: "Seiten", label: "Startseite", hint: "Überblick", icon: Home, run: () => navigate("/") },
+      { id: "studio", group: "Seiten", label: "Creator Studio", hint: "KI-Creator, Bilder, Videos, Planung", icon: Sparkles, run: () => navigate("/creator-studio") },
+      { id: "web", group: "Seiten", label: "Webdesign & Entwicklung", hint: "Websites, Shops, Plattformen", icon: LayoutTemplate, run: () => navigate("/webdesign") },
+      { id: "seo", group: "Seiten", label: "Technische SEO", hint: "Crawling, Indexierung, Ladezeit", icon: Gauge, run: () => navigate("/technische-seo") },
+      { id: "geo", group: "Seiten", label: "KI-Sichtbarkeit (GEO)", hint: "ChatGPT, Perplexity, Google AI", icon: Bot, run: () => navigate("/ki-sichtbarkeit") },
+      { id: "projekte", group: "Seiten", label: "Projekte", hint: "Ausgewählte Arbeiten", icon: FolderKanban, run: () => navigate("/#projekte") },
+      { id: "pilot", group: "Aktionen", label: "Pilotzugang anfragen", hint: "Creator Studio testen", icon: Send, run: contact("Creator Studio: Pilotzugang") },
+      { id: "projekt", group: "Aktionen", label: "Projekt anfragen", hint: "Website, Shop, SEO, KI-Sichtbarkeit", icon: Send, run: contact("Webentwicklung, Shop oder Plattform") },
+      { id: "app", group: "Aktionen", label: "Creator Studio öffnen", hint: "studio.digital-perfect.com", icon: ArrowUpRight, run: () => window.open(STUDIO_URL, "_blank", "noopener,noreferrer") },
+    ];
+  }, [navigate]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -209,33 +172,44 @@ export const usePaletteHotkey = (setOpen: (updater: (value: boolean) => boolean)
 };
 
 const DOCK = [
-  { id: "studio", label: "Studio", icon: Sparkles },
-  { id: "ablauf", label: "Ablauf", icon: Film },
-  { id: "leistungen", label: "Services", icon: Terminal },
-  { id: "projekte", label: "Projekte", icon: FolderKanban },
+  { to: "/", label: "Start", icon: Home },
+  { to: "/creator-studio", label: "Studio", icon: Sparkles },
+  { to: "/webdesign", label: "Web", icon: LayoutTemplate },
+  { to: "/ki-sichtbarkeit", label: "KI & SEO", icon: Bot },
 ] as const;
 
-// Telefon: Tab-Leiste unten, sobald der Hero verlassen ist. Am Kontaktformular verschwindet sie wieder.
-export const MobileDock = ({ active }: { active: string | null }) => {
+// Telefon: Tab-Leiste unten, sobald der Seitenkopf verlassen ist. Am Kontaktformular verschwindet sie wieder.
+export const MobileDock = () => {
+  const { pathname } = useLocation();
   const [past, setPast] = useState(false);
+  const [atContact, setAtContact] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => setPast(window.scrollY > window.innerHeight * 0.7);
+    const onScroll = () => setPast(window.scrollY > window.innerHeight * 0.6);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  const on = past && active !== "kontakt";
+  }, [pathname]);
 
+  useEffect(() => {
+    const target = document.getElementById("kontakt");
+    if (!target || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(([entry]) => setAtContact(entry.isIntersecting), { rootMargin: "-30% 0px -30% 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [pathname]);
+
+  const on = past && !atContact;
   return (
     <nav className={`pm-dock${on ? " is-on" : ""}`} aria-label="Schnellnavigation" aria-hidden={!on}>
       {DOCK.map((item) => {
         const Icon = item.icon;
-        const current = active === item.id || (item.id === "studio" && active === "kontrolle") || (item.id === "leistungen" && active === "branchen");
+        const current = pathname === item.to || (item.to === "/ki-sichtbarkeit" && pathname === "/technische-seo");
         return (
-          <a key={item.id} href={`#${item.id}`} className={current ? "is-active" : undefined} tabIndex={on ? 0 : -1} aria-current={current ? "location" : undefined}>
+          <Link key={item.to} to={item.to} className={current ? "is-active" : undefined} tabIndex={on ? 0 : -1} aria-current={current ? "page" : undefined}>
             <Icon size={19} aria-hidden="true" />
             <span>{item.label}</span>
-          </a>
+          </Link>
         );
       })}
       <a href="#kontakt" className="pm-dock__cta" tabIndex={on ? 0 : -1}>

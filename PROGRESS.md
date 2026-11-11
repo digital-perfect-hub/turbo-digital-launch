@@ -6,6 +6,21 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-11 — Premium-Website v4: Farbsystem, endloser Hero, 7-Schritte-Ablauf, vier Unterseiten (Branch design/premium-home, nur Vorschau)
+
+**Auftrag Markus:** v3 konsequent weiterentwickeln: Blau-Schwarz mit eleganten Weißflächen, Orange nur als Akzent, grelle Preisfläche neu, Hero-Videos dürfen nie stehen bleiben (Mobile-Autoplay), Creator Studio einfach erklären (70 %), Web/SEO/KI-Sichtbarkeit klar positionieren (30 %), High-Risk nur dezent, Unterseiten erlaubt. Kein Push/Deploy ohne Freigabe.
+
+- **Farben:** Grundton Blau-Schwarz (`#070b15`), helle Flächen `.pm-light` (kühles Weiß, weiße Karten), Orange nur noch für Buttons, Kicker und kleine Akzente; Glühflächen und Schatten sind blau. Dritte Hero-Zeile als Kontur statt orange Fläche.
+- **Hero (`Reel.tsx`):** Videos laufen endlos. Rechner: `HERO_FILMS` wechselt automatisch mit Überblendung (derzeit ein 16:9-Film, der weich von vorn beginnt; weitere Filme nur in `content.ts` ergänzen). Telefon: vier Hochformat-Clips im Wechsel. Autoplay: `muted`/`playsinline` zusätzlich als Attribute, `autoPlay` am ersten Clip; blockiert der Browser, fährt das Standbild langsam (Ken Burns) und die erste Berührung startet; Rückkehr in den Tab und hängende Clips (6 s) werden abgefangen.
+- **Startseite:** Hero → Modellband → „Von der Idee zum fertigen Post. In sieben Schritten.“ (hell, anklickbar, läuft von selbst) → Kontaktbogen/Oberfläche → Kosten (hell, ersetzt orange Fläche und die Kontrolle-Liste) → Agenturteil mit Terminal und drei Säulen (Webdesign, technische SEO, KI-Sichtbarkeit) → Projekte (hell) → Gründer → Formular. Branchen-Dossiers entfernt; nur noch ein dezenter Satz zu anspruchsvollen Branchen (Startseite und /webdesign).
+- **Unterseiten** (nur Digital-Perfect-Site, über Route `/:slug` in `PremiumOrDynamicPage.tsx`, alle anderen Slugs/Sites weiter `DynamicPage`): `/creator-studio`, `/webdesign`, `/technische-seo`, `/ki-sichtbarkeit`. Inhalte in `premium-home/pages.ts`, Vorlage `PremiumPage.tsx` (Hero mit eigenem Visual, Kacheln, Ablauf, FAQ mit FAQPage-Schema, Service-/SoftwareApplication-Schema, Formular mit Themen-Vorauswahl). Keine Preise, Fristen oder Garantien.
+- **Navigation:** Kopf, Befehlspalette und Telefon-Tab-Leiste führen jetzt auf die Seiten (`Shell.tsx`, `AppShell.tsx`). Formular-Thema neu: „KI-Sichtbarkeit (GEO)“.
+- **Fakten Creator Studio** (aus dessen PROJEKTSTATUS): Planung für Instagram, TikTok, X, Reddit; Veröffentlichen nur Instagram, in Erprobung, nie ohne Freigabe. So steht es auf der Seite („posten oder herunterladen“).
+- **Geprüft:** `tsc` ohne Fehler in den neuen Dateien (die Fehler in `App.tsx` Zeile 147–150 bestanden schon vorher), ESLint 0 Fehler, `vite build` grün; Browser lokal Desktop 1440 (Start + vier Unterseiten) und Telefon 390 (kein seitliches Überlaufen, Clip läuft stumm/inline). Screenshots `v4-*` in `TURBO-DIGITAL-LAUNCH_Startseite-Vorschau/`.
+- **Offen:** (1) Die neuen Seiten stehen nicht in der Sitemap (Edge Function `generate-sitemap` liest nur die Datenbank) und nicht im Admin-CMS (Texte in `pages.ts`). (2) Meta-Titel der Startseite kommt weiter aus der Datenbank („SEO & Webdesign Agentur Linz“). (3) Medien-Ersatz (fünf Szenen, zwei weitere 16:9-Hero-Filme) braucht Kostenfreigabe. (4) Echtes iPhone/Safari nicht getestet. (5) Commit, Push, Vorschau-Deploy nur nach GO.
+
+---
+
 ## 2026-11-11 — Premium-Startseite v3: App-Gefühl und „Deep-Web“-Service-Teil (Branch design/premium-home, nur Vorschau)
 
 **Auftrag Markus:** Premium-Startseite konsequent verbessern (70 % Creator Studio, 30 % Webdesign/SEO mit High-Risk-Wirkung), Webapp-Gefühl, Mobile First; direkt umsetzen, kein Push/Deploy.

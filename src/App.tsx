@@ -31,6 +31,7 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Forum = lazy(() => import("./pages/Forum"));
 const ForumThread = lazy(() => import("./pages/ForumThread"));
 const DynamicPage = lazy(() => import("./pages/DynamicPage"));
+const PremiumOrDynamicPage = lazy(() => import("./pages/PremiumOrDynamicPage"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -229,7 +230,7 @@ const App = () => (
 
                 <Route path="/seo/:slug" element={<DynamicPage />} />
                 <Route path="/webdesign/:slug" element={<DynamicPage />} />
-                <Route path="/:slug" element={<DynamicPage />} />
+                <Route path="/:slug" element={<PremiumOrDynamicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>

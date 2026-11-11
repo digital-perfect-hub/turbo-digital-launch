@@ -5,11 +5,11 @@
 export const STUDIO_URL = "https://studio.digital-perfect.com";
 
 export const NAV_LINKS = [
-  { label: "Creator Studio", href: "#studio" },
-  { label: "Ablauf", href: "#ablauf" },
-  { label: "Leistungen", href: "#leistungen" },
-  { label: "Branchen", href: "#branchen" },
-  { label: "Projekte", href: "#projekte" },
+  { label: "Creator Studio", href: "/creator-studio" },
+  { label: "Webdesign", href: "/webdesign" },
+  { label: "Technische SEO", href: "/technische-seo" },
+  { label: "KI-Sichtbarkeit", href: "/ki-sichtbarkeit" },
+  { label: "Projekte", href: "/#projekte" },
 ] as const;
 
 // Modellfamilien, die Creator Studio über die Higgsfield-API anspricht (README, Auswahl).
@@ -50,6 +50,9 @@ export const STILLS = {
   see: { title: "Frühnebel am See", src: `${MEDIA}/still-see.webp`, thumb: `${MEDIA}/still-see-thumb.webp` },
   dach: { title: HERO_FILM.title, src: `${MEDIA}/still-dach.webp`, thumb: `${MEDIA}/still-dach-thumb.webp` },
 } as const;
+
+// Filme für den Hero am Rechner (16:9). Sie wechseln automatisch und laufen endlos; weitere Filme hier ergänzen.
+export const HERO_FILMS = [HERO_FILM] as const;
 
 export const REEL_SCENES = [
   {
@@ -165,16 +168,36 @@ export const COST_BAND = [
   { value: "10 $", label: "Tagesbudget", note: "Voreinstellung, mit Protokoll" },
 ] as const;
 
-export const CONTROL_SPECS = [
-  { key: "Kostenvorschau", value: "Vor jedem bezahlten Auftrag. Gestartet wird erst nach deiner Freigabe." },
-  { key: "Limit pro Auftrag", value: "Einstellbar. Voreinstellung: Bild 0,10 $, Video 2,00 $." },
-  { key: "Tagesbudget", value: "Einstellbar. Voreinstellung: 10 $ pro Tag, mit Protokoll der Ausgaben." },
-  { key: "KI-Konto", value: "Eigenes Higgsfield-Konto: Die KI-Kosten laufen direkt dort und bleiben nachvollziehbar." },
-  { key: "Team", value: "Workspaces, Rollen und Einladungen für mehrere Personen." },
-  { key: "Schnittstelle", value: "Remote-MCP für KI-Assistenten, in Erprobung." },
-  { key: "Status", value: "Pilotphase. Zugang auf Anfrage." },
-  { key: "Betreiber", value: "Digital-Perfect, Österreich." },
+// Kosten, einfach erklärt. Zahlen sind die Voreinstellungen von Creator Studio und je Workspace änderbar.
+export const COST_POINTS = [
+  { title: "Preis vor dem Start", text: "Bevor ein Bild oder Video erzeugt wird, siehst du, was es kostet. Erst dein Klick startet den Auftrag." },
+  { title: "Grenzen, die du setzt", text: "Ein Limit pro Bild, pro Video und pro Tag. Wird es erreicht, stoppt das Studio, statt weiter Geld auszugeben." },
+  { title: "Dein eigenes KI-Konto", text: "Die KI-Kosten laufen über dein eigenes Higgsfield-Konto. Du siehst jede Ausgabe dort und im Protokoll." },
+  { title: "Für Teams gemacht", text: "Workspaces, Rollen und Einladungen, wenn mehrere Personen an denselben Creatorn arbeiten." },
 ] as const;
+
+// Der Weg in Creator Studio, in sieben einfachen Schritten. Nur vorhandene Funktionen (siehe PROJEKTSTATUS des Studios):
+// Planung für Instagram, TikTok, X und Reddit; direktes Veröffentlichen gibt es nur für Instagram und ist in Erprobung.
+export const JOURNEY = [
+  { title: "Creator anlegen", text: "Gib deiner Figur ein Gesicht: Steckbrief schreiben, Masterbild erzeugen, fertig ist die Grundlage.", image: `${MEDIA}/poster-studio.webp`, tag: "Start" },
+  { title: "Konsistente Bilder", text: "Ein Referenzpaket hält Gesicht, Haare und Stil fest. Jedes neue Bild zeigt dieselbe Person.", image: STILLS.cafe.src, tag: "Bilder" },
+  { title: "Szenen bauen", text: "Neuer Ort, neues Licht, neues Outfit. Aus Vorlagen oder mit deinen eigenen Worten.", image: STILLS.donau.src, tag: "Szenen" },
+  { title: "Videos erzeugen", text: "Aus einem Bild wird ein Video. Du wählst Modell, Länge und Format und siehst vorher den Preis.", image: STILLS.neon.src, tag: "Videos" },
+  { title: "Clips schneiden", text: "Im Editor kürzen, ordnen, Musik darunterlegen und als fertiges MP4 exportieren.", image: STILLS.dach.src, tag: "Schnitt" },
+  { title: "Beiträge planen", text: "Kalender und Warteschlange für Instagram, TikTok, X und Reddit. Du behältst den Überblick.", image: STILLS.see.src, tag: "Planung" },
+  { title: "Posten oder herunterladen", text: "Fertige Bilder und Videos lädst du herunter und postest sie selbst. Direktes Veröffentlichen auf Instagram ist in Erprobung.", image: `${MEDIA}/still-fluss.webp`, tag: "Fertig" },
+] as const;
+
+// Die drei Service-Säulen (30 % der Seite), je mit eigener Unterseite.
+export const PILLARS = [
+  { code: "WEB", title: "Webdesign & Entwicklung", text: "Schnelle, eigenständige Websites, Shops und Plattformen. Individuell gebaut, sauber im Code, leicht zu pflegen.", href: "/webdesign", cta: "Webdesign ansehen" },
+  { code: "SEO", title: "Technische SEO", text: "Crawling, Indexierung, Ladezeit und Struktur. Die Grundlage, damit Inhalte überhaupt gefunden werden.", href: "/technische-seo", cta: "Technische SEO ansehen" },
+  { code: "GEO", title: "KI-Sichtbarkeit", text: "Damit ChatGPT, Perplexity und Googles KI-Antworten dein Unternehmen kennen, verstehen und nennen.", href: "/ki-sichtbarkeit", cta: "KI-Sichtbarkeit ansehen" },
+] as const;
+
+export const MORE_SERVICES = ["Technische Betreuung & Monitoring", "Automatisierung von Abläufen", "Beratung zu Shop- und Zahlungsanbietern"] as const;
+
+export const DISCREET_NOTE = "Wir betreuen auch Projekte in anspruchsvollen Branchen, in denen Werberichtlinien und Anbieterwahl besondere Sorgfalt verlangen. Diskret und auf Anfrage.";
 
 export const SERVICES = [
   {
@@ -219,37 +242,14 @@ export const SERVICES = [
 
 // Beispielablauf eines technischen Audits für das Terminal im Service-Teil (Ablauf, keine Ergebnisse).
 export const AUDIT_LINES = [
-  { kind: "cmd", text: "$ dp audit --ziel shop --markt high-risk" },
+  { kind: "cmd", text: "$ dp audit --ziel website --tiefe voll" },
   { kind: "step", text: "› crawling ........ seiten, weiterleitungen" },
   { kind: "step", text: "› indexierung ..... was google wirklich sieht" },
   { kind: "step", text: "› ladezeit ........ core web vitals messen" },
-  { kind: "step", text: "› zahlungswege .... passende anbieter abgleichen" },
-  { kind: "step", text: "› plattformregeln . risiken markieren" },
+  { kind: "step", text: "› struktur ........ daten für suche und ki" },
+  { kind: "step", text: "› ki-antworten .... wirst du genannt?" },
   { kind: "done", text: "✓ bericht: konkrete schritte, keine garantien" },
 ] as const;
-
-export const INDUSTRIES = [
-  {
-    tag: "Regulierter Markt",
-    title: "CBD & Hanfprodukte",
-    text: "Werbe- und Plattformregeln machen Reichweite schwer. Wir bauen Struktur, Inhalte und Technik so, dass Sichtbarkeit trotzdem wächst.",
-    scope: ["Technische SEO", "Shop-Technik", "Anbieterwahl"],
-  },
-  {
-    tag: "Regulierter Markt",
-    title: "Legales Cannabis",
-    text: "Die Regeln unterscheiden sich je Markt. Wir arbeiten innerhalb dieser Grenzen: saubere Inhalte, technische Betreuung, lokale Sichtbarkeit.",
-    scope: ["Lokale Sichtbarkeit", "Inhalte", "Betreuung"],
-  },
-  {
-    tag: "Sensible Plattform",
-    title: "Dating & Membership",
-    text: "Wachstum für Plattformen mit Abos und sensiblen Inhalten: Performance, technische SEO, Seitenstruktur und passende Zahlungsanbieter.",
-    scope: ["Performance", "Technische SEO", "Anbieterwahl"],
-  },
-] as const;
-
-export const INDUSTRY_NOTE = "Erfahrung, keine Garantien. Keine Rechtsberatung. Kein Zahlungsdienstleister.";
 
 export const PROJECTS = [
   {
@@ -291,7 +291,8 @@ export const FOUNDER = {
 
 export const INTEREST_OPTIONS = [
   "Creator Studio: Pilotzugang",
-  "Technische SEO & Reichweite",
+  "Technische SEO",
+  "KI-Sichtbarkeit (GEO)",
   "Webentwicklung, Shop oder Plattform",
   "Technische Betreuung",
   "Automatisierung",

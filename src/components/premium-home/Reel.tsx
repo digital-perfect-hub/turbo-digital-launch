@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
-import { HERO_FILM, MARIA_DISCLOSURE, REEL_SCENES } from "./content";
+import { HERO_FILMS, MARIA_DISCLOSURE, REEL_SCENES } from "./content";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -10,6 +10,38 @@ const prefersLiteMedia = () => {
   if (typeof navigator === "undefined") return false;
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
   return Boolean(connection?.saveData) || connection?.effectiveType === "slow-2g" || connection?.effectiveType === "2g";
+};
+
+// Autoplay auf Telefonen: iOS und Android starten ein Video nur von selbst, wenn es stumm ist und inline läuft.
+// React setzt "muted" nur als Eigenschaft; hier zusätzlich als Attribut, sonst blockiert Safari den Start gelegentlich.
+const armVideo = (video: HTMLVideoElement) => {
+  video.muted = true;
+  video.defaultMuted = true;
+  video.setAttribute("muted", "");
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+};
+
+const safePlay = (video: HTMLVideoElement, onBlocked: () => void) => {
+  armVideo(video);
+  const attempt = video.play();
+  if (attempt) {
+    attempt.catch((error: DOMException) => {
+      if (error?.name === "NotAllowedError") onBlocked();
+    });
+  }
+};
+
+// Blockiert der Browser den Start (z. B. Stromsparmodus am iPhone), läuft das Standbild als langsame Kamerafahrt
+// weiter, und die erste Berührung, Taste oder Scrollbewegung startet die Videos.
+const useUnblockOnGesture = (blocked: boolean, retry: () => void) => {
+  useEffect(() => {
+    if (!blocked) return;
+    const events = ["pointerdown", "touchstart", "keydown", "scroll"] as const;
+    const handler = () => retry();
+    events.forEach((name) => window.addEventListener(name, handler, { once: true, passive: true }));
+    return () => events.forEach((name) => window.removeEventListener(name, handler));
+  }, [blocked, retry]);
 };
 
 export const useMinWidth = (px: number) => {
@@ -42,6 +74,8 @@ export const ReelPlayer = () => {
   const [lite] = useState(prefersLiteMedia);
   const [choice, setChoice] = useState<boolean | null>(null);
   const [visible, setVisible] = useState(true);
+  const [blocked, setBlocked] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const videos = useRef<Array<HTMLVideoElement | null>>([]);
   const bars = useRef<Array<HTMLElement | null>>([]);
@@ -63,26 +97,46 @@ export const ReelPlayer = () => {
       if (!video) return;
       if (index === active && running) {
         video.preload = "auto";
-        const attempt = video.play();
-        if (attempt) {
-          attempt.catch((error: DOMException) => {
-            if (error?.name === "NotAllowedError") setChoice(false);
-          });
-        }
+        safePlay(video, () => setBlocked(true));
       } else {
         video.pause();
       }
     });
-  }, [active, running]);
+  }, [active, running, attempt]);
+
+  const retry = useRef(() => {
+    setBlocked(false);
+    setAttempt((value) => value + 1);
+  }).current;
+  useUnblockOnGesture(blocked && wanted, retry);
+
+  // Zurück im Tab: weiterlaufen lassen.
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden) setAttempt((value) => value + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   // Zeitmarke und Fortschrittsbalken ohne React-Neuzeichnen, direkt aus der Abspielzeit.
   useEffect(() => {
     let frame = 0;
     let warmed = -1;
+    let lastTime = -1;
+    let lastMove = performance.now();
     const tick = () => {
       const video = videos.current[active];
       const bar = bars.current[active];
       if (video) {
+        // Hängt ein Video (Netz, Dekoder) länger als sechs Sekunden, geht es mit der nächsten Szene weiter.
+        if (video.currentTime !== lastTime) {
+          lastTime = video.currentTime;
+          lastMove = performance.now();
+        } else if (!video.paused && performance.now() - lastMove > 6000) {
+          lastMove = performance.now();
+          setActive((value) => (value + 1) % total);
+        }
         const duration = video.duration && Number.isFinite(video.duration) ? video.duration : REEL_SCENES[active].seconds;
         if (clock.current) clock.current.textContent = timecode(video.currentTime);
         if (bar) bar.style.transform = `scaleX(${Math.min(1, video.currentTime / duration)})`;
@@ -113,13 +167,14 @@ export const ReelPlayer = () => {
     if (clock.current) clock.current.textContent = timecode(0);
     setActive(index);
     if (choice === false) setChoice(true);
+    if (blocked) retry();
   };
 
   const scene = REEL_SCENES[active];
   const toggleLabel = wanted ? "Szenen anhalten" : "Szenen abspielen";
 
   return (
-    <div className="pm-reel" ref={root} role="group" aria-roledescription="Szenenfolge" aria-label="Beispielszenen aus Creator Studio">
+    <div className={`pm-reel${blocked ? " is-still" : ""}`} ref={root} role="group" aria-roledescription="Szenenfolge" aria-label="Beispielszenen aus Creator Studio">
       <div className="pm-reel__col">
         <div className="pm-reel__frame">
           <img
@@ -140,8 +195,10 @@ export const ReelPlayer = () => {
               poster={item.poster}
               muted
               playsInline
+              autoPlay={index === 0 && wanted}
               preload={index === 0 ? "auto" : "none"}
               onEnded={() => show((index + 1) % total)}
+              onError={() => index === active && setActive((index + 1) % total)}
               tabIndex={-1}
               aria-hidden="true"
             />
@@ -199,25 +256,29 @@ export const ReelPlayer = () => {
 };
 
 /**
- * Hero-Film für den Rechner: ein 16:9-Film füllt den Hero, der Text liegt links auf der dunklen Bildhälfte.
- * Der Film läuft einmal (8 s) und bleibt dann auf dem letzten Bild stehen, es gibt keinen Schnitt zurück an den Anfang.
- * Bei reduzierter Bewegung, Datenspar-Modus oder blockiertem Autoplay bleibt das erste Bild stehen und der Film wird erst
- * auf Knopfdruck geladen. Abspielen, Pause und Wiederholen sind immer bedienbar. Wird nur ab 1024 px Breite gerendert.
+ * Hero-Film für den Rechner: 16:9-Filme füllen den Hero, der Text liegt links auf der dunklen Bildhälfte.
+ * Die Filme aus HERO_FILMS wechseln automatisch mit weicher Überblendung und laufen endlos. Gibt es nur einen Film,
+ * blendet er am Ende weich auf sein erstes Bild und beginnt von vorn. Bei reduzierter Bewegung oder Datenspar-Modus
+ * bleibt das erste Bild stehen; blockiert der Browser den Start, läuft das Standbild als langsame Kamerafahrt und die
+ * erste Berührung startet den Film. Abspielen und Pause sind immer bedienbar. Wird nur ab 1024 px Breite gerendert.
  * Gibt zwei Geschwister zurück: die Bildebene hinter dem Hero-Text und die Bedienleiste darüber (sonst nicht klickbar).
  */
 export const HeroFilm = () => {
   const reduce = useReducedMotion();
+  const total = HERO_FILMS.length;
   const [lite] = useState(prefersLiteMedia);
   const [choice, setChoice] = useState<boolean | null>(null);
   const [visible, setVisible] = useState(true);
-  const [ended, setEnded] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [active, setActive] = useState(0);
+  const [shown, setShown] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const root = useRef<HTMLDivElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
+  const videos = useRef<Array<HTMLVideoElement | null>>([]);
   const clock = useRef<HTMLSpanElement>(null);
 
   const wanted = choice ?? (!reduce && !lite);
-  const running = wanted && visible && !ended;
+  const running = wanted && visible;
 
   useEffect(() => {
     const node = root.current;
@@ -228,84 +289,98 @@ export const HeroFilm = () => {
   }, []);
 
   useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-    if (running) {
-      const attempt = element.play();
-      if (attempt) {
-        attempt.catch((error: DOMException) => {
-          if (error?.name === "NotAllowedError") setChoice(false);
-        });
-      }
-    } else {
-      element.pause();
-    }
-  }, [running]);
+    videos.current.forEach((element, index) => {
+      if (!element) return;
+      if (index === active && running) safePlay(element, () => setBlocked(true));
+      else element.pause();
+    });
+  }, [active, running, attempt]);
+
+  const retry = useRef(() => {
+    setBlocked(false);
+    setAttempt((value) => value + 1);
+  }).current;
+  useUnblockOnGesture(blocked && wanted, retry);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden) setAttempt((value) => value + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   // Zeitmarke direkt aus der Abspielzeit, ohne React-Neuzeichnen.
   useEffect(() => {
     let frame = 0;
     const tick = () => {
-      const element = video.current;
+      const element = videos.current[active];
       if (element && clock.current) clock.current.textContent = timecode(element.currentTime);
       frame = window.requestAnimationFrame(tick);
     };
     if (running) frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [running]);
+  }, [running, active]);
 
-  const toggle = () => {
-    if (ended) {
-      const element = video.current;
+  // Ende eines Films: weich ausblenden, dann der nächste (oder derselbe von vorn). Der Film bleibt nie stehen.
+  const advance = (index: number) => {
+    if (index !== active) return;
+    setShown(false);
+    window.setTimeout(() => {
+      const next = (index + 1) % total;
+      const element = videos.current[next];
       if (element) element.currentTime = 0;
-      if (clock.current) clock.current.textContent = timecode(0);
-      setEnded(false);
-      setChoice(true);
-      return;
-    }
-    setChoice(!wanted);
+      setActive(next);
+      setAttempt((value) => value + 1);
+    }, 700);
   };
 
-  const label = ended ? "Film noch einmal abspielen" : wanted ? "Film anhalten" : "Film abspielen";
+  const film = HERO_FILMS[active];
+  const label = wanted ? "Film anhalten" : "Film abspielen";
 
   return (
     <>
-      <div className="pm-film" ref={root} role="group" aria-roledescription="Film" aria-label="Beispielfilm aus Creator Studio">
+      <div className={`pm-film${blocked || !wanted ? " is-still" : ""}`} ref={root} role="group" aria-roledescription="Film" aria-label="Beispielfilme aus Creator Studio">
         <img
           className="pm-film__poster"
-          src={HERO_FILM.poster}
+          src={film.poster}
           alt=""
           width={1920}
           height={1080}
           decoding="async"
           {...({ fetchpriority: "high" } as Record<string, string>)}
         />
-        <video
-          ref={video}
-          className={`pm-film__video${ready ? " is-ready" : ""}`}
-          src={HERO_FILM.src}
-          poster={HERO_FILM.poster}
-          muted
-          playsInline
-          preload={wanted ? "auto" : "none"}
-          onPlaying={() => setReady(true)}
-          onEnded={() => setEnded(true)}
-          tabIndex={-1}
-          aria-hidden="true"
-        />
+        {HERO_FILMS.map((item, index) => (
+          <video
+            key={item.src}
+            ref={(node) => { videos.current[index] = node; }}
+            className={`pm-film__video${index === active && shown ? " is-ready" : ""}`}
+            src={item.src}
+            poster={item.poster}
+            muted
+            playsInline
+            autoPlay={index === 0 && wanted}
+            preload={index === 0 && wanted ? "auto" : "none"}
+            onPlaying={() => index === active && setShown(true)}
+            onEnded={() => advance(index)}
+            onError={() => advance(index)}
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        ))}
         <span className="pm-film__shade" aria-hidden="true" />
         <span className="pm-film__grain" aria-hidden="true" />
-        <p className="pm-sr">{`${HERO_FILM.title}. ${MARIA_DISCLOSURE}`}</p>
+        <p className="pm-sr">{`${film.title}. ${MARIA_DISCLOSURE}`}</p>
       </div>
       <div className="pm-film__hud">
-        <p className="pm-film__scene">{HERO_FILM.title}</p>
-        <p className="pm-film__model">{HERO_FILM.model}</p>
+        <p className="pm-film__scene">{film.title}</p>
+        <p className="pm-film__model">{film.model}</p>
         <p className="pm-film__ai">{MARIA_DISCLOSURE}</p>
         <div className="pm-film__ctl">
           <span className="pm-film__rec" aria-hidden="true"><i />REC</span>
           <span className="pm-film__tc" ref={clock} aria-hidden="true">{timecode(0)}</span>
-          <button type="button" className="pm-film__toggle" onClick={toggle} aria-label={label}>
-            {ended ? <RotateCcw size={16} aria-hidden="true" /> : wanted ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          <button type="button" className="pm-film__toggle" onClick={() => setChoice(!wanted)} aria-label={label} aria-pressed={wanted}>
+            {wanted ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -343,7 +418,7 @@ export const LazyClip = ({ src, poster, label }: { src: string; poster: string; 
   useEffect(() => {
     const element = video.current;
     if (!element) return;
-    if (playing) element.play().catch(() => undefined);
+    if (playing) safePlay(element, () => undefined);
     else element.pause();
   }, [playing, near]);
 
