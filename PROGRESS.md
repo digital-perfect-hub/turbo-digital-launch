@@ -6,6 +6,17 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-11 — Neue Maria-Medien für die Premium-Seiten (Kostenfreigabe Markus, max. 12 USD; lokal auf design/premium-home-v4, nicht committet)
+
+- **Erzeugt im Creator Studio (Creator Maria Noelle, angemeldete Sitzung von Markus):** 7 Startbilder mit Grok Image 2.0 je 0,09 $ (Café, Studio, Fluss, Wald, Gipfel im Format 9:16; „Abend am Meer“ und „Nacht im Loft“ in 16:9), Referenzen je Bild: Master, 3/4 und die Tattoo-Referenz („Sonstige“). Daraus 7 Videos mit **MiniMax H3 (Bild zu Video, 2K)**: 2 × 8 s je 1,04 $ (Hero), 5 × 6 s je 0,78 $. Prompt-Assistent: 6 Aufrufe (zwei davon vom Assistenten selbst verworfen, ohne Bild). **Summe laut Studio („Heute geschätzt“): 6,65 $.** Der von Higgsfield wirklich abgerechnete Betrag steht nur im Higgsfield-Konto.
+- **Warum MiniMax H3 statt Kling 3.0 Pro:** Higgsfield lieferte am 11.11. für Kling, Wan und Seedance (Bild zu Video) keine Preis-Schätzung („estimate response had no credits/usd amount“). Ohne Schätzung startet das Studio keinen Auftrag; die Kostenkontrolle wurde nicht umgangen. MiniMax H3 hatte eine Schätzung, ein Testclip wurde zuerst geprüft.
+- **Geprüft (Einzelbilder aus jedem Clip):** Gesicht stabil, Tattoo am linken Unterarm in allen Szenen, keine Bildfehler, kein Wasserzeichen, keine zweite Person.
+- **Eingebaut:** `public/media/maria/` neu: `hero-meer`, `hero-loft` (1920 × 1080, mit Poster), `reel-`/`poster-` für `studio`, `cafe`, `gipfel`, `fluss`, `wald` (720 × 1280, ohne Ton). Entfernt: `reel-luft`, `poster-luft*`, `still-luft-gesicht`, `still-studio-lauf`, `still-fluss`. Alle Videos zusammen 7,7 MB. `content.ts`: `HERO_FILMS` = Meer, Loft, Dach (wechseln automatisch mit Überblendung), `REEL_SCENES` = fünf neue Szenen, Kontaktbogen zeigt fünf Videos.
+- **Lokal geprüft (Chrome, 1440 und 390):** drei Hero-Filme wechseln, fünf Szenen wechseln am Telefon, Kontaktbogen spielt, kein Überlaufen; Build grün.
+- **Offen:** Commit, Push und Vorschau-Deploy nach GO. Originale (2K) liegen im Studio in der Bibliothek.
+
+---
+
 ## 2026-11-11 — Premium-Website v4: Farbsystem, endloser Hero, 7-Schritte-Ablauf, vier Unterseiten (Branch design/premium-home, nur Vorschau)
 
 **Auftrag Markus:** v3 konsequent weiterentwickeln: Blau-Schwarz mit eleganten Weißflächen, Orange nur als Akzent, grelle Preisfläche neu, Hero-Videos dürfen nie stehen bleiben (Mobile-Autoplay), Creator Studio einfach erklären (70 %), Web/SEO/KI-Sichtbarkeit klar positionieren (30 %), High-Risk nur dezent, Unterseiten erlaubt. Kein Push/Deploy ohne Freigabe.

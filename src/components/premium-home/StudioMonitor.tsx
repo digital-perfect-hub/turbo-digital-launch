@@ -36,7 +36,7 @@ const SLOTS: Record<number, Array<{ time: string; label: string }>> = {
 const CreatorPanel = () => (
   <div className="pm-mon__creator">
     <div className="pm-mon__master">
-      <img src={REEL_SCENES[1].thumb} alt="Maria Noelle, fiktive KI-Figur, Nahaufnahme" width={240} height={427} loading="lazy" decoding="async" />
+      <img src={REEL_SCENES[0].thumb} alt="Maria Noelle, fiktive KI-Figur, Nahaufnahme" width={240} height={427} loading="lazy" decoding="async" />
       <span className="pm-mon__tag">Nahaufnahme</span>
     </div>
     <div className="pm-mon__fields">

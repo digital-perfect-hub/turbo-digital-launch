@@ -173,11 +173,7 @@ export const SheetSection = () => (
           {CONTACT_SHEET.map((item) => (
             <li key={item.title} className="pm-sheet__item">
               <div className="pm-sheet__frame">
-                {item.kind === "video" ? (
-                  <LazyClip src={item.src} poster={item.poster} label={`Maria Noelle, Szene ${item.title}`} />
-                ) : (
-                  <img src={item.poster} alt={`Maria Noelle, ${item.title}`} width={720} height={1280} loading="lazy" decoding="async" />
-                )}
+                <LazyClip src={item.src} poster={item.poster} label={`Maria Noelle, Szene ${item.title}`} />
               </div>
               <span className="pm-sheet__label">{item.title}</span>
               <span className="pm-sheet__meta">{item.meta}</span>

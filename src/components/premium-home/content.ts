@@ -25,7 +25,7 @@ export const MODEL_FAMILIES = [
 ] as const;
 
 // Echte Ergebnisse aus Creator Studio: Szenen der fiktiven Figur „Maria Noelle“, mit den Modellen erzeugt, die
-// im Auftragsverlauf stehen (Bild zu Video). Freigabe zur Verwendung auf der Startseite: Markus Schulz, 2026-11-07.
+// im Auftragsverlauf stehen (Bild zu Video). Stand der Clips: 2026-11-11 (MiniMax H3), Dach-Film 2026-11-07 (Kling 3.0 Pro). Freigabe zur Verwendung auf der Startseite: Markus Schulz, 2026-11-07.
 // Die Dateien sind für das Web neu kodiert (720 × 1280, ohne Ton). Originale und Zugriffe bleiben im Studio.
 const MEDIA = "/media/maria";
 
@@ -51,62 +51,57 @@ export const STILLS = {
   dach: { title: HERO_FILM.title, src: `${MEDIA}/still-dach.webp`, thumb: `${MEDIA}/still-dach-thumb.webp` },
 } as const;
 
-// Filme für den Hero am Rechner (16:9). Sie wechseln automatisch und laufen endlos; weitere Filme hier ergänzen.
-export const HERO_FILMS = [HERO_FILM] as const;
+// Filme für den Hero am Rechner (16:9, je 8 s, ohne Ton). Sie wechseln automatisch und laufen endlos.
+// „Meer“ und „Loft“: Startbild Grok Image 2.0, Video MiniMax H3 (Bild zu Video), am 2026-11-11 in Creator Studio erzeugt.
+export const HERO_FILMS = [
+  {
+    title: "Abend am Meer",
+    model: "MiniMax H3 · Bild zu Video",
+    seconds: 8,
+    src: `${MEDIA}/hero-meer.mp4`,
+    poster: `${MEDIA}/hero-meer-poster.webp`,
+  },
+  {
+    title: "Nacht im Loft",
+    model: "MiniMax H3 · Bild zu Video",
+    seconds: 8,
+    src: `${MEDIA}/hero-loft.mp4`,
+    poster: `${MEDIA}/hero-loft-poster.webp`,
+  },
+  HERO_FILM,
+] as const;
+
+// Fünf Hochformat-Szenen (720 × 1280, je ca. 6 s, ohne Ton), am 2026-11-11 in Creator Studio erzeugt:
+// Startbild Grok Image 2.0 mit Master, 3/4-Ansicht und Tattoo-Referenz, daraus Video mit MiniMax H3 (Bild zu Video).
+const scene = (id: string, label: string, title: string) => ({
+  id,
+  label,
+  title,
+  model: "MiniMax H3 · Bild zu Video",
+  seconds: 6,
+  src: `${MEDIA}/reel-${id}.mp4`,
+  poster: `${MEDIA}/poster-${id}.webp`,
+  thumb: `${MEDIA}/poster-${id}-thumb.webp`,
+});
 
 export const REEL_SCENES = [
-  {
-    id: "luft",
-    label: "Luft",
-    title: "Sprung über den Alpen",
-    model: "Wan 3.0 · Bild zu Video",
-    seconds: 10,
-    src: `${MEDIA}/reel-luft.mp4`,
-    poster: `${MEDIA}/poster-luft.webp`,
-    thumb: `${MEDIA}/poster-luft-thumb.webp`,
-  },
-  {
-    id: "studio",
-    label: "Studio",
-    title: "Nahaufnahme im Studio",
-    model: "Wan 3.0 · Bild zu Video",
-    seconds: 9,
-    src: `${MEDIA}/reel-studio.mp4`,
-    poster: `${MEDIA}/poster-studio.webp`,
-    thumb: `${MEDIA}/poster-studio-thumb.webp`,
-  },
-  {
-    id: "fluss",
-    label: "Fluss",
-    title: "Trittsteine im Fluss",
-    model: "Kling v3.0 Pro · Bild zu Video",
-    seconds: 8,
-    src: `${MEDIA}/reel-fluss.mp4`,
-    poster: `${MEDIA}/poster-fluss.webp`,
-    thumb: `${MEDIA}/poster-fluss-thumb.webp`,
-  },
-  {
-    id: "wald",
-    label: "Wald",
-    title: "Waldweg im Gegenlicht",
-    model: "Kling v3.0 Standard · Bild zu Video",
-    seconds: 7,
-    src: `${MEDIA}/reel-wald.mp4`,
-    poster: `${MEDIA}/poster-wald.webp`,
-    thumb: `${MEDIA}/poster-wald-thumb.webp`,
-  },
+  scene("studio", "Studio", "Lachen im Studio"),
+  scene("cafe", "Café", "Cappuccino am Fenster"),
+  scene("gipfel", "Gipfel", "Morgen über den Wolken"),
+  scene("fluss", "Fluss", "Abend am Gebirgsfluss"),
+  scene("wald", "Wald", "Waldweg im Gegenlicht"),
 ] as const;
 
-// Kontaktbogen: dieselbe Person in fünf Szenen. Bei „video“ spielt die Kachel stumm, sobald sie sichtbar ist.
-export const CONTACT_SHEET = [
-  { title: "Luft", meta: "Video · Wan 3.0", kind: "video", src: REEL_SCENES[0].src, poster: `${MEDIA}/still-luft-gesicht.webp` },
-  { title: "Café", meta: "Standbild · Grok Image 2.0", kind: "still", poster: STILLS.cafe.src },
-  { title: "Studio", meta: "Video · Wan 3.0", kind: "video", src: REEL_SCENES[1].src, poster: `${MEDIA}/still-studio-lauf.webp` },
-  { title: "Fluss", meta: "Video · Kling v3.0 Pro", kind: "video", src: REEL_SCENES[2].src, poster: `${MEDIA}/still-fluss.webp` },
-  { title: "Wald", meta: "Video · Kling v3.0 Standard", kind: "video", src: REEL_SCENES[3].src, poster: REEL_SCENES[3].poster },
-] as const;
+// Kontaktbogen: dieselbe Person in fünf Szenen. Jede Kachel spielt stumm, sobald sie sichtbar ist.
+export const CONTACT_SHEET = REEL_SCENES.map((item) => ({
+  title: item.label,
+  meta: "Video · MiniMax H3",
+  kind: "video" as const,
+  src: item.src,
+  poster: item.poster,
+}));
 
-export const SHEET_CAPTION = "Echte Ergebnisse aus Creator Studio: eine Figur, fünf Szenen, vier davon als Video. Maria Noelle ist eine fiktive KI-Figur.";
+export const SHEET_CAPTION = "Echte Ergebnisse aus Creator Studio: eine Figur, fünf Szenen, alle als Video. Maria Noelle ist eine fiktive KI-Figur.";
 
 export const STUDIO_POINTS = [
   {
@@ -185,7 +180,7 @@ export const JOURNEY = [
   { title: "Videos erzeugen", text: "Aus einem Bild wird ein Video. Du wählst Modell, Länge und Format und siehst vorher den Preis.", image: STILLS.neon.src, tag: "Videos" },
   { title: "Clips schneiden", text: "Im Editor kürzen, ordnen, Musik darunterlegen und als fertiges MP4 exportieren.", image: STILLS.dach.src, tag: "Schnitt" },
   { title: "Beiträge planen", text: "Kalender und Warteschlange für Instagram, TikTok, X und Reddit. Du behältst den Überblick.", image: STILLS.see.src, tag: "Planung" },
-  { title: "Posten oder herunterladen", text: "Fertige Bilder und Videos lädst du herunter und postest sie selbst. Direktes Veröffentlichen auf Instagram ist in Erprobung.", image: `${MEDIA}/still-fluss.webp`, tag: "Fertig" },
+  { title: "Posten oder herunterladen", text: "Fertige Bilder und Videos lädst du herunter und postest sie selbst. Direktes Veröffentlichen auf Instagram ist in Erprobung.", image: `${MEDIA}/poster-fluss.webp`, tag: "Fertig" },
 ] as const;
 
 // Die drei Service-Säulen (30 % der Seite), je mit eigener Unterseite.

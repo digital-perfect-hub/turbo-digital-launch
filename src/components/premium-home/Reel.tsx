@@ -271,6 +271,8 @@ export const HeroFilm = () => {
   const [visible, setVisible] = useState(true);
   const [active, setActive] = useState(0);
   const [shown, setShown] = useState(false);
+  // Standbild unter dem Video: beim Wechsel schon das erste Bild des nächsten Films, damit weich überblendet wird.
+  const [under, setUnder] = useState(0);
   const [blocked, setBlocked] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const root = useRef<HTMLDivElement>(null);
@@ -325,9 +327,15 @@ export const HeroFilm = () => {
   // Ende eines Films: weich ausblenden, dann der nächste (oder derselbe von vorn). Der Film bleibt nie stehen.
   const advance = (index: number) => {
     if (index !== active) return;
+    const next = (index + 1) % total;
+    setUnder(next);
     setShown(false);
+    const upcoming = videos.current[next];
+    if (upcoming && upcoming.preload !== "auto") {
+      upcoming.preload = "auto";
+      upcoming.load();
+    }
     window.setTimeout(() => {
-      const next = (index + 1) % total;
       const element = videos.current[next];
       if (element) element.currentTime = 0;
       setActive(next);
@@ -343,7 +351,7 @@ export const HeroFilm = () => {
       <div className={`pm-film${blocked || !wanted ? " is-still" : ""}`} ref={root} role="group" aria-roledescription="Film" aria-label="Beispielfilme aus Creator Studio">
         <img
           className="pm-film__poster"
-          src={film.poster}
+          src={HERO_FILMS[under].poster}
           alt=""
           width={1920}
           height={1080}
