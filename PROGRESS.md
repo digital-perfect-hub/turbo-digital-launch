@@ -6,7 +6,7 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
-## 2026-11-11 — Premium-Website v5: Filmbühne, Schritte-Demo, Creator-Galerie, freie Videos, neue Unterseiten (Branch design/premium-home, nur Vorschau)
+## 2026-11-11 — Premium-Website v5: Filmbühne, Schritte-Demo, Creator-Galerie, freie Videos, neue Unterseiten (Commits cc28514 und ee24069 auf origin design/premium-home, Vorschau deployt und online geprüft; Live unverändert)
 
 **Auftrag Markus:** Website nahezu veröffentlichungsreif machen. Creator Studio 60–70 % (menschlich erklärt, sieben echte Schritte, Galerie mit mindestens zwei Creatorn), freie KI-Medien, alle Tattoo-Medien ersetzen, obere Seitenhälfte auf das Niveau des Service-Teils heben, kein Onepager, Leistungen 20–30 %. Medienbudget: einmalige Freigabe max. 20 USD. Commit, Push und Vorschau-Deploy für dieses Paket freigegeben; Live bleibt unverändert.
 
@@ -18,6 +18,7 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 - **Texte:** ohne Marketingfloskeln; der Ablauf folgt den sieben Schritten des Studios. Schritt 5 heißt „Freie Videos ohne Creator“: **freie Bilder ohne Creator kann das Studio heute nicht** (die Bilder-Seite verlangt einen Creator), deshalb steht das nicht auf der Seite. Tattoos stehen als bewusste Grenze in der FAQ.
 - **SEO:** Startseite hat eigenen Titel und eigene Beschreibung (nur Premium-Startseite), jede Unterseite Titel, Beschreibung und strukturierte Daten.
 - **Geprüft:** `tsc` ohne Fehler in den geänderten Dateien, ESLint 0 Fehler, `vite build` grün; lokal Desktop 1440 und Telefon 375: keine Konsolenfehler, kein seitliches Überlaufen, keine fehlenden Bilder.
+- **Online geprüft (echtes Chrome, 1440 und 390, preview.digital-perfect.com):** erstes Hero-Video läuft nach 2,7 s (Rechner) bzw. 1,8 s (Telefon); 48 s Beobachtung ohne einen Messpunkt ohne laufendes Video, Reihenfolge der Filme stimmt; Galerie (3 Creator), freie Videos (5), Schritte, Navigation, acht Seiten: keine Konsolenfehler, keine fehlgeschlagenen Anfragen, kein seitliches Überlaufen, keine fehlenden Bilder, keine Anfrage mehr an `/media/maria`. Das Formular wurde nicht abgeschickt. Screenshots `online-v5-*` in `TURBO-DIGITAL-LAUNCH_Startseite-Vorschau/`.
 - **Offen:** (1) Sitemap kennt die Premium-Unterseiten nicht (Edge Function liest nur die Datenbank). (2) Texte liegen im Code (`content.ts`, `pages.ts`), nicht im Admin-CMS. (3) Echtes iPhone/Safari nicht getestet. (4) Rechtsseiten sind weiter leer (eigenes Arbeitspaket). (5) Alte, nicht mehr benutzte Regeln in `premium-home.css` (Reel, Hero-Film, Kontaktbogen, Monitor) sind noch nicht ausgeräumt.
 
 ---
