@@ -6,6 +6,16 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-12 — Vorschau nach dem Browser-Prüfbericht nachgezogen (Commit `3045ca1`, nur Vorschau)
+
+- **Anlass:** Go-live-Vorbereitung, Paket 4. Der Prüfbericht selbst lag nicht als Datei vor; die im Auftrag genannten Punkte wurden einzeln nachgeprüft und nur behoben, was sich belegen ließ. Gestaltung, Animationen und Bildwelt sind unverändert.
+- **Behoben, P1:** (1) Leere Unterseite nach internem Wechsel: nachgestellt, indem der nachgeladene Seitenbaustein blockiert wurde (passiert nach einem neuen Deploy bei offenem Tab); `lazyPage` in `src/App.tsx` lädt die Seite dann einmal neu (Merker `dp:chunk-reload`). (2) Canonical und `og:url` folgen jetzt dem Seitenwechsel (`src/components/SEO.tsx`). (3) Das Kontaktformular übernimmt das Anliegen der aktuellen Seite und behält kein altes. (4) FAQ und Kostenpunkte nennen kein eigenes Higgsfield-Konto mehr, sondern den Preis vor dem Start. (5) Rechtsseiten: bleiben durch die bestehende Platzhalter-Sperre gesperrt; es wurde kein Rechtstext veröffentlicht.
+- **Behoben, P2:** Creator-Tabs als echtes Tab-Muster mit Pfeiltasten, Pos1, Ende; ein Knopf hält alle laufenden Filme und Clips an (`MediaToggle`, gemeinsame Wahl in `media.tsx`); ein ausgeblendeter Clip schaltet nicht mehr weiter (Schutz gegen veraltetes `onEnded`); Jahressumme und Vergleichsbasis bei den Beispielpreisen; Formulierungen zu Instagram („Social-Media-Planung im Kalender“) und Wiedererkennbarkeit entschärft.
+- **Behoben, P3:** Titel höchstens 60, Beschreibungen höchstens 155 Zeichen, Kürzung nur an Wortgrenzen; eigenes Teilen-Bild `public/media/studio/share-creator-studio.jpg` (1200 × 630) statt Platzhalter; die Vorschau meldet `noindex,nofollow`; Aussagen zur KI-Sichtbarkeit ohne Zusage einer Nennung; 320, 360 und 390 px ohne Überlauf.
+- **Nicht nachstellbar:** falsche Zuordnung von Clip und Titel beim Wechsel (Galerie, Hero-Bühne, freie Videos: 0 Abweichungen in den Prüfläufen). Nur der oben genannte Wettlauf wurde gehärtet.
+- **Geprüft:** 32 Website-Tests und Build lokal; online auf der Vorschau (Bundle `index-Kkogr5PA.js`) im echten Chrome: 8 Routen mit richtigen Kopfdaten nach internem Wechsel, Anliegen je Seite, Tastatur, Pause, 9 Seiten bei 320/360/390 px, keine Skriptfehler, keine fehlgeschlagenen Abrufe. Die Live-Website liefert weiter `index-BIsdzo2R.js`; `main` wurde nicht angefasst.
+- **Offen, Betreiber:** `public/robots.txt` (von Cloudflare verwalteter Inhalt) sperrt GPTBot, ClaudeBot, Google-Extended, CCBot und andere. Das widerspricht der angebotenen Leistung KI-Sichtbarkeit und ist vor dem Livegang zu entscheiden. Canonical auf dem echten Host lässt sich erst nach dem Livegang endgültig prüfen. Weiter offen wie bisher: Firmendaten, Rechtstexte, Formulartest mit echtem Versand, iPhone, GO.
+
 ## 2026-11-12 — Fehlgeschlagener Abruf von `maria-cafe.mp4` auf der Vorschau behoben
 
 - **Meldung:** Auf der Vorschau stand in der Konsole ein fehlgeschlagener Abruf von `maria-cafe.mp4` (`net::ERR_ABORTED`), vor allem am Telefon.
