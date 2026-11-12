@@ -6,6 +6,17 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-12 — Preise von Creator Studio auf der Website (nur Vorschau)
+
+- **Auftrag (Markus):** Die drei Abos, die enthaltenen Credits und die Endpreise für Bilder und Videos verständlich zeigen; keine Einkaufspreise; keine fest eingetragenen Preise, die später von der Superadmin-Verwaltung abweichen.
+- **Umsetzung:** Der Kostenabschnitt (Startseite und `/creator-studio`) liest die Preise aus der öffentlichen Preisliste des Studios (`GET /api/public/pricing`, Standardadresse `https://studio.digital-perfect.com/api/public/pricing`, überschreibbar mit `VITE_STUDIO_PRICING_URL`). Neu: `src/components/premium-home/Pricing.tsx` (Abruf, Tarifkarten, Beispielpreise, Nachkaufpakete), Stile `.pv-plan*` und `.pv-pricing*` in `premium-v5.css`. Im Code der Seite steht kein Preis (Test `src/test/studio-pricing.test.ts`).
+- **Drei Zustände:** (1) Das Studio gibt eine gültige, eingeschaltete Preisliste aus: Die Seite zeigt sie. (2) Es gibt keine (heute: der Endpunkt ist im Studio gebaut, aber nicht veröffentlicht, und das Geschäftsmodell ist ausgeschaltet): Auf der Live-Domain bleibt der bisherige Kostenabschnitt stehen. (3) Nur auf `preview.*` und lokal: Die Seite zeigt die geplante Preisliste aus `pricing-preview.json` mit dem Hinweis „Vorschau: geplante Preise, noch nicht gültig“ und fragt das Studio nicht, solange `VITE_STUDIO_PRICING_URL` nicht gesetzt ist (sonst gäbe es einen Konsolenfehler, weil der Endpunkt live noch fehlt).
+- **`pricing-preview.json`** ist aus dem Modell des Studios erzeugt (Stand 2026-11-12: 49 / 119 / 299 €, 1.000 / 3.000 / 10.000 Credits, Beispiele 17 / 84 / 167 / 606 Credits, Pakete 10 / 25 / 50 €). Sie wird auf der Live-Domain nie verwendet. Ändert sich das Modell vor dem Start, ist sie neu zu erzeugen.
+- **Geprüft:** lokal im Browser bei 1440 und 375 Pixeln Breite (drei Tarifkarten, vier Beispielpreise, kein Querscrollen), Tests 15 grün, Build grün.
+- **Offen vor dem Livegang:** Reihenfolge beachten: zuerst das Studio mit dem Endpunkt veröffentlichen, dann die Website, sonst meldet der Browser auf der Live-Domain einen fehlgeschlagenen Abruf. Der bisherige Kostenabschnitt nennt Dollar-Limits und das eigene Higgsfield-Konto; er gilt nur, solange das neue Modell aus ist.
+
+---
+
 ## 2026-11-12 — Go-live-Vorbereitung: Rechtsseiten abgesichert, Sitemap vorbereitet, Design v5 eingefroren
 
 **Auftrag Markus:** Design v5 ist eingefroren. Verbleibende technische Punkte vor dem Livegang erledigen: Formulartest, Sitemap, Rechtsseiten. Keine Platzhalter veröffentlichen, keine rechtliche Freigabe behaupten. Live bleibt unverändert bis zum ausdrücklichen GO.

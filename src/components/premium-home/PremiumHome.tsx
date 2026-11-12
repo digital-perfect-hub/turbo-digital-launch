@@ -5,6 +5,7 @@ import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
 import { FilmStage, useMinWidth } from "./media";
 import { Depth, Reveal } from "./motion";
 import { OpsServices } from "./OpsSection";
+import { PricingSection, usePricing } from "./Pricing";
 import { StudioSteps } from "./StudioSteps";
 import { CreatorGallery, FreeWorlds } from "./Showcase";
 import { requestInterest } from "./AppShell";
@@ -81,7 +82,16 @@ const Ticker = () => (
 );
 
 // Kosten, ruhig und hell erklärt: drei Voreinstellungen und vier einfache Zusagen.
-export const CostSection = () => (
+// Preise: Gibt das Studio eine gültige Preisliste aus, zeigt die Seite Tarife, Guthaben und Beispielpreise von dort. Sonst bleibt der
+// bisherige Abschnitt stehen, der beschreibt, wie das Studio heute abrechnet. Solange die Antwort aussteht, hält der Abschnitt nur seinen Platz.
+export const CostSection = () => {
+  const state = usePricing();
+  if (state.status === "ready") return <PricingSection pricing={state.pricing} planned={state.planned} />;
+  if (state.status === "pending") return <section id="kosten" className="pm-section pm-light pm-cost pv-pricing--pending" aria-hidden="true" />;
+  return <CurrentCost />;
+};
+
+const CurrentCost = () => (
   <section id="kosten" className="pm-section pm-light pm-cost" aria-labelledby="pm-cost-title">
     <div className="pm-wrap">
       <div className="pm-cost__head">

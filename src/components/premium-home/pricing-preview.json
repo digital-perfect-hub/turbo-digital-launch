@@ -1,0 +1,103 @@
+{
+  "active": true,
+  "version": 0,
+  "currency": "EUR",
+  "credit_cents": 1,
+  "plans": [
+    {
+      "key": "creator",
+      "name": "Creator",
+      "price_month_cents": 4900,
+      "price_year_cents": 46800,
+      "credits_month": 1000,
+      "creators": 2,
+      "features": {
+        "video": true,
+        "productions": true,
+        "editor": true,
+        "voiceover": true,
+        "music": true,
+        "products": false,
+        "social": false,
+        "byok": false,
+        "reference_pack": true
+      },
+      "generation_discount_percent": 0
+    },
+    {
+      "key": "studio",
+      "name": "Studio",
+      "price_month_cents": 11900,
+      "price_year_cents": 114000,
+      "credits_month": 3000,
+      "creators": 5,
+      "features": {
+        "video": true,
+        "productions": true,
+        "editor": true,
+        "voiceover": true,
+        "music": true,
+        "products": true,
+        "social": true,
+        "byok": false,
+        "reference_pack": true
+      },
+      "generation_discount_percent": 0
+    },
+    {
+      "key": "business",
+      "name": "Business",
+      "price_month_cents": 29900,
+      "price_year_cents": 286800,
+      "credits_month": 10000,
+      "creators": 15,
+      "features": {
+        "video": true,
+        "productions": true,
+        "editor": true,
+        "voiceover": true,
+        "music": true,
+        "products": true,
+        "social": true,
+        "byok": true,
+        "reference_pack": true
+      },
+      "generation_discount_percent": 15
+    }
+  ],
+  "examples": [
+    {
+      "id": "image",
+      "credits": 17
+    },
+    {
+      "id": "video_5s",
+      "credits": 84
+    },
+    {
+      "id": "video_10s",
+      "credits": 167
+    },
+    {
+      "id": "reel",
+      "credits": 606
+    }
+  ],
+  "packs": [
+    {
+      "price_cents": 1000,
+      "credits": 1000,
+      "bonus_percent": 0
+    },
+    {
+      "price_cents": 2500,
+      "credits": 2650,
+      "bonus_percent": 5
+    },
+    {
+      "price_cents": 5000,
+      "credits": 5500,
+      "bonus_percent": 10
+    }
+  ]
+}
