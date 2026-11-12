@@ -6,6 +6,17 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-12 — Fehlgeschlagener Abruf von `maria-cafe.mp4` auf der Vorschau behoben
+
+- **Meldung:** Auf der Vorschau stand in der Konsole ein fehlgeschlagener Abruf von `maria-cafe.mp4` (`net::ERR_ABORTED`), vor allem am Telefon.
+- **Befund (belegt):** Die Datei ist in Ordnung (Status 200, 513 KB, `video/mp4`, spielt ab, kein Fehler am Videoelement). Der Baustein `Clip` (`src/components/premium-home/media.tsx`) setzte ein Video schon ein, sobald es in die Nähe des Bildschirms kam, mit `preload="metadata"`. Chrome begann bei einem pausierten Clip knapp unter dem sichtbaren Bereich zu laden und brach den Abruf gleich wieder ab. Das war kein kaputtes Video, aber ein roter Eintrag in der Konsole und am Telefon verschenktes Datenvolumen.
+- **Korrektur:** Ein Clip lädt erst, wenn er wirklich läuft (`preload` ist `none`, bis der Clip gut sichtbar ist, dann `auto`). Standbild, Abspielen im sichtbaren Bereich und Pausieren außerhalb sind unverändert.
+- **Geprüft:** lokal und auf der Vorschau im echten Chrome, Startseite und `/creator-studio`, bei 390 und 1440 Pixeln Breite, jeweils mit Durchscrollen der ganzen Seite: kein fehlgeschlagener Abruf mehr, alle eingesetzten Clips geladen und ohne Fehler. Tests 30 grün, Build grün.
+- **Auf der Vorschau:** Commit `9cbc044` als Fast-Forward auf origin `design/premium-home`, Vorschau-App darauf gestellt und neu gebaut (Bundle `index-i1NCE6mM.js`). Live unverändert (`index-BIsdzo2R.js`), `main` nicht berührt.
+- **Nebenbefund, nicht geändert:** `/media/studio/maria-cafe-tall.mp4` gibt es nicht (die Adresse liefert die HTML-Seite); die Seite verweist nirgends darauf.
+
+---
+
 ## 2026-11-12 — Preise von Creator Studio auf der Website (nur Vorschau)
 
 - **Auftrag (Markus):** Die drei Abos, die enthaltenen Credits und die Endpreise für Bilder und Videos verständlich zeigen; keine Einkaufspreise; keine fest eingetragenen Preise, die später von der Superadmin-Verwaltung abweichen.
