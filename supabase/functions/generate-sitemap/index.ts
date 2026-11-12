@@ -21,6 +21,21 @@ const RESERVED_ROOT_SLUGS = new Set([
   "sitemap.xml",
   "robots.txt",
 ]);
+// Feste Unterseiten der Digital-Perfect-Site. Sie stehen im Code der Website (src/components/premium-home/pages.ts
+// und src/pages/PremiumOrDynamicPage.tsx), nicht in der Datenbank. Der Test src/test/sitemap-premium-pages.test.ts
+// hält diese Liste mit dem Code der Website gleich.
+const PREMIUM_STATIC_PATHS = ["creator-studio", "leistungen", "webdesign", "technische-seo", "ki-sichtbarkeit", "projekte", "kontakt"];
+
+// Gleiche Regel wie in src/hooks/useLegalPages.ts: Rechtsseiten mit Platzhaltertext sind für Suchmaschinen gesperrt
+// und gehören deshalb nicht in die Sitemap.
+const LEGAL_PLACEHOLDER_PATTERNS = [/bitte pflege/i, /\[\[/, /\]\]/, /platzhalter/i, /lorem ipsum/i];
+const MIN_LEGAL_TEXT_LENGTH = 250;
+const hasRealLegalText = (body?: string | null) => {
+  const raw = body || "";
+  const text = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return text.length >= MIN_LEGAL_TEXT_LENGTH && !LEGAL_PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(raw));
+};
+
 const SCHEDULE_PATTERN = /\[\[scheduled_at=([^\]]+)\]\]/i;
 
 type SiteRecord = {
@@ -30,6 +45,7 @@ type SiteRecord = {
 
 type TimestampedSlugRow = {
   slug: string | null;
+  body?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -266,7 +282,7 @@ Deno.serve(async (request) => {
     const pages = await fetchSafe(admin.from("pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
     const landingPages = await fetchSafe(admin.from("landing_pages").select("slug, created_at, updated_at").eq("site_id", site.id));
     const products = await fetchSafe(admin.from("products").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_visible", true));
-    const legalPages = await fetchSafe(admin.from("legal_pages").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
+    const legalPages = await fetchSafe(admin.from("legal_pages").select("slug, body, created_at, updated_at").eq("site_id", site.id).eq("is_published", true));
     const forumCategories = await fetchSafe(admin.from("forum_categories").select("slug, created_at, updated_at").eq("site_id", site.id).eq("is_active", true));
     const forumThreads = await fetchSafe(admin.from("forum_threads").select("slug, status, admin_notes, created_at, updated_at").eq("site_id", site.id).eq("is_active", true).in("status", ["published", "scheduled"]));
 
@@ -275,9 +291,13 @@ Deno.serve(async (request) => {
 
     addUrl(entries, "/", null);
 
+    if (site.id === DEFAULT_SITE_ID) {
+      for (const path of PREMIUM_STATIC_PATHS) addUrl(entries, path, null);
+    }
+
     for (const row of ((legalPages as TimestampedSlugRow[] | null) ?? [])) {
       const slug = normalizeSlug(row.slug);
-      if (!slug) continue;
+      if (!slug || !hasRealLegalText(row.body)) continue;
       addUrl(entries, slug, resolveLastmod(row));
     }
 

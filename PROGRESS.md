@@ -6,6 +6,19 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-12 — Go-live-Vorbereitung: Rechtsseiten abgesichert, Sitemap vorbereitet, Design v5 eingefroren
+
+**Auftrag Markus:** Design v5 ist eingefroren. Verbleibende technische Punkte vor dem Livegang erledigen: Formulartest, Sitemap, Rechtsseiten. Keine Platzhalter veröffentlichen, keine rechtliche Freigabe behaupten. Live bleibt unverändert bis zum ausdrücklichen GO.
+
+- **Befund (nur gelesen):** Die Tabelle `legal_pages` ist anonym lesbar. Für die Digital-Perfect-Site stehen dort drei Zeilen (Impressum, Datenschutz, AGB), alle als veröffentlicht markiert, alle nur mit dem Platzhalter „Bitte pflege diese Seite …“ (Stand 22.03.2026). Der reine Absturz-Fix hätte diese Platzhalter also sofort öffentlich gezeigt.
+- **Rechtsseiten:** (1) Absturz-Fix übernommen (`LegalPageTemplate` liest `data` statt `page`; derselbe Patch wie auf `fix/legal-pages-render`). (2) Sperre `isLegalPagePublishable` in `src/hooks/useLegalPages.ts`: Ein Rechtstext wird nur gezeigt, wenn er aus der Datenbank kommt, veröffentlicht ist, mindestens 250 Zeichen hat und keine Platzhalter enthält („Bitte pflege“, `[[`, `]]`, „Platzhalter“, „Lorem ipsum“). Sonst steht dort nur „Der Text dieser Seite ist noch nicht veröffentlicht.“ und die Seite trägt `noindex`. (3) Für die Digital-Perfect-Site laufen die drei Seiten im Premium-Rahmen (`LegalPage` in `PremiumPage.tsx`): Kopf, Fuß mit Rechtslinks und „Cookie-Einstellungen“, Anfrageformular. Andere Sites behalten die alte Ansicht, ebenfalls mit Sperre. Die Texte kommen weiter aus der Verwaltung „Recht & SEO“; im Code steht kein Rechtstext.
+- **Sitemap (`supabase/functions/generate-sitemap`, noch nicht eingespielt):** Für die Digital-Perfect-Site kommen die sieben festen Unterseiten dazu (`/creator-studio`, `/leistungen`, `/webdesign`, `/technische-seo`, `/ki-sichtbarkeit`, `/projekte`, `/kontakt`). Rechtsseiten erscheinen nur noch mit echtem Text (gleiche Regel wie oben). Der Test `src/test/sitemap-premium-pages.test.ts` hält die Liste mit dem Code der Website gleich. **Einspielen erst beim Livegang**, sonst listet die Live-Sitemap Seiten, die es dort noch nicht gibt.
+- **Edge Functions im Zweig:** Die Commits zum Schlüsselwechsel (Helfer `_shared/supabase-keys.ts`, `config.toml`, Sitemap mit neuem Schlüssel) sind aus dem lokalen Sicherheitszweig übernommen. Damit entspricht `supabase/` im Zweig dem Stand, der seit 07.11./11.11.2026 eingespielt ist. Ohne das hätte ein Einspielen aus diesem Zweig die Sitemap auf den abgeschalteten Altschlüssel zurückgesetzt.
+- **Prüfung:** 26 Tests grün (davon neu: Sperre, Premium-Rahmen, Sitemap-Liste), ESLint der geänderten Dateien 0 Fehler, Build ok. Lokal alle elf Seiten am Rechner und mobil: kein Überlauf, kein Platzhalter sichtbar, Rechtsseiten `noindex`.
+- **Offen vor dem Livegang:** (1) Echte Rechtstexte in „Recht & SEO“ einpflegen (Entwürfe liegen außerhalb des Repositories, Angaben und Freigabe stehen aus). Solange das fehlt, zeigen die drei Seiten nur den Hinweis. (2) Sitemap-Funktion einspielen (am Tag des Livegangs). (3) Echtes iPhone/Safari. (4) Merge nach `main` nur mit ausdrücklichem GO; ein Push auf `main` deployt auch die Prerender-App.
+
+---
+
 ## 2026-11-11 — Premium-Website v5: Filmbühne, Schritte-Demo, Creator-Galerie, freie Videos, neue Unterseiten (Commits cc28514 und ee24069 auf origin design/premium-home, Vorschau deployt und online geprüft; Live unverändert)
 
 **Auftrag Markus:** Website nahezu veröffentlichungsreif machen. Creator Studio 60–70 % (menschlich erklärt, sieben echte Schritte, Galerie mit mindestens zwei Creatorn), freie KI-Medien, alle Tattoo-Medien ersetzen, obere Seitenhälfte auf das Niveau des Service-Teils heben, kein Onepager, Leistungen 20–30 %. Medienbudget: einmalige Freigabe max. 20 USD. Commit, Push und Vorschau-Deploy für dieses Paket freigegeben; Live bleibt unverändert.

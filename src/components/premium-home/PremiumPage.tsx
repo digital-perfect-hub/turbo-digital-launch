@@ -128,7 +128,7 @@ const SubHero = ({
   crumb: string;
   kicker: string;
   lines: string[];
-  lead: string;
+  lead?: string;
   visual?: ReactNode;
   children?: ReactNode;
   modifier?: string;
@@ -148,7 +148,7 @@ const SubHero = ({
             <span key={line} className={`pm-line${index === lines.length - 1 && lines.length > 1 ? " pm-line--accent" : ""}`}><span>{line}</span></span>
           ))}
         </h1>
-        <p className="pm-lead">{lead}</p>
+        {lead ? <p className="pm-lead">{lead}</p> : null}
         {children}
       </div>
       {visual ? <Depth className="pm-sub__visual">{visual}</Depth> : null}
@@ -340,6 +340,21 @@ export const ContactPage = () => (
       modifier="contact"
     />
     <PremiumContact title="Worum geht es?" />
+  </PremiumShell>
+);
+
+// Rechtsseiten (Impressum, Datenschutz, AGB) im selben Rahmen wie alle anderen Seiten: Kopf, Fuß mit den
+// Rechtslinks und „Cookie-Einstellungen“. Der Text selbst kommt aus der Verwaltung „Recht & SEO“.
+export const LegalPage = ({ title, seo, children }: { title: string; seo: ReactNode; children: ReactNode }) => (
+  <PremiumShell>
+    {seo}
+    <SubHero crumb={title} kicker="Rechtliches" lines={[title]} modifier="legal" />
+    <section className="pm-section pm-light pv-legal" aria-label={title}>
+      <div className="pm-wrap">
+        <div className="pv-legal__text">{children}</div>
+      </div>
+    </section>
+    <PremiumContact title="Noch eine Frage?" />
   </PremiumShell>
 );
 

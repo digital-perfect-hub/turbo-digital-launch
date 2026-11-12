@@ -55,6 +55,19 @@ export const legalPageDefaults: Record<LegalPageSlug, Pick<LegalPageRecord, "slu
   },
 };
 
+// Sperre gegen Platzhalter: Ein Rechtstext wird nur gezeigt, wenn er aus der Datenbank kommt, veröffentlicht ist,
+// eine Mindestlänge hat und keine Platzhalter enthält ("Bitte pflege diese Seite", "[[Angabe fehlt]]").
+// Sonst zeigt die Seite einen neutralen Hinweis und ist für Suchmaschinen gesperrt (noindex).
+export const LEGAL_PLACEHOLDER_PATTERNS = [/bitte pflege/i, /\[\[/, /\]\]/, /platzhalter/i, /lorem ipsum/i];
+export const MIN_LEGAL_TEXT_LENGTH = 250;
+
+export const isLegalPagePublishable = (page?: Pick<LegalPageRecord, "id" | "body" | "is_published"> | null) => {
+  if (!page || !page.is_published || String(page.id).startsWith("fallback-")) return false;
+  const text = (page.body || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (text.length < MIN_LEGAL_TEXT_LENGTH) return false;
+  return !LEGAL_PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(page.body || ""));
+};
+
 export const useLegalPage = (slug: LegalPageSlug) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;

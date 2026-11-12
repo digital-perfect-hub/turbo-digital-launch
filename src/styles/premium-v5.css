@@ -372,3 +372,26 @@ body:has(.pm) .cookie-reopen { display: none; }
 /* Kontaktseite: Kopf und Formular rücken zusammen. */
 .pm-sub--contact { padding-bottom: clamp(20px, 3vw, 44px); }
 .pm-sub--contact + .pm-contact { padding-top: clamp(44px, 5vw, 80px); }
+
+/* ---------- Rechtsseiten (Impressum, Datenschutz, AGB) im Premium-Rahmen ---------- */
+.pm-sub--legal { padding-bottom: clamp(28px, 4vw, 56px); }
+.pm-sub--legal .pm-h1--sub { font-size: clamp(2rem, 8.4vw, 4.6rem); line-height: 1.04; overflow-wrap: anywhere; hyphens: auto; }
+.pm-sub--legal .pm-h1--sub .pm-line { padding-block: 0.06em; }
+.pv-legal { padding-block: clamp(40px, 6vw, 88px); }
+.pv-legal__text { max-width: 78ch; font-size: clamp(1rem, 1.1vw, 1.0625rem); line-height: 1.75; color: var(--pm-text); overflow-wrap: break-word; }
+.pv-legal__text :is(h2, h3, h4) { font-family: var(--pm-body); font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; color: var(--pm-text); }
+.pv-legal__text h2 { margin: 2.2em 0 0.6em; font-size: clamp(1.25rem, 1.8vw, 1.5rem); }
+.pv-legal__text h3 { margin: 1.8em 0 0.5em; font-size: 1.125rem; }
+.pv-legal__text h4 { margin: 1.5em 0 0.4em; font-size: 1rem; }
+.pv-legal__text > div > :first-child, .pv-legal__text > :first-child { margin-top: 0; }
+.pv-legal__text p { margin: 0 0 1em; }
+.pv-legal__text :is(ul, ol) { margin: 0 0 1em; padding-left: 1.4em; }
+.pv-legal__text ul { list-style: disc; }
+.pv-legal__text ol { list-style: decimal; }
+.pv-legal__text li { margin: 0.3em 0; }
+.pv-legal__text a { color: var(--pm-orange); text-decoration: underline; text-underline-offset: 3px; }
+.pv-legal__text a:hover { color: var(--pm-orange-hi); }
+.pv-legal__text table { display: block; max-width: 100%; margin: 0 0 1.2em; overflow-x: auto; border-collapse: collapse; font-size: 0.9375rem; }
+.pv-legal__text :is(th, td) { padding: 8px 12px; border: 1px solid var(--pm-line-strong); text-align: left; vertical-align: top; }
+.pv-legal__text th { background: rgba(11, 18, 34, 0.04); font-weight: 600; }
+.pv-legal__text hr { margin: 2em 0; border: 0; border-top: 1px solid var(--pm-line-strong); }
