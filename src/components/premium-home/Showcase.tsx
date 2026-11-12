@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Film as FilmIcon, Image as ImageIcon, ImagePlay, Type } from "lucide-react";
 import { Depth, Reveal } from "./motion";
-import { Clip, useOnScreen } from "./media";
+import { Clip, MediaToggle, useMediaChoice, useOnScreen } from "./media";
 import { requestInterest } from "./AppShell";
 import { AI_NOTE, CREATORS, WORLDS } from "./content";
 
@@ -23,14 +23,32 @@ export const CreatorGallery = () => {
   const total = scenes.length;
   const current = scenes[index % total];
   const next = () => setIndex((value) => (value + 1) % total);
+  const paused = useMediaChoice() === false;
+  // Ein Clip, der gerade ausgeblendet wird, kann sein Ende noch melden: Weitergeschaltet wird nur, wenn die Szene, die
+  // zu Ende ging, noch die gezeigte ist. Sonst würde nach einem Wechsel eine Szene übersprungen.
+  const shown = useRef("");
+  shown.current = `${creator.id}:${current.id}`;
+  const endedOn = (key: string) => () => {
+    if (shown.current === key) next();
+  };
+  const tabs = useRef<Array<HTMLButtonElement | null>>([]);
+  // Tab-Muster: Pfeiltasten, Pos1 und Ende wechseln den Creator und nehmen den Fokus mit; nur der gewählte Tab steht in der Tab-Reihenfolge.
+  const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, position: number) => {
+    const last = CREATORS.length - 1;
+    const target = event.key === "ArrowRight" || event.key === "ArrowDown" ? (position === last ? 0 : position + 1) : event.key === "ArrowLeft" || event.key === "ArrowUp" ? (position === 0 ? last : position - 1) : event.key === "Home" ? 0 : event.key === "End" ? last : -1;
+    if (target < 0) return;
+    event.preventDefault();
+    pickCreator(target);
+    tabs.current[target]?.focus();
+  };
 
   // Bilder bleiben fünf Sekunden stehen, Videos melden ihr Ende selbst.
   useEffect(() => {
-    if (!auto || !onScreen || reduce || current.kind !== "bild") return;
+    if (!auto || !onScreen || reduce || paused || current.kind !== "bild") return;
     const timer = window.setTimeout(next, 5000);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auto, onScreen, reduce, current.id]);
+  }, [auto, onScreen, reduce, paused, current.id]);
 
   const pickCreator = (value: number) => {
     setWho(value);
@@ -66,7 +84,12 @@ export const CreatorGallery = () => {
               key={item.id}
               type="button"
               role="tab"
+              id={`pv-gal-tab-${item.id}`}
               aria-selected={position === who}
+              aria-controls="pv-gal-panel"
+              tabIndex={position === who ? 0 : -1}
+              ref={(node) => { tabs.current[position] = node; }}
+              onKeyDown={(event) => onTabKey(event, position)}
               className={`pv-who${position === who ? " is-active" : ""}`}
               onClick={() => pickCreator(position)}
             >
@@ -79,7 +102,7 @@ export const CreatorGallery = () => {
           ))}
         </div>
 
-        <div className="pv-gal__grid">
+        <div className="pv-gal__grid" role="tabpanel" id="pv-gal-panel" aria-labelledby={`pv-gal-tab-${creator.id}`}>
           <Depth className="pv-gal__stage-wrap">
             <div className="pv-gal__stage" ref={stageRef}>
               <span className="pv-gal__ghost pv-gal__ghost--2" aria-hidden="true">
@@ -99,7 +122,7 @@ export const CreatorGallery = () => {
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {current.kind === "video" ? (
-                    <Clip src={current.src} poster={current.poster} label={`${creator.name}: ${current.title}`} loop={!auto} onEnded={auto ? next : undefined} />
+                    <Clip src={current.src} poster={current.poster} label={`${creator.name}: ${current.title}`} loop={!auto} onEnded={auto ? endedOn(`${creator.id}:${current.id}`) : undefined} />
                   ) : (
                     <div className="pv-clip"><img src={current.src} alt={`${creator.name}: ${current.title}`} loading="lazy" decoding="async" /></div>
                   )}
@@ -110,6 +133,7 @@ export const CreatorGallery = () => {
                   </figcaption>
                 </motion.figure>
               </AnimatePresence>
+              <MediaToggle className="pv-media-toggle--stage" />
               <div className="pv-gal__nav">
                 <button type="button" onClick={() => step(-1)} aria-label="Vorige Szene"><ArrowLeft size={18} aria-hidden="true" /></button>
                 <button type="button" onClick={() => step(1)} aria-label="Nächste Szene"><ArrowRight size={18} aria-hidden="true" /></button>
@@ -197,6 +221,12 @@ export const FreeWorlds = () => {
   const world = WORLDS[active];
   const typed = useTyped(world.prompt, onScreen && !reduce);
   const next = () => setActive((value) => (value + 1) % WORLDS.length);
+  // Wie in der Galerie: Nur der Film, der gerade gezeigt wird, schaltet an seinem Ende weiter.
+  const shown = useRef("");
+  shown.current = world.id;
+  const endedOn = (key: string) => () => {
+    if (shown.current === key) next();
+  };
 
   return (
     <section id="welten" className="pm-section pv-worlds" aria-labelledby="pv-worlds-title">
@@ -226,10 +256,11 @@ export const FreeWorlds = () => {
                 exit={reduce ? undefined : { opacity: 0 }}
                 transition={{ duration: 0.9, ease: [0.2, 0, 0, 1] }}
               >
-                <Clip src={world.src} poster={world.poster} label={world.title} loop={!auto} onEnded={auto ? next : undefined} />
+                <Clip src={world.src} poster={world.poster} label={world.title} loop={!auto} onEnded={auto ? endedOn(world.id) : undefined} />
               </motion.div>
             </AnimatePresence>
             <span className="pv-world__shade" aria-hidden="true" />
+            <MediaToggle className="pv-media-toggle--world" />
             <div className="pv-world__prompt">
               <span>Beschreibung</span>
               <p aria-hidden="true">{typed}<i /></p>

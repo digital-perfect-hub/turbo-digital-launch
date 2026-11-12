@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowUp, ArrowUpRight, CheckCircle2, Menu, Search, X } from "lucide-react";
 import SupportWidget from "@/components/support/SupportWidget";
@@ -151,11 +151,24 @@ export const PremiumContact = ({ title = "Pilotzugang oder Projekt?", interest }
   useEffect(() => {
     const onInterest = (event: Event) => {
       const option = (event as CustomEvent<string>).detail;
+      // Die Vorauswahl ist damit angekommen: Sie darf nicht liegen bleiben und auf der nächsten Seite noch einmal greifen.
+      takePendingInterest();
       if ((INTEREST_OPTIONS as readonly string[]).includes(option)) setForm((previous) => ({ ...previous, service: option }));
     };
     window.addEventListener(INTEREST_EVENT, onInterest);
     return () => window.removeEventListener(INTEREST_EVENT, onInterest);
   }, []);
+
+  // Beim Wechsel auf eine andere Seite bleibt das Formular dasselbe Element: Das Anliegen der neuen Seite ersetzt das der alten,
+  // solange noch nichts abgeschickt ist. Eine Vorauswahl aus einem Button (oben) kommt danach und gewinnt.
+  const firstInterest = useRef(true);
+  useEffect(() => {
+    if (firstInterest.current) {
+      firstInterest.current = false;
+      return;
+    }
+    setForm((previous) => ({ ...previous, service: takePendingInterest() || interest || "" }));
+  }, [interest]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();

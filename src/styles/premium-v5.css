@@ -223,6 +223,11 @@
 .pv-gal__card figcaption span { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); font: 500 10px/1 var(--pm-mono); letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .pv-gal__card figcaption strong { font: 800 1.5rem/1 var(--pm-display); letter-spacing: 0.02em; text-transform: uppercase; }
 .pv-gal__card figcaption em { font: 500 11px/1 var(--pm-mono); font-style: normal; color: rgba(255, 255, 255, 0.7); }
+/* Anhalten und Abspielen in der Galerie und bei den freien Videos: derselbe Knopf wie auf der Bühne im Hero. */
+.pv-media-toggle { position: absolute; z-index: 5; }
+.pv-media-toggle--stage { top: 12px; right: 12px; }
+.pv-media-toggle--world { right: clamp(14px, 2.4vw, 28px); bottom: clamp(14px, 2.4vw, 28px); }
+.pv-media-toggle:focus-visible, .pv-who:focus-visible { outline: 2px solid var(--pm-orange); outline-offset: 3px; }
 .pv-gal__nav { position: absolute; z-index: 4; inset: auto -22px 44% -22px; display: flex; justify-content: space-between; pointer-events: none; }
 .pv-gal__nav button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--pm-line-strong); border-radius: 50%; background: rgba(11, 18, 34, 0.82); color: #fff; cursor: pointer; pointer-events: auto; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background 0.2s, border-color 0.2s; }
 .pv-gal__nav button:hover { background: var(--pm-orange); border-color: var(--pm-orange); color: #070b15; }

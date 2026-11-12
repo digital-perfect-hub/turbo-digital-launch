@@ -1,3 +1,4 @@
+import { SHARE_IMAGE } from "@/components/premium-home/content";
 import { useMemo, type ComponentType } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -155,7 +156,8 @@ const Index = () => {
       <>
         <SEO
           title="Creator Studio, Webdesign & SEO aus Linz | Digital-Perfect"
-          description="Digital-Perfect entwickelt Creator Studio für KI-Creator, Bilder und Videos und baut Websites, die bei Google und in KI-Antworten gefunden werden."
+          image={SHARE_IMAGE}
+          description="Digital-Perfect entwickelt Creator Studio für KI-Creator, Bilder und Videos und baut Websites, die für Google und KI-Assistenten gut lesbar sind."
           structuredData={structuredData}
         />
         <PremiumHome />

@@ -104,7 +104,7 @@ const DemoVideo = () => (
     <div className="pv-d-row">
       <Chip>MiniMax H3</Chip>
       <Chip>Hochformat 9:16</Chip>
-      <Chip>Kostenvorschau 0,78 $</Chip>
+      <Chip>Preis vor dem Start</Chip>
     </div>
   </Window>
 );

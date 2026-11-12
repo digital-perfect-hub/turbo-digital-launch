@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import type { Film } from "./content";
@@ -55,6 +55,35 @@ export const useMinWidth = (px: number) => {
   return matches;
 };
 
+// Ob Filme und Clips laufen: null heißt nach Voreinstellung (sie laufen, außer bei reduzierter Bewegung oder Datensparen),
+// true oder false ist die Wahl der Person. Die Wahl gilt für alle bewegten Medien der Seite, nicht nur für die Bühne, an der
+// sie getroffen wurde: Wer anhält, hält alles an.
+let mediaChoice: boolean | null = null;
+const mediaListeners = new Set<() => void>();
+export const setMediaChoice = (value: boolean) => {
+  mediaChoice = value;
+  mediaListeners.forEach((listener) => listener());
+};
+const subscribeMedia = (listener: () => void) => {
+  mediaListeners.add(listener);
+  return () => void mediaListeners.delete(listener);
+};
+export const useMediaChoice = (): boolean | null => useSyncExternalStore(subscribeMedia, () => mediaChoice, () => null);
+
+/** Anhalten und Abspielen für einen Bereich mit laufenden Clips; schaltet dieselbe Wahl wie die Bühne im Hero. */
+export const MediaToggle = ({ className }: { className?: string }) => {
+  const reduce = useReducedMotion();
+  const [lite] = useState(prefersLiteMedia);
+  const choice = useMediaChoice();
+  const wanted = choice ?? (!reduce && !lite);
+  const label = wanted ? "Videos anhalten" : "Videos abspielen";
+  return (
+    <button type="button" className={`pv-stage__toggle pv-media-toggle${className ? ` ${className}` : ""}`} onClick={() => setMediaChoice(!wanted)} aria-label={label} aria-pressed={wanted}>
+      {wanted ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+    </button>
+  );
+};
+
 // true, solange das Element zu einem Teil im Bild ist.
 export const useOnScreen = <T extends Element>(threshold = 0.2, rootMargin = "0px") => {
   const ref = useRef<T>(null);
@@ -85,7 +114,8 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
   const reduce = useReducedMotion();
   const total = films.length;
   const [lite] = useState(prefersLiteMedia);
-  const [choice, setChoice] = useState<boolean | null>(null);
+  const choice = useMediaChoice();
+  const setChoice = setMediaChoice;
   const [rootRef, visible] = useOnScreen<HTMLDivElement>(0.1);
   const [active, setActive] = useState(0);
   const [previous, setPrevious] = useState<number | null>(null);
@@ -283,7 +313,9 @@ export const Clip = ({
   const [near, setNear] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
-  const allowed = !reduce && !lite;
+  const choice = useMediaChoice();
+  // Wer ausdrücklich abspielt, bekommt die Clips auch bei reduzierter Bewegung; wer anhält, hält alle an.
+  const allowed = choice ?? (!reduce && !lite);
 
   useEffect(() => {
     const node = box.current;
@@ -301,9 +333,9 @@ export const Clip = ({
   useEffect(() => {
     const element = video.current;
     if (!element) return;
-    if (playing) safePlay(element);
+    if (playing && choice !== false) safePlay(element);
     else element.pause();
-  }, [playing, near]);
+  }, [playing, near, choice]);
 
   return (
     <div className="pv-clip" ref={box}>

@@ -89,7 +89,7 @@ export function planPoints(plan: StudioPlan): string[] {
     ...(has("editor") ? ["Schnitt im Browser"] : []),
     ...(has("voiceover") || has("music") ? ["Stimme und Musik"] : []),
     ...(has("products") ? ["Produkte und Produktvideos"] : []),
-    ...(has("social") ? ["Planung und Veröffentlichung"] : []),
+    ...(has("social") ? ["Social-Media-Planung im Kalender"] : []),
     ...(plan.generation_discount_percent > 0 ? [`${count(plan.generation_discount_percent)} % günstigere Generierungen`] : []),
     ...(has("byok") ? ["Eigener KI-Schlüssel möglich"] : []),
   ];
@@ -133,13 +133,13 @@ export const PricingSection = ({ pricing, planned }: { pricing: StudioPricing; p
                   <small>pro Monat, inkl. USt</small>
                 </p>
                 {plan.price_year_cents > 0 && plan.price_year_cents < plan.price_month_cents * 12 ? (
-                  <p className="pv-plan__year">oder {euro(Math.round(plan.price_year_cents / 12))} pro Monat bei jährlicher Zahlung</p>
+                  <p className="pv-plan__year">oder {euro(plan.price_year_cents)} pro Jahr (entspricht {euro(Math.round(plan.price_year_cents / 12))} pro Monat)</p>
                 ) : null}
                 <p className="pv-plan__credits">
                   {count(plan.credits_month)} Credits pro Monat
                   {image > 0 && clip > 0 ? (
                     <span>
-                      zum Beispiel {count(Math.floor(plan.credits_month / own(clip, plan)))} Videos oder {count(Math.floor(plan.credits_month / own(image, plan)))} Bilder
+                      reicht zum Beispiel für {count(Math.floor(plan.credits_month / own(clip, plan)))} Videos von 5 Sekunden oder {count(Math.floor(plan.credits_month / own(image, plan)))} Bilder
                     </span>
                   ) : null}
                 </p>
@@ -165,12 +165,12 @@ export const PricingSection = ({ pricing, planned }: { pricing: StudioPricing; p
               <Depth key={example.id} delay={index * 0.06} className="pm-figure">
                 <p className="pm-figure__value">{count(example.credits)}</p>
                 <p className="pm-figure__label">Credits für {EXAMPLE_LABELS[example.id] ?? example.id}</p>
-                <p className="pm-figure__note">ab {euro(example.credits)}</p>
+                <p className="pm-figure__note">entspricht {euro(example.credits)}</p>
               </Depth>
             ))}
           </div>
           <p className="pv-pricing__note">
-            Beispiele zum vollen Preis. Modell, Dauer und Auflösung können den Preis ändern; den genauen Betrag zeigt dir das Studio immer,
+            Alle Beispiele sind mit dem Standard-Bildmodell und dem Standard-Videomodell gerechnet, zum vollen Preis ohne Tarifrabatt; die Zahlen in den Tarifen beruhen auf denselben Beispielen. Modell, Dauer und Auflösung können den Preis ändern; den genauen Betrag zeigt dir das Studio immer,
             bevor etwas startet. Schlägt eine Generierung fehl, bekommst du die Credits zurück.
             {pricing.packs && pricing.packs.length > 0
               ? ` Reicht das Guthaben einmal nicht, kaufst du nach: ${pricing.packs.map((pack) => `${euro(pack.price_cents)} für ${count(pack.credits)} Credits`).join(", ")}. Gekauftes Guthaben gilt drei Jahre.`

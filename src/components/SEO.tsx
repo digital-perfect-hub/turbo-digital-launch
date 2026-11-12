@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
 import { buildRenderImageUrl } from "@/lib/image";
-import { resolveCanonicalUrl } from "@/lib/url";
+import { buildAbsolutePublicUrl, resolveCanonicalUrl } from "@/lib/url";
 
 type StructuredData = Record<string, unknown> | Array<Record<string, unknown>>;
 
@@ -19,8 +19,14 @@ const truncate = (value: string, maxChars: number) => {
   const v = (value || "").trim();
   if (!v) return "";
   if (v.length <= maxChars) return v;
-  return v.slice(0, maxChars).trimEnd();
+  // Nie mitten im Wort abschneiden: bis zur letzten Wortgrenze kürzen und hängende Trennzeichen entfernen.
+  const cut = v.slice(0, maxChars + 1);
+  const at = cut.lastIndexOf(" ");
+  return (at > maxChars * 0.5 ? cut.slice(0, at) : v.slice(0, maxChars)).replace(/[\s|:,;·&–-]+$/u, "");
 };
+
+// Vorschau und lokale Entwicklung dürfen nie in einen Suchindex.
+const isPreviewHost = (host: string) => /^preview\./.test(host) || host === "localhost" || host === "127.0.0.1";
 
 const upsertMeta = (attrs: { name?: string; property?: string }, content: string) => {
   if (content === undefined || content === null) return;
@@ -101,9 +107,15 @@ const SEO = ({
   const resolvedDescription = useMemo(() => truncate(description || defaultDescription, 155), [description, defaultDescription]);
 
   const ogImageRaw = useMemo(() => image || settings.og_image_path || settings.logo_path || "", [image, settings.logo_path, settings.og_image_path]);
-  const ogImageUrl = useMemo(() => (ogImageRaw ? buildRenderImageUrl(ogImageRaw, { width: 1200, quality: 80 }) : ""), [ogImageRaw]);
+  // Ein Bild aus dem eigenen Auftritt (Pfad ab "/") wird zur vollen Adresse; alles andere liegt im Speicher.
+  const ogImageUrl = useMemo(() => (!ogImageRaw ? "" : ogImageRaw.startsWith("/") ? buildAbsolutePublicUrl(ogImageRaw) : buildRenderImageUrl(ogImageRaw, { width: 1200, quality: 80 })), [ogImageRaw]);
 
-  const resolvedCanonical = useMemo(() => resolveCanonicalUrl(canonical), [canonical]);
+  // Die Adresse der Seite gehört zur Berechnung: Bei einem internen Seitenwechsel bleibt dieselbe Komponente stehen,
+  // ohne den Pfad blieben Canonical und og:url auf der Seite, auf der der Besuch begonnen hat.
+  const path = typeof window === "undefined" ? "" : window.location.pathname;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const resolvedCanonical = useMemo(() => resolveCanonicalUrl(canonical), [canonical, path]);
+  const preview = typeof window !== "undefined" && isPreviewHost(window.location.hostname);
 
   useEffect(() => {
     if (resolvedTitle) document.title = resolvedTitle;
@@ -111,14 +123,16 @@ const SEO = ({
     upsertMeta({ property: "og:title" }, resolvedTitle);
     upsertMeta({ property: "og:description" }, resolvedDescription);
     upsertMeta({ property: "og:image" }, ogImageUrl);
+    upsertMeta({ name: "twitter:image" }, ogImageUrl);
+    upsertMeta({ name: "twitter:card" }, ogImageUrl ? "summary_large_image" : "summary");
     upsertMeta({ property: "og:type" }, type);
     upsertMeta({ property: "og:url" }, resolvedCanonical);
-    upsertMeta({ name: "robots" }, noIndex ? "noindex,follow" : "index,follow");
+    upsertMeta({ name: "robots" }, preview ? "noindex,nofollow" : noIndex ? "noindex,follow" : "index,follow");
     upsertLink("canonical", resolvedCanonical);
     upsertStructuredData(structuredData);
 
     return cleanupStructuredData;
-  }, [resolvedTitle, resolvedDescription, ogImageUrl, resolvedCanonical, type, noIndex, structuredData]);
+  }, [resolvedTitle, resolvedDescription, ogImageUrl, resolvedCanonical, type, noIndex, preview, structuredData]);
 
   return null;
 };

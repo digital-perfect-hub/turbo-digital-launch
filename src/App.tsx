@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useMemo, type ReactNode } from "react";
+import { lazy, Suspense, useLayoutEffect, useMemo, type ComponentType, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,44 +22,73 @@ import { LoadingScreen } from "./components/ui/LoadingScreen";
 // gerendert werden. Alle übrigen Routen (inkl. des gesamten Admin-Panels) werden
 // per Code-Splitting nachgeladen, damit Erstbesucher der Startseite nicht das
 // komplette Admin-Bundle (Rich-Text-Editor, Charts, Drag&Drop, Stripe) mitladen.
-const Login = lazy(() => import("./pages/Login"));
-const SetPassword = lazy(() => import("./pages/SetPassword"));
-const Impressum = lazy(() => import("./pages/Impressum"));
-const Datenschutz = lazy(() => import("./pages/Datenschutz"));
-const AGB = lazy(() => import("./pages/AGB"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const Forum = lazy(() => import("./pages/Forum"));
-const ForumThread = lazy(() => import("./pages/ForumThread"));
-const DynamicPage = lazy(() => import("./pages/DynamicPage"));
-const PremiumOrDynamicPage = lazy(() => import("./pages/PremiumOrDynamicPage"));
+// Eine Unterseite wird als eigene Datei nachgeladen. Nach einem neuen Deployment heißt diese Datei anders: Ein Tab mit dem alten
+// Stand findet sie nicht mehr, und die Seite bliebe leer. Dann wird einmal neu geladen (der neue Stand kennt die neuen Namen);
+// schlägt es danach wieder fehl, wird der Fehler nicht verschluckt.
+const RELOAD_FLAG = "dp:chunk-reload";
+const flag = (set?: boolean): boolean => {
+  try {
+    if (set === true) window.sessionStorage.setItem(RELOAD_FLAG, "1");
+    else if (set === false) window.sessionStorage.removeItem(RELOAD_FLAG);
+    return window.sessionStorage.getItem(RELOAD_FLAG) === "1";
+  } catch {
+    return true;
+  }
+};
+export const lazyPage = <T extends ComponentType<never>>(load: () => Promise<{ default: T }>) =>
+  lazy(() =>
+    load().then(
+      (module) => {
+        flag(false);
+        return module;
+      },
+      (error: unknown) => {
+        if (flag()) throw error;
+        flag(true);
+        window.location.reload();
+        return new Promise<{ default: T }>(() => undefined);
+      },
+    ),
+  );
 
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminFooter = lazy(() => import("./pages/admin/AdminFooter"));
-const AdminBranding = lazy(() => import("./pages/admin/AdminBranding"));
-const AdminNavigation = lazy(() => import("./pages/admin/AdminNavigation"));
-const AdminHomepage = lazy(() => import("./pages/admin/AdminHomepage"));
-const AdminHero = lazy(() => import("./pages/admin/AdminHero"));
-const AdminServices = lazy(() => import("./pages/admin/AdminServices"));
-const AdminPortfolio = lazy(() => import("./pages/admin/AdminPortfolio"));
-const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
-const AdminFAQ = lazy(() => import("./pages/admin/AdminFAQ"));
-const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
-const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
-const AdminDomains = lazy(() => import("./pages/admin/AdminDomains"));
-const AdminForum = lazy(() => import("./pages/admin/AdminForum"));
-const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
-const AdminTeam = lazy(() => import("./pages/admin/AdminTeam"));
-const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
-const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
-const AdminLegal = lazy(() => import("./pages/admin/AdminLegal"));
-const AdminSites = lazy(() => import("./pages/admin/AdminSites"));
-const AdminPages = lazy(() => import("./pages/admin/AdminPages"));
-const AdminBilling = lazy(() => import("./pages/admin/AdminBilling"));
-const AdminTickets = lazy(() => import("./pages/admin/AdminTickets"));
-const AdminOnboarding = lazy(() => import("./pages/admin/AdminOnboarding"));
-const AdminMedia = lazy(() => import("./pages/admin/AdminMedia"));
-const AdminBanners = lazy(() => import("./pages/admin/AdminBanners"));
+const Login = lazyPage(() => import("./pages/Login"));
+const SetPassword = lazyPage(() => import("./pages/SetPassword"));
+const Impressum = lazyPage(() => import("./pages/Impressum"));
+const Datenschutz = lazyPage(() => import("./pages/Datenschutz"));
+const AGB = lazyPage(() => import("./pages/AGB"));
+const ProductDetail = lazyPage(() => import("./pages/ProductDetail"));
+const Forum = lazyPage(() => import("./pages/Forum"));
+const ForumThread = lazyPage(() => import("./pages/ForumThread"));
+const DynamicPage = lazyPage(() => import("./pages/DynamicPage"));
+const PremiumOrDynamicPage = lazyPage(() => import("./pages/PremiumOrDynamicPage"));
+
+const AdminLayout = lazyPage(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazyPage(() => import("./pages/admin/AdminDashboard"));
+const AdminFooter = lazyPage(() => import("./pages/admin/AdminFooter"));
+const AdminBranding = lazyPage(() => import("./pages/admin/AdminBranding"));
+const AdminNavigation = lazyPage(() => import("./pages/admin/AdminNavigation"));
+const AdminHomepage = lazyPage(() => import("./pages/admin/AdminHomepage"));
+const AdminHero = lazyPage(() => import("./pages/admin/AdminHero"));
+const AdminServices = lazyPage(() => import("./pages/admin/AdminServices"));
+const AdminPortfolio = lazyPage(() => import("./pages/admin/AdminPortfolio"));
+const AdminProducts = lazyPage(() => import("./pages/admin/AdminProducts"));
+const AdminFAQ = lazyPage(() => import("./pages/admin/AdminFAQ"));
+const AdminLeads = lazyPage(() => import("./pages/admin/AdminLeads"));
+const AdminSettings = lazyPage(() => import("./pages/admin/AdminSettings"));
+const AdminDomains = lazyPage(() => import("./pages/admin/AdminDomains"));
+const AdminForum = lazyPage(() => import("./pages/admin/AdminForum"));
+const AdminContent = lazyPage(() => import("./pages/admin/AdminContent"));
+const AdminTeam = lazyPage(() => import("./pages/admin/AdminTeam"));
+const AdminUsers = lazyPage(() => import("./pages/admin/AdminUsers"));
+const AdminTestimonials = lazyPage(() => import("./pages/admin/AdminTestimonials"));
+const AdminLegal = lazyPage(() => import("./pages/admin/AdminLegal"));
+const AdminSites = lazyPage(() => import("./pages/admin/AdminSites"));
+const AdminPages = lazyPage(() => import("./pages/admin/AdminPages"));
+const AdminBilling = lazyPage(() => import("./pages/admin/AdminBilling"));
+const AdminTickets = lazyPage(() => import("./pages/admin/AdminTickets"));
+const AdminOnboarding = lazyPage(() => import("./pages/admin/AdminOnboarding"));
+const AdminMedia = lazyPage(() => import("./pages/admin/AdminMedia"));
+const AdminBanners = lazyPage(() => import("./pages/admin/AdminBanners"));
 
 const queryClient = new QueryClient();
 

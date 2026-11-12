@@ -10,7 +10,7 @@ import { PremiumContact, PremiumShell } from "./Shell";
 import { CostSection } from "./PremiumHome";
 import { StudioSteps } from "./StudioSteps";
 import { CreatorGallery, FreeWorlds } from "./Showcase";
-import { AI_NOTE, CREATORS, FOUNDER, PROJECTS } from "./content";
+import { AI_NOTE, CREATORS, FOUNDER, PROJECTS, SHARE_IMAGE } from "./content";
 import type { PremiumPageData } from "./pages";
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -184,7 +184,7 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
 
   return (
     <PremiumShell>
-      <SEO title={page.seoTitle} description={page.seoDescription} structuredData={structuredData} />
+      <SEO title={page.seoTitle} description={page.seoDescription} image={SHARE_IMAGE} structuredData={structuredData} />
       <SubHero crumb={name} kicker={page.kicker} lines={page.h1} lead={page.lead} visual={visual} modifier={page.visual}>
         <div className="pm-cta">
           <a className="pm-btn" href="#kontakt" onClick={() => requestInterest(page.interest)}>
@@ -274,6 +274,7 @@ export const ProjectsPage = () => (
   <PremiumShell>
     <SEO
       title="Projekte: Websites und Portale von Digital-Perfect"
+      image={SHARE_IMAGE}
       description="Ausgewählte Projekte von Digital-Perfect: Vergleichsportale, ein Magazin und ein SEO-Projekt. Alle online und zum Ansehen verlinkt."
     />
     <SubHero
@@ -329,6 +330,7 @@ export const ContactPage = () => (
   <PremiumShell>
     <SEO
       title="Kontakt: Anfrage an Digital-Perfect"
+      image={SHARE_IMAGE}
       description="Schreib Digital-Perfect: Pilotzugang zu Creator Studio, Website, SEO oder KI-Sichtbarkeit. Du bekommst eine persönliche Antwort vom Gründer."
     />
     <SubHero

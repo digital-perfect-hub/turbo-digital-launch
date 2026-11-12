@@ -249,7 +249,7 @@ export const COST_BAND = [
 export const COST_POINTS = [
   { title: "Preis vor dem Start", text: "Bevor ein Bild oder Video erzeugt wird, siehst du, was es kostet. Erst dein Klick startet den Auftrag." },
   { title: "Grenzen, die du setzt", text: "Ein Limit pro Bild, pro Video und pro Tag. Wird es erreicht, stoppt das Studio, statt weiter Geld auszugeben." },
-  { title: "Dein eigenes KI-Konto", text: "Die KI-Kosten laufen über dein eigenes Higgsfield-Konto. Du siehst jede Ausgabe dort und im Protokoll." },
+  { title: "Jede Ausgabe im Blick", text: "Was ein Auftrag gekostet hat, steht im Verlauf und im Protokoll. Was ein Tarif enthält, zeigt der Abschnitt Preise." },
   { title: "Für Teams gemacht", text: "Workspaces, Rollen und Einladungen, wenn mehrere Personen an denselben Creatorn arbeiten." },
 ] as const;
 
@@ -336,3 +336,6 @@ export const INTEREST_OPTIONS = [
   "Technik & Automatisierung",
   "Etwas anderes",
 ] as const;
+
+// Vorschaubild, wenn eine der Premium-Seiten geteilt wird (1200 × 630, aus dem Standbild des ersten Hero-Films).
+export const SHARE_IMAGE = "/media/studio/share-creator-studio.jpg";
