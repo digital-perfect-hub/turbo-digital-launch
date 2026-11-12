@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarDays, Check, Download, Music2, Scissors, Send, Volume2 } from "lucide-react";
 import { Depth, Reveal, useInViewOnce } from "./motion";
-import { Clip } from "./media";
+import { Clip, useOnScreen } from "./media";
 import { CREATORS, STEPS, WORLDS } from "./content";
 
 // „So funktioniert's“: die sieben Schritte im Studio. Links die Schritte, rechts ein nachgebautes Studio-Fenster,
@@ -187,14 +187,16 @@ const DEMOS: Record<string, () => JSX.Element> = {
 export const StudioSteps = ({ id = "studio" }: { id?: string }) => {
   const reduce = useReducedMotion();
   const [ref, seen] = useInViewOnce<HTMLDivElement>("0px 0px -25% 0px");
+  // Weiterschalten nur, solange der Abschnitt zu sehen ist: sonst verschiebt sich die Seite, während man weiter unten liest.
+  const [sectionRef, onScreen] = useOnScreen<HTMLElement>(0.12);
   const [active, setActive] = useState(0);
   const [auto, setAuto] = useState(true);
 
   useEffect(() => {
-    if (!seen || !auto || reduce) return;
+    if (!seen || !onScreen || !auto || reduce) return;
     const timer = window.setTimeout(() => setActive((value) => (value + 1) % STEPS.length), 6000);
     return () => window.clearTimeout(timer);
-  }, [seen, auto, active, reduce]);
+  }, [seen, onScreen, auto, active, reduce]);
 
   const pick = (index: number) => {
     setAuto(false);
@@ -205,7 +207,7 @@ export const StudioSteps = ({ id = "studio" }: { id?: string }) => {
   const Demo = DEMOS[step.key];
 
   return (
-    <section id={id} className="pm-section pm-light pv-steps" aria-labelledby="pv-steps-title">
+    <section ref={sectionRef} id={id} className="pm-section pm-light pv-steps" aria-labelledby="pv-steps-title">
       <div className="pm-wrap">
         <div className="pv-head">
           <Reveal>
@@ -214,8 +216,8 @@ export const StudioSteps = ({ id = "studio" }: { id?: string }) => {
           </Reveal>
           <Reveal delay={0.08}>
             <p className="pm-body">
-              Creator Studio ist ein Werkzeug im Browser. Du erschaffst eine erfundene Person, machst mit ihr immer neue Bilder
-              und Videos und bringst sie bis zum fertigen Beitrag. Du brauchst dafür kein Technikwissen.
+              Creator Studio läuft im Browser. Du legst eine Figur an, machst mit ihr immer neue Bilder und Videos und planst am
+              Ende den fertigen Beitrag. Technikwissen brauchst du dafür nicht.
             </p>
           </Reveal>
         </div>
@@ -235,7 +237,7 @@ export const StudioSteps = ({ id = "studio" }: { id?: string }) => {
                     <span className="pv-step__tab">{item.tab}</span>
                     <span className="pv-step__text">{item.text}</span>
                   </span>
-                  {index === active && auto && !reduce && seen ? <i className="pv-step__timer" key={`t-${active}`} aria-hidden="true" /> : null}
+                  {index === active && auto && !reduce && seen && onScreen ? <i className="pv-step__timer" key={`t-${active}`} aria-hidden="true" /> : null}
                 </button>
               </li>
             ))}

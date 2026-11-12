@@ -38,7 +38,7 @@ const Hero = () => {
           <span className="pm-line pm-line--accent"><span>Bilder, Videos, Posts</span></span>
         </h1>
         <p className="pm-lead">
-          Erfinde eine Person und mach mit ihr so viele Bilder und Videos, wie du willst. Sie sieht jedes Mal gleich aus.{" "}
+          Erfinde eine Person und mach mit ihr so viele Bilder und Videos, wie du willst. Sie bleibt dabei immer dieselbe.{" "}
           <span className="pv-lead__more">
             Dazu freie Videos ganz ohne Person, ein Schnittprogramm und ein Kalender für deine Beiträge. Alles in einem Werkzeug im
             Browser.

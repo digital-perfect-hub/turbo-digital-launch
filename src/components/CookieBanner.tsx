@@ -129,7 +129,7 @@ const CookieBanner = () => {
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
-          className="fixed bottom-4 left-4 z-[30] hidden items-center gap-2 rounded-full border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-text-main-hex)] shadow-[0_24px_60px_-34px_rgba(14,31,83,0.3)] md:inline-flex"
+          className="cookie-reopen fixed bottom-4 left-4 z-[30] hidden items-center gap-2 rounded-full border border-[color:var(--surface-card-border)] bg-[color:var(--surface-card)] px-4 py-2 text-xs font-semibold text-[color:var(--theme-text-main-hex)] shadow-[0_24px_60px_-34px_rgba(14,31,83,0.3)] md:inline-flex"
         >
           <Settings2 size={14} className="text-primary" />
           Cookie-Einstellungen

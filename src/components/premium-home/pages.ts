@@ -30,7 +30,7 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     seoTitle: "Creator Studio: KI-Influencer erstellen, Bilder & Videos | Digital-Perfect",
     seoDescription:
       "Creator Studio von Digital-Perfect: KI-Creator anlegen, konsistente Bilder und Videos erzeugen, Clips schneiden und Beiträge planen. Mit Kostenvorschau vor jedem Auftrag.",
-    kicker: "Creator Studio",
+    kicker: "Creator Studio · in der Pilotphase",
     h1: ["Creator Studio.", "Ein Werkzeug für", "Bilder, Videos, Posts"],
     lead: "Du erfindest eine Person und machst mit ihr immer neue Bilder und Videos. Dazu kommen freie Videos ohne Person, ein Schnittprogramm und ein Kalender für deine Beiträge. Alles läuft im Browser.",
     cta: "Pilotzugang anfragen",
@@ -38,7 +38,7 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     introTitle: "Was alles drinsteckt.",
     introText: "Statt fünf Programme zu verbinden, arbeitest du in einer Oberfläche. Hier steht, was Creator Studio heute kann.",
     tiles: [
-      { title: "Creator, die gleich bleiben", text: "Ein Steckbrief, ein Hauptbild und fünf Ansichten legen fest, wie deine Figur aussieht. Jedes neue Bild geht von dort aus." },
+      { title: "Creator, die gleich bleiben", text: "Ein Steckbrief, ein Hauptbild und vier weitere Ansichten legen fest, wie deine Figur aussieht. Jedes neue Bild geht von dort aus." },
       { title: "Bilder in Serie", text: "Neuer Ort, neues Outfit, neue Stimmung. Du schreibst es in eigenen Worten oder nimmst eine Vorlage." },
       { title: "Videos aus Bildern", text: "Aus jedem Bild wird auf Wunsch ein Video. Mehrere KI-Modelle stehen zur Wahl, Länge und Format bestimmst du." },
       { title: "Freie Videos", text: "Videos ohne Person: aus einem Satz oder aus einem eigenen Bild. Für Landschaften, Produkte, Filmszenen." },
@@ -52,7 +52,7 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     faqTitle: "Häufige Fragen zu Creator Studio",
     faq: [
       { q: "Brauche ich Vorkenntnisse?", a: "Nein. Du beschreibst deine Figur in eigenen Worten, das Studio führt dich Schritt für Schritt vom ersten Bild bis zum fertigen Video." },
-      { q: "Sieht mein Creator wirklich immer gleich aus?", a: "Dafür gibt es das Hauptbild und fünf Ansichten: Jede neue Szene nutzt dieselben Referenzbilder. KI bleibt KI, deshalb prüfst du jedes Ergebnis selbst, bevor du es verwendest." },
+      { q: "Sieht mein Creator wirklich immer gleich aus?", a: "Dafür gibt es das Hauptbild und vier weitere Ansichten: Jede neue Szene nutzt dieselben Referenzbilder. KI bleibt KI, deshalb prüfst du jedes Ergebnis selbst, bevor du es verwendest." },
       { q: "Kann mein Creator Tattoos haben?", a: "Im Moment nicht. Tattoos landen bei heutigen KI-Modellen nicht zuverlässig an derselben Stelle, deshalb unterstützt das Studio sie bewusst nicht. Narben, Muttermale und Piercings kannst du angeben." },
       { q: "Geht es auch ohne Creator?", a: "Ja. Freie Videos entstehen aus einem Satz oder aus einem eigenen Bild, ganz ohne Person. Sie landen in derselben Bibliothek und lassen sich schneiden und einplanen." },
       { q: "Postet das Studio automatisch?", a: "Nein. Du planst Beiträge im Kalender, lädst fertige Bilder und Videos herunter und postest sie selbst. Direktes Veröffentlichen auf Instagram ist in Erprobung und passiert nie ohne deine Freigabe." },
@@ -67,7 +67,7 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     seoTitle: "Leistungen: Webdesign, SEO & KI-Sichtbarkeit | Digital-Perfect",
     seoDescription:
       "Digital-Perfect gestaltet und entwickelt Websites und macht sie sichtbar: technische SEO, lokale Sichtbarkeit, KI-Suchmaschinenoptimierung (GEO) und Automatisierung aus einer Hand.",
-    kicker: "Leistungen",
+    kicker: "Leistungen · Web, SEO, KI-Sichtbarkeit",
     h1: ["Eine Website,", "die gefunden wird.", "Und Kunden bringt"],
     lead: "Wir gestalten und entwickeln Websites und sorgen dafür, dass sie gefunden werden: bei Google, in deiner Region und in den Antworten von KI-Assistenten. Alles aus einer Hand, mit einem festen Ansprechpartner.",
     cta: "Projekt anfragen",
@@ -107,8 +107,8 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     seoTitle: "Webdesign & Webentwicklung aus Linz: schnell, individuell | Digital-Perfect",
     seoDescription:
       "Webdesign und Webentwicklung von Digital-Perfect aus Linz: individuelle Websites, Shops und Plattformen, die schnell laden, gefunden werden und sich selbst pflegen lassen.",
-    kicker: "Webdesign & Entwicklung",
-    h1: ["Websites, die", "verkaufen.", "Und schnell laden."],
+    kicker: "Webdesign & Entwicklung · aus Linz",
+    h1: ["Websites, die", "verkaufen.", "Und schnell laden"],
     lead: "Wir gestalten und entwickeln Websites, Shops und Plattformen, die zu deinem Unternehmen passen. Individuell gebaut, auf dem Handy zuerst gedacht, von Anfang an für Suchmaschinen und KI lesbar.",
     cta: "Projekt anfragen",
     visual: "cards",
@@ -146,8 +146,8 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     seoTitle: "Technische SEO: Crawling, Indexierung, Ladezeit | Digital-Perfect",
     seoDescription:
       "Technische SEO von Digital-Perfect: Crawling, Indexierung, Core Web Vitals, Seitenstruktur und strukturierte Daten. Das Fundament für Sichtbarkeit bei Google und in KI-Antworten.",
-    kicker: "Technische SEO",
-    h1: ["Das Fundament,", "auf dem Rankings", "entstehen."],
+    kicker: "Technische SEO · Audit und Umsetzung",
+    h1: ["Das Fundament,", "auf dem Rankings", "entstehen"],
     lead: "Der beste Inhalt hilft nicht, wenn Suchmaschinen ihn nicht sauber lesen können. Technische SEO sorgt dafür, dass deine Seiten gefunden, verstanden und schnell geladen werden.",
     cta: "Audit anfragen",
     visual: "terminal",
@@ -184,7 +184,7 @@ export const PREMIUM_PAGES: Record<string, PremiumPageData> = {
     seoDescription:
       "KI-Suchmaschinenoptimierung (GEO, AI Visibility) von Digital-Perfect: Damit ChatGPT, Perplexity und Googles KI-Antworten dein Unternehmen kennen, verstehen und nennen.",
     kicker: "KI-Sichtbarkeit · GEO · AI Visibility",
-    h1: ["Wenn KI gefragt", "wird, soll dein", "Name fallen."],
+    h1: ["Wenn KI gefragt", "wird, soll dein", "Name fallen"],
     lead: "Immer mehr Menschen fragen ChatGPT, Perplexity oder Googles KI-Übersichten statt zu googeln. KI-Sichtbarkeit (auch GEO oder AI Visibility) sorgt dafür, dass diese Systeme dein Unternehmen kennen, richtig verstehen und in ihren Antworten nennen.",
     cta: "KI-Sichtbarkeit prüfen lassen",
     visual: "answer",

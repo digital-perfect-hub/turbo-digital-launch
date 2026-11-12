@@ -50,7 +50,7 @@ export const CreatorGallery = () => {
         <div className="pv-head">
           <Reveal>
             <p className="pm-kicker">Echte Beispiele aus unserem Studio</p>
-            <h2 id="pv-gal-title" className="pm-h2">Vier Creator. Immer dieselbe Person.</h2>
+            <h2 id="pv-gal-title" className="pm-h2">Vier Creator. Jeder unverwechselbar.</h2>
           </Reveal>
           <Reveal delay={0.08}>
             <p className="pm-body">

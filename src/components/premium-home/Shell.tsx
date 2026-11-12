@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUpRight, CheckCircle2, Menu, Search, X } from "lucide-react";
-import Footer from "@/components/Footer";
+import { ArrowUp, ArrowUpRight, CheckCircle2, Menu, Search, X } from "lucide-react";
 import SupportWidget from "@/components/support/SupportWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
+import { defaultFooterContactItems, type FooterContactItem, useSiteSettings } from "@/hooks/useSiteSettings";
+import { openCookieSettings } from "@/lib/cookie-consent";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
@@ -255,6 +256,107 @@ export const PremiumContact = ({ title = "Pilotzugang oder Projekt?", interest }
   );
 };
 
+const FOOTER_GROUPS = [
+  {
+    title: "Creator Studio",
+    links: [
+      { label: "So funktioniert es", to: "/creator-studio" },
+      { label: "Beispiele ansehen", to: "/#creator" },
+      { label: "Freie Videos", to: "/#welten" },
+      { label: "Kosten", to: "/#kosten" },
+    ],
+  },
+  {
+    title: "Leistungen",
+    links: [
+      { label: "Alle Leistungen", to: "/leistungen" },
+      { label: "Webdesign & Entwicklung", to: "/webdesign" },
+      { label: "Technische SEO", to: "/technische-seo" },
+      { label: "KI-Sichtbarkeit", to: "/ki-sichtbarkeit" },
+    ],
+  },
+  {
+    title: "Digital-Perfect",
+    links: [
+      { label: "Projekte", to: "/projekte" },
+      { label: "Kontakt", to: "/kontakt" },
+    ],
+  },
+] as const;
+
+const FALLBACK_LEGAL = [
+  { label: "Impressum", url: "/impressum" },
+  { label: "Datenschutz", url: "/datenschutz" },
+  { label: "AGB", url: "/agb" },
+];
+
+// Fußzeile in der Sprache der Premium-Seiten. Rechtliche Links und Kontaktangaben kommen wie bisher aus den
+// Einstellungen der Website, damit sie an einer Stelle gepflegt werden.
+const PremiumFooter = ({ brand }: { brand: string }) => {
+  const { settings } = useGlobalTheme();
+  const { getJsonSetting } = useSiteSettings();
+  const legal = Array.isArray(settings.footer_legal_links) && settings.footer_legal_links.length ? settings.footer_legal_links : FALLBACK_LEGAL;
+  const contact = getJsonSetting<FooterContactItem[]>("footer_contact_items", defaultFooterContactItems).filter((item) => item?.value?.trim());
+  const mail = contact.find((item) => (item.icon || "mail") === "mail")?.value.trim();
+
+  return (
+    <footer className="pv-foot">
+      <div className="pm-wrap">
+        <div className="pv-foot__top">
+          <div className="pv-foot__brand">
+            <Link to="/" className="pm-logo" aria-label={`${brand}, zur Startseite`}>
+              {brand}
+              <span className="pm-logo__dot">.</span>
+            </Link>
+            <p>Creator Studio für KI-Creator, Bilder und Videos. Dazu Webdesign, SEO und KI-Sichtbarkeit aus Linz.</p>
+            <div className="pv-foot__actions">
+              <a className="pm-btn pm-btn--sm" href="#kontakt">Anfrage senden</a>
+              <a className="pv-foot__app" href={STUDIO_URL} rel="noopener noreferrer">
+                Zur App <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+          <nav className="pv-foot__nav" aria-label="Fußnavigation">
+            {FOOTER_GROUPS.map((group) => (
+              <div key={group.title}>
+                <h2>{group.title}</h2>
+                <ul>
+                  {group.links.map((link) => (
+                    <li key={link.to}>
+                      <Link to={link.to}>{link.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div>
+              <h2>Rechtliches</h2>
+              <ul>
+                {legal.map((link: { label: string; url: string }) => (
+                  <li key={link.url}>
+                    <Link to={link.url}>{link.label}</Link>
+                  </li>
+                ))}
+                <li>
+                  <button type="button" onClick={openCookieSettings}>Cookie-Einstellungen</button>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+        <p className="pv-foot__mark" aria-hidden="true">{brand}</p>
+        <div className="pv-foot__bottom">
+          <p>{`© ${new Date().getFullYear()} ${brand}. Linz, Österreich.`}</p>
+          {mail ? <a href={`mailto:${mail}`}>{mail}</a> : null}
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            Nach oben <ArrowUp size={14} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
 // Gemeinsamer Rahmen aller Premium-Seiten: Kopf, Befehlspalette, Tab-Leiste, Fuß.
 export const PremiumShell = ({ children }: { children: ReactNode }) => {
   const { settings } = useGlobalTheme();
@@ -280,7 +382,7 @@ export const PremiumShell = ({ children }: { children: ReactNode }) => {
       <CommandPalette open={palette} onClose={() => setPalette(false)} />
       <MobileDock />
       <main id="inhalt">{children}</main>
-      <Footer />
+      <PremiumFooter brand={brand} />
       <SupportWidget />
     </div>
   );

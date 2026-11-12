@@ -199,7 +199,7 @@ export const STEPS = [
     key: "creator",
     tab: "Creator",
     title: "Creator erstellen",
-    text: "Du beschreibst deine Figur mit eigenen Worten: Alter, Haare, Augen, Stil. Das Studio macht daraus ein Hauptbild und fünf Ansichten, an denen sich später alles orientiert.",
+    text: "Du beschreibst deine Figur mit eigenen Worten: Alter, Haare, Augen, Stil. Das Studio macht daraus ein Hauptbild und vier weitere Ansichten. Daran orientiert sich später jedes neue Bild.",
   },
   {
     key: "bilder",
@@ -211,7 +211,7 @@ export const STEPS = [
     key: "szenen",
     tab: "Szenen",
     title: "Szenen gestalten",
-    text: "Für ein längeres Video legst du Szenen an: Was passiert, was trägt sie, wie bewegt sie sich. Auf Wunsch mit Sprecherstimme und Musik.",
+    text: "Für ein längeres Video legst du Szenen an: was passiert, was deine Figur trägt, wie sie sich bewegt. Auf Wunsch mit Sprecherstimme und Musik.",
   },
   {
     key: "videos",

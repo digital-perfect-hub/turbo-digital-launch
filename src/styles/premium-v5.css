@@ -305,3 +305,70 @@
   .pv-stage.is-blocked .pv-stage__poster, .pv-d-playhead, .pv-world__prompt i, .pv-step__timer { animation: none; }
   .pv-stage__video.is-active { transition: none; }
 }
+
+/* ───── Feinschliff (12.11.2026) ───── */
+/* Galerie: Die Seitenspalte darf nie breiter als der Bildschirm werden. Die Szenenleiste hatte sie am Telefon aufgezogen. */
+.pv-gal__side { grid-template-columns: minmax(0, 1fr); }
+.pv-gal__side > div { justify-self: stretch; min-width: 0; }
+
+/* Hero am Telefon: dunkler Verlauf beginnt früher, damit die orange Zeile über dem Titel lesbar bleibt. */
+@media (max-width: 899px) {
+  .pv-stage__media::after { background: linear-gradient(180deg, rgba(7, 11, 21, 0.72) 0, rgba(7, 11, 21, 0) 22%, rgba(7, 11, 21, 0.08) 34%, rgba(7, 11, 21, 0.7) 50%, rgba(7, 11, 21, 0.94) 72%, #070b15 100%); }
+  .pv-hero .pm-eyebrow { color: #ff8a52; text-shadow: 0 1px 10px rgba(7, 11, 21, 0.95), 0 0 2px rgba(7, 11, 21, 0.9); }
+}
+
+/* Unterseiten am Telefon: Titel etwas kleiner, damit der orange Punkt nicht allein in die nächste Zeile rutscht. */
+@media (max-width: 639px) { .pm-h1--sub { font-size: clamp(2.2rem, 10.6vw, 4rem); } }
+
+/* Kacheln auf dunkler Fläche (Funktionen auf der Studio-Seite). */
+.pv-dark-tiles .pm-tile { border-color: var(--pm-line-strong); background: linear-gradient(180deg, rgba(56, 104, 255, 0.09), transparent 55%), var(--pm-surface-1); }
+.pv-dark-tiles .pm-tile:hover { border-color: rgba(255, 107, 44, 0.5); background: linear-gradient(180deg, rgba(56, 104, 255, 0.16), transparent 60%), var(--pm-surface-1); box-shadow: 0 30px 60px -40px #000; }
+
+/* Der schwebende Cookie-Knopf liegt auf den Premium-Seiten über dem Inhalt; der Link steht hier in der Fußzeile. */
+body:has(.pm) .cookie-reopen { display: none; }
+
+/* ───── Fußzeile ───── */
+.pv-foot { position: relative; overflow: clip; padding: clamp(56px, 7vw, 96px) 0 28px; border-top: 1px solid var(--pm-line); background: #050912; }
+.pv-foot::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(50% 70% at 100% 0%, rgba(56, 104, 255, 0.14), transparent 70%), radial-gradient(40% 60% at 0% 100%, rgba(255, 107, 44, 0.05), transparent 70%); }
+.pv-foot .pm-wrap { position: relative; }
+.pv-foot__top { display: grid; gap: 44px; }
+.pv-foot__brand { display: grid; gap: 18px; justify-items: start; align-content: start; max-width: 400px; }
+.pv-foot__brand .pm-logo { font-size: 1.9rem; }
+.pv-foot__brand p { font-size: 15px; line-height: 1.65; color: var(--pm-muted); }
+.pv-foot__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.pv-foot__app { display: inline-flex; align-items: center; gap: 4px; font: 500 14px/1 var(--pm-body); color: var(--pm-muted); text-decoration: none; transition: color 0.2s; }
+.pv-foot__app:hover { color: var(--pm-text); }
+.pv-foot__nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 24px; }
+.pv-foot__nav h2 { margin: 0 0 16px; font: 500 11px/1.4 var(--pm-mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--pm-orange); }
+.pv-foot__nav ul { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.pv-foot__nav a, .pv-foot__nav button { padding: 0; border: 0; background: none; font: 400 15px/1.4 var(--pm-body); color: #cdd5e6; text-align: left; text-decoration: none; cursor: pointer; transition: color 0.2s; }
+.pv-foot__nav a:hover, .pv-foot__nav button:hover { color: #fff; }
+.pv-foot__mark { margin: clamp(40px, 6vw, 80px) 0 0; font: 800 clamp(3.2rem, 16vw, 15rem)/0.8 var(--pm-display); text-transform: uppercase; white-space: nowrap; color: transparent; -webkit-text-stroke: 1px rgba(190, 208, 255, 0.16); user-select: none; }
+.pv-foot__bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--pm-line); font: 400 12px/1.5 var(--pm-mono); color: var(--pm-muted); }
+.pv-foot__bottom p { margin: 0; }
+.pv-foot__bottom a { color: inherit; text-decoration: none; transition: color 0.2s; }
+.pv-foot__bottom button { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; padding: 0; border: 0; background: none; font: inherit; letter-spacing: 0.08em; text-transform: uppercase; color: inherit; cursor: pointer; transition: color 0.2s; }
+.pv-foot__bottom a:hover, .pv-foot__bottom button:hover { color: var(--pm-text); }
+.pv-foot__bottom button svg { color: var(--pm-orange); }
+@media (min-width: 900px) {
+  .pv-foot__top { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.7fr); gap: 72px; }
+  .pv-foot__nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Schritte: gleiche Höhe für alle sieben Demos, damit die Seite beim Weiterschalten nicht springt. */
+@media (max-width: 959px) {
+  .pv-steps__demo { display: flex; flex-direction: column; min-height: 652px; }
+  .pv-steps__demo > div:first-child { flex: 1; display: flex; flex-direction: column; }
+  .pv-steps__demo .pv-win { flex: 1; display: flex; flex-direction: column; }
+  .pv-steps__demo .pv-win__body { flex: 1; }
+  .pv-steps__current { min-height: 150px; }
+}
+@media (max-width: 559px) { .pv-d-creator__face { width: 38%; } }
+@media (min-width: 960px) { .pv-steps__grid { min-height: 640px; } }
+
+/* Unterseiten am Telefon: Zeile über dem Titel bleibt einzeilig. */
+@media (max-width: 639px) { .pm-sub .pm-eyebrow { font-size: 10.5px; letter-spacing: 0.12em; } }
+
+/* Kontaktseite: Kopf und Formular rücken zusammen. */
+.pm-sub--contact { padding-bottom: clamp(20px, 3vw, 44px); }
+.pm-sub--contact + .pm-contact { padding-top: clamp(44px, 5vw, 80px); }

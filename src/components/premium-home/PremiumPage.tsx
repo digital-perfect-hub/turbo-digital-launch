@@ -198,7 +198,10 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
       {isStudio ? <CreatorGallery /> : null}
       {isStudio ? <FreeWorlds /> : null}
 
-      <section id={isStudio ? "funktionen" : "mehr"} className="pm-section pm-light" aria-labelledby="pm-intro-title">
+      {isStudio ? <CostSection /> : null}
+
+      <section id={isStudio ? "funktionen" : "mehr"} className={isStudio ? "pm-section pm-ops pv-dark-tiles" : "pm-section pm-light"} aria-labelledby="pm-intro-title">
+        {isStudio ? <div className="pm-ops__bg" aria-hidden="true" /> : null}
         <div className="pm-wrap">
           <div className="pv-head">
             <Reveal>
@@ -222,8 +225,6 @@ const PremiumPage = ({ page }: { page: PremiumPageData }) => {
           </ul>
         </div>
       </section>
-
-      {isStudio ? <CostSection /> : null}
 
       {page.steps.length ? (
         <section className="pm-section pv-flow" aria-labelledby="pm-steps-title">
@@ -277,7 +278,7 @@ export const ProjectsPage = () => (
     />
     <SubHero
       crumb="Projekte"
-      kicker="Projekte"
+      kicker="Vier Projekte · alle online"
       lines={["Websites, die", "online sind"]}
       lead="Keine Entwürfe, keine Mockups. Diese vier Projekte haben wir gebaut oder betreuen sie, und du kannst jedes selbst ansehen."
       visual={<CardsVisual />}
@@ -332,10 +333,11 @@ export const ContactPage = () => (
     />
     <SubHero
       crumb="Kontakt"
-      kicker="Kontakt"
-      lines={["Schreib uns.", "Wir antworten persönlich"]}
-      lead="Ob Pilotzugang zu Creator Studio oder ein Projekt für dein Unternehmen: Ein paar Sätze reichen. Du bekommst eine Antwort mit einem klaren nächsten Schritt."
+      kicker="Direkt zum Gründer"
+      lines={["Schreib uns.", "Wir antworten", "noch selbst"]}
+      lead="Ob Pilotzugang zu Creator Studio oder ein Projekt für dein Unternehmen: Ein paar Sätze reichen. Markus Schulz liest jede Anfrage selbst."
       visual={<PersonVisual />}
+      modifier="contact"
     />
     <PremiumContact title="Worum geht es?" />
   </PremiumShell>
