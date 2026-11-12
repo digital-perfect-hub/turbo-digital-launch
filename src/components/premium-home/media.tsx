@@ -316,7 +316,9 @@ export const Clip = ({
           muted
           loop={loop}
           playsInline
-          preload="metadata"
+          // Geladen wird erst, wenn der Clip wirklich läuft: ein Clip knapp unter dem sichtbaren Bereich fing sonst an zu laden,
+          // und der Browser brach diesen Abruf gleich wieder ab (als fehlgeschlagener Abruf sichtbar, am Telefon verschenktes Datenvolumen).
+          preload={playing ? "auto" : "none"}
           onPlaying={() => setReady(true)}
           onEnded={onEnded}
           tabIndex={-1}
