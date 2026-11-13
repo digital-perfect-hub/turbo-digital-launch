@@ -162,6 +162,7 @@ export const PremiumContact = ({ title = "Pilotzugang oder Projekt?", interest }
   // Beim Wechsel auf eine andere Seite bleibt das Formular dasselbe Element: Das Anliegen der neuen Seite ersetzt das der alten,
   // solange noch nichts abgeschickt ist. Eine Vorauswahl aus einem Button (oben) kommt danach und gewinnt.
   const firstInterest = useRef(true);
+  const trap = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (firstInterest.current) {
       firstInterest.current = false;
@@ -172,6 +173,11 @@ export const PremiumContact = ({ title = "Pilotzugang oder Projekt?", interest }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    // Das unsichtbare Feld füllt kein Mensch aus: Wer es füllt, bekommt die Bestätigung, und nichts wird gespeichert.
+    if (trap.current?.value) {
+      setSent(true);
+      return;
+    }
     setSending(true);
     try {
       const { error } = await supabase.from("leads").insert({
@@ -222,14 +228,15 @@ export const PremiumContact = ({ title = "Pilotzugang oder Projekt?", interest }
             </div>
           ) : (
             <form className="pm-form" onSubmit={submit}>
+              <input ref={trap} type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
               <div className="pm-form__two">
                 <label>
                   <span>Name</span>
-                  <input required autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} />
+                  <input required maxLength={120} autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} />
                 </label>
                 <label>
                   <span>E-Mail</span>
-                  <input required type="email" autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+                  <input required maxLength={200} type="email" autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
                 </label>
               </div>
               <fieldset className="pm-form__topics">
@@ -245,11 +252,11 @@ export const PremiumContact = ({ title = "Pilotzugang oder Projekt?", interest }
               </fieldset>
               <label>
                 <span>Unternehmen (optional)</span>
-                <input autoComplete="organization" value={form.company} onChange={(e) => update("company", e.target.value)} />
+                <input maxLength={160} autoComplete="organization" value={form.company} onChange={(e) => update("company", e.target.value)} />
               </label>
               <label>
                 <span>Deine Nachricht</span>
-                <textarea required rows={4} value={form.description} onChange={(e) => update("description", e.target.value)} />
+                <textarea required maxLength={4000} rows={4} value={form.description} onChange={(e) => update("description", e.target.value)} />
               </label>
               <label className="pm-form__privacy">
                 <input type="checkbox" required checked={form.privacy} onChange={(e) => update("privacy", e.target.checked)} />

@@ -179,8 +179,8 @@ const DynamicPage = () => {
   }
 
   const missingLandingHint = landingSlug.includes("/")
-    ? "Prüfe den Slug in landing_pages.slug oder veröffentliche die Seite."
-    : "Prüfe den Slug im Landing- oder Page-Builder oder gehe zurück auf die Startseite.";
+    ? "Prüfe die Adresse oder gehe zurück auf die Startseite."
+    : "Prüfe die Adresse oder gehe zurück auf die Startseite.";
 
   return (
     <>

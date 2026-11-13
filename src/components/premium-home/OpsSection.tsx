@@ -82,7 +82,7 @@ export const OpsServices = () => (
           <Decrypt as="h2" className="pm-h2" text="Gefunden werden. Von Menschen, Google und KI." />
           <p className="pm-body">
             Digital-Perfect ist auch Agentur. Wir gestalten und bauen Websites, die schnell laden, bei Google gefunden werden und
-            in den Antworten von ChatGPT, Perplexity und Googles KI auftauchen. Du bekommst klare Schritte und ehrliche Zahlen
+            in den Antworten von ChatGPT, Perplexity und Googles KI auftauchen können. Du bekommst klare Schritte und ehrliche Zahlen
             statt großer Versprechen.
           </p>
           <ul className="pm-ops__more">

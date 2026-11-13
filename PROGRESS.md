@@ -6,6 +6,14 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-13 — Prüfung des Vorschau-Stands vor dem Livegang, fünf kleine Korrekturen (nur Vorschau)
+
+- **Geprüft (Code des Stands `afe6637`):** Links zum Studio, Preisquelle, Formular, Rechtsseiten, Kopfdaten, Navigation, Testdaten, mobile Risiken.
+- **Korrigiert:** Die Fehlerseite für unbekannte Adressen ist deutsch, verlinkt intern und meldet `noindex`; der Hinweis auf interne Tabellennamen bei unbekannten Kurzadressen ist entfernt; Titel und Beschreibung in `index.html` nennen die heutige Ausrichtung statt „Wird geladen…“; das Kontaktformular hat ein unsichtbares Feld gegen automatische Einträge und Längengrenzen; die Aussage zu KI-Antworten ist als Möglichkeit formuliert.
+- **Geprüft:** Build grün, 32 Tests grün; in den geänderten Dateien keine Typfehler.
+- **Offen vor dem Livegang (nicht geändert):** Rechtstexte fehlen (die drei Seiten zeigen den Hinweis „noch nicht veröffentlicht“, eine Widerrufsseite gibt es nicht); der Preisabschnitt braucht den Endpunkt `/api/public/pricing` des Studios, der erst mit dem neuen Studio-Stand und eingeschaltetem Modell antwortet, bis dahin zeigt Live den bisherigen Kostenabschnitt mit Dollar-Limits; echter Formulartest mit E-Mail-Zustellung; Sitemap-Funktion nicht eingespielt und nimmt Forum-Inhalte auf; `/favicon.ico` fehlt in `public/`; `robots.txt` sperrt KI-Crawler; im Repository sind `.env`, `supabase/.temp`, `src.zip` und `work/` versioniert; Forum, Produktseiten und `?design=classic` sind erreichbar, aber nicht verlinkt; echtes iPhone.
+- **Entscheidungen des Inhabers:** „Pilotphase auf Anfrage“ oder offene Tarife; Freigabe der Zusagen im Preisabschnitt (ein Credit ist ein Cent, Übertrag, drei Jahre, „inkl. USt“); KI-Crawler; Widerrufsseite; alte Bereiche abschalten; GO für `main`.
+
 ## 2026-11-12 — Vorschau nach dem Browser-Prüfbericht nachgezogen (Commit `3045ca1`, nur Vorschau)
 
 - **Anlass:** Go-live-Vorbereitung, Paket 4. Der Prüfbericht selbst lag nicht als Datei vor; die im Auftrag genannten Punkte wurden einzeln nachgeprüft und nur behoben, was sich belegen ließ. Gestaltung, Animationen und Bildwelt sind unverändert.
