@@ -40,6 +40,23 @@
         box-shadow: 0 0 36px rgba(255, 107, 44, 0.2);
       }
 
+      /* Eigene Startseite von Digital-Perfect: statt nur eines Ladekreises steht sofort das erste Bild des Hero-Films da. */
+      html.dp-boot-home #dp-app-boot {
+        align-items: flex-end;
+        padding-bottom: 28px;
+        background:
+          linear-gradient(180deg, rgba(7, 11, 21, 0.72) 0, rgba(7, 11, 21, 0) 24%, rgba(7, 11, 21, 0.1) 42%, rgba(7, 11, 21, 0.9) 76%, #070b15 100%),
+          var(--dp-boot-poster) center / cover no-repeat,
+          #070b15;
+      }
+
+      html.dp-boot-home #dp-app-boot::after {
+        width: 30px;
+        height: 30px;
+        border-width: 2px;
+        box-shadow: none;
+      }
+
       body.dp-app-ready #dp-app-boot {
         opacity: 0;
         visibility: hidden;
@@ -52,6 +69,47 @@
         }
       }
     </style>
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
+    <script>
+      // Eigene Adressen von Digital-Perfect (gleiche Liste wie HOME_HOSTNAMES in src/lib/site.ts): Das erste Bild des Hero-Films
+      // (gleiche Dateien wie HERO_WIDE[0] und HERO_TALL[0] in content.ts) wird geholt, bevor das Skript der Seite da ist, und
+      // steht im Ladebild. Mandanten-Adressen bleiben unberührt.
+      (function () {
+        var host = location.hostname.replace(/^www\./, "");
+        var home = host === "digital-perfect.com" || host === "preview.digital-perfect.com" || host === "localhost" || host === "127.0.0.1";
+        if (!home) return;
+        // Einstellungen und Design der Standard-Site werden schon jetzt abgerufen, nicht erst, wenn das Skript der Seite läuft:
+        // dieselben beiden Abfragen wie in useSiteSettings und useGlobalTheme, mit dem öffentlichen Schlüssel der Seite.
+        var api = "%VITE_SUPABASE_URL%";
+        var key = "%VITE_SUPABASE_PUBLISHABLE_KEY%";
+        if (api.indexOf("http") === 0 && key.charAt(0) !== "%" && window.fetch) {
+          var site = "00000000-0000-0000-0000-000000000001";
+          var read = function (path) {
+            var pending = fetch(api + "/rest/v1/" + path, { headers: { apikey: key, Authorization: "Bearer " + key } }).then(function (response) {
+              if (!response.ok) throw new Error(String(response.status));
+              return response.json();
+            });
+            pending.catch(function () {});
+            return pending;
+          };
+          window.__dpBoot = {
+            site: site,
+            settings: read("site_settings?select=key%2Cvalue&site_id=eq." + site),
+            theme: read("global_settings?select=*&site_id=eq." + site + "&limit=1"),
+          };
+        }
+        if (location.pathname !== "/" || /[?&]design=classic/.test(location.search)) return;
+        var poster = "/media/studio/" + (window.matchMedia("(min-width: 900px)").matches ? "hero-maria-see" : "maria-cafe") + ".webp";
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.href = poster;
+        link.setAttribute("fetchpriority", "high");
+        document.head.appendChild(link);
+        document.documentElement.style.setProperty("--dp-boot-poster", "url(" + poster + ")");
+        document.documentElement.classList.add("dp-boot-home");
+      })();
+    </script>
     <meta
       name="description"
       content="Digital-Perfect entwickelt Creator Studio für KI-Creator, Bilder und Videos und baut Websites, die für Google und KI-Assistenten gut lesbar sind."

@@ -112,7 +112,7 @@ const DemoVideo = () => (
 const DemoFree = () => (
   <Window title="Freies Video">
     <div className="pv-d-prompt"><span>Beschreib dein Video</span><p>{WORLDS[0].prompt}</p></div>
-    <div className="pv-d-wide"><Clip src={WORLDS[0].src} poster={WORLDS[0].poster} label={WORLDS[0].title} /></div>
+    <div className="pv-d-wide"><Clip src={WORLDS[0].small} poster={WORLDS[0].poster} label={WORLDS[0].title} /></div>
     <div className="pv-d-row">
       <Chip>Text zu Video</Chip>
       <Chip>Querformat 16:9</Chip>
@@ -123,7 +123,7 @@ const DemoFree = () => (
 
 const DemoEdit = () => (
   <Window title="Editor">
-    <div className="pv-d-wide"><Clip src={WORLDS[1].src} poster={WORLDS[1].poster} label={WORLDS[1].title} /></div>
+    <div className="pv-d-wide"><Clip src={WORLDS[1].small} poster={WORLDS[1].poster} label={WORLDS[1].title} /></div>
     <div className="pv-d-timeline" aria-hidden="true">
       <div className="pv-d-track">
         {[WORLDS[1].thumb, gipfel.thumb, WORLDS[0].thumb, altstadt.thumb].map((thumb, index) => (

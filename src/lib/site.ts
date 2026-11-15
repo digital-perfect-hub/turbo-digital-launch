@@ -21,6 +21,17 @@ export const normalizeHostname = (value?: string | null) => {
   return hostname.replace(/^www\./, "").split(":")[0] || "localhost";
 };
 
+// Die eigenen Adressen von Digital-Perfect. Hier ist die Standard-Site bekannt, bevor die Datenbank geantwortet hat: Design und
+// Einstellungen werden sofort mit abgerufen statt erst nach der Auflösung der Adresse. Die Auflösung läuft trotzdem und gilt.
+const HOME_HOSTNAMES = new Set(["digital-perfect.com", "preview.digital-perfect.com", "localhost", "127.0.0.1"]);
+export const isHomeHostname = (value?: string | null) => HOME_HOSTNAMES.has(normalizeHostname(value));
+
+// Die Seiten der eigenen Site, deren Inhalt im Code steht (Premium-Startseite und ihre Unterseiten, siehe pages.ts und
+// PremiumOrDynamicPage). Sie dürfen schon aufgebaut werden, während Design und Einstellungen noch geladen werden. Fehlt hier
+// eine Adresse, wartet sie nur wie bisher.
+const HOME_FAST_PATHS = new Set(["/", "/creator-studio", "/leistungen", "/webdesign", "/technische-seo", "/ki-sichtbarkeit", "/projekte", "/kontakt"]);
+export const isHomeFastPath = (pathname: string, search = "") => HOME_FAST_PATHS.has(pathname.replace(/[/]+$/, "") || "/") && !/[?&]design=classic(?:&|$)/.test(search);
+
 export const getBrowserHostname = () => {
   if (typeof window === "undefined") return "localhost";
   return normalizeHostname(window.location.hostname);

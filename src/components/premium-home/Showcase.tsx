@@ -1,10 +1,42 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Film as FilmIcon, Image as ImageIcon, ImagePlay, Type } from "lucide-react";
-import { Depth, Reveal } from "./motion";
+import { Depth, Reveal, Tilt } from "./motion";
 import { Clip, MediaToggle, useMediaChoice, useOnScreen } from "./media";
 import { requestInterest } from "./AppShell";
 import { AI_NOTE, CREATORS, WORLDS } from "./content";
+
+// Alle Szenen aller Creator, reihum gemischt, damit im Ring nie zwei Bilder derselben Figur nebeneinanderstehen.
+const RING = (() => {
+  const lists = CREATORS.map((creator) => creator.scenes.map((scene) => ({ id: `${creator.id}-${scene.id}`, thumb: scene.thumb })));
+  const longest = Math.max(...lists.map((list) => list.length));
+  return Array.from({ length: longest }, (_, row) => lists.flatMap((list) => (list[row] ? [list[row]] : []))).flat();
+})();
+
+/**
+ * Bilderring: alle Szenen der Galerie auf einem Zylinder, der sich langsam dreht. Reines CSS (eine Drehung der ganzen
+ * Spur), gedreht wird nur, solange der Ring im Bild ist; bei reduzierter Bewegung steht er. Er zeigt nichts Neues, sondern
+ * dieselben Szenen noch einmal als Ganzes, deshalb ist er für Vorleseprogramme ausgeblendet und nur der Satz darunter zählt.
+ */
+export const SceneRing = () => {
+  const [ref, onScreen] = useOnScreen<HTMLDivElement>(0.05, "160px 0px");
+  const count = RING.length;
+  const spacing = 1 / (2 * Math.tan(Math.PI / count));
+  return (
+    <div className={`pv-ring${onScreen ? " is-live" : ""}`} ref={ref}>
+      <div className="pv-ring__scene" aria-hidden="true">
+        <div className="pv-ring__track" style={{ "--pv-ring-k": spacing.toFixed(4) } as CSSProperties}>
+          {RING.map((item, position) => (
+            <span key={item.id} className="pv-ring__card" style={{ "--pv-ring-a": `${((360 / count) * position).toFixed(3)}deg` } as CSSProperties}>
+              <img src={item.thumb} alt="" width={240} height={427} loading="lazy" decoding="async" />
+            </span>
+          ))}
+        </div>
+      </div>
+      <p className="pm-caption pv-ring__note">{`${CREATORS.length} Creator, ${count} Szenen. Jedes Bild in diesem Ring ist in Creator Studio entstanden.`}</p>
+    </div>
+  );
+};
 
 /**
  * Creator-Galerie: vier Figuren aus unserem eigenen Studio. Oben wählt man die Figur, die Bühne zeigt ihre Szenen
@@ -104,7 +136,9 @@ export const CreatorGallery = () => {
 
         <div className="pv-gal__grid" role="tabpanel" id="pv-gal-panel" aria-labelledby={`pv-gal-tab-${creator.id}`}>
           <Depth className="pv-gal__stage-wrap">
-            <div className="pv-gal__stage" ref={stageRef}>
+            <div className={`pv-gal__stage${onScreen ? " is-onscreen" : ""}`} ref={stageRef}>
+              {/* Der Stapel steht im Raum: Die nächsten Szenen liegen wirklich hinter der Karte und verschieben sich beim Neigen gegen sie. */}
+              <Tilt className="pv-gal__deck" max={10}>
               <span className="pv-gal__ghost pv-gal__ghost--2" aria-hidden="true">
                 <img src={scenes[(index + 2) % total].poster} alt="" loading="lazy" decoding="async" />
               </span>
@@ -133,6 +167,7 @@ export const CreatorGallery = () => {
                   </figcaption>
                 </motion.figure>
               </AnimatePresence>
+              </Tilt>
               <MediaToggle className="pv-media-toggle--stage" />
               <div className="pv-gal__nav">
                 <button type="button" onClick={() => step(-1)} aria-label="Vorige Szene"><ArrowLeft size={18} aria-hidden="true" /></button>
@@ -179,6 +214,7 @@ export const CreatorGallery = () => {
           </div>
         </div>
       </div>
+      <SceneRing />
     </section>
   );
 };
@@ -246,6 +282,7 @@ export const FreeWorlds = () => {
         </div>
 
         <Depth className="pv-world">
+          <Tilt className="pv-tilt--stage" max={3}>
           <div className="pv-world__stage" ref={ref}>
             <AnimatePresence initial={false}>
               <motion.div
@@ -256,7 +293,7 @@ export const FreeWorlds = () => {
                 exit={reduce ? undefined : { opacity: 0 }}
                 transition={{ duration: 0.9, ease: [0.2, 0, 0, 1] }}
               >
-                <Clip src={world.src} poster={world.poster} label={world.title} loop={!auto} onEnded={auto ? endedOn(world.id) : undefined} />
+                <Clip src={world.src} small={world.small} poster={world.poster} label={world.title} loop={!auto} onEnded={auto ? endedOn(world.id) : undefined} />
               </motion.div>
             </AnimatePresence>
             <span className="pv-world__shade" aria-hidden="true" />
@@ -268,6 +305,7 @@ export const FreeWorlds = () => {
             </div>
             <p className="pv-world__title">{world.title}</p>
           </div>
+          </Tilt>
           <ul className="pv-world__tabs" aria-label="Freie Videos">
             {WORLDS.map((item, index) => (
               <li key={item.id}>

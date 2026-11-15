@@ -106,7 +106,9 @@ const FADE_MS = 900;
 /**
  * Filmbühne im Hero: mehrere Filme laufen nacheinander und blenden ineinander über. Der nächste Film startet kurz
  * vor dem Ende des laufenden und legt sich weich darüber, es gibt also kein stehendes Bild und keinen Schnitt auf
- * Schwarz. Geladen wird immer nur der laufende Film und, ab der Hälfte, der nächste. Bei reduzierter Bewegung oder
+ * Schwarz. Geladen wird immer nur der laufende Film und der nächste, und der nächste erst, wenn der laufende ganz da
+ * ist: Auf einer langsamen Verbindung teilen sich sonst zwei Abrufe die Leitung. Ist der nächste am Ende des laufenden
+ * noch nicht abspielbereit, läuft der laufende einfach noch einmal, statt auf ein stehendes Bild zu wechseln. Bei reduzierter Bewegung oder
  * Datenspar-Modus bleibt das erste Bild stehen; blockiert der Browser den Start, fährt das Standbild langsam und die
  * erste Berührung startet die Filme. Abspielen, Pause und die Szenenwahl sind immer bedienbar.
  */
@@ -127,6 +129,8 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
   const bars = useRef<Array<HTMLElement | null>>([]);
   const activeRef = useRef(0);
   const fadeTimer = useRef(0);
+  // Wie oft der laufende Film schon von vorn begonnen hat, weil der nächste noch nicht bereit war.
+  const repeats = useRef(0);
 
   const wanted = choice ?? (!reduce && !lite);
   const running = wanted && visible;
@@ -141,6 +145,7 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
       const from = activeRef.current;
       if (index === from) return;
       activeRef.current = index;
+      repeats.current = 0;
       const target = videos.current[index];
       if (target && target.readyState > 0) target.currentTime = 0;
       setLoaded((list) => (list.includes(index) ? list : [...list, index]));
@@ -157,6 +162,24 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
   );
 
   useEffect(() => () => window.clearTimeout(fadeTimer.current), []);
+
+  const want = useCallback((index: number) => setLoaded((list) => (list.includes(index) ? list : [...list, index])), []);
+  const isReady = (index: number) => (videos.current[index]?.readyState ?? 0) >= 3;
+  // Der laufende Film ist zu Ende (oder hängt): weiter zum nächsten, wenn der abspielbereit ist, sonst noch einmal von vorn.
+  const advance = useCallback(
+    (index: number) => {
+      if (index !== activeRef.current || total < 2) return;
+      const next = (index + 1) % total;
+      if (isReady(next)) return go(next);
+      repeats.current += 1;
+      want(next);
+      const video = videos.current[index];
+      if (!video) return;
+      if (video.ended || video.currentTime > 0.5) video.currentTime = 0;
+      safePlay(video, () => setBlocked(true));
+    },
+    [go, total, want],
+  );
 
   // Der aktive Film spielt, der vorige läuft während der Überblendung aus, alle anderen stehen.
   useEffect(() => {
@@ -203,22 +226,22 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
           lastTime = video.currentTime;
           lastMove = performance.now();
         } else if (!video.paused && performance.now() - lastMove > 6000 && total > 1) {
-          // Hängt ein Film (Netz, Dekoder) länger als sechs Sekunden, geht es mit dem nächsten weiter.
+          // Hängt ein Film (Netz, Dekoder) länger als sechs Sekunden, geht es mit dem nächsten weiter, sofern der bereit ist.
           lastMove = performance.now();
-          go(next);
+          advance(index);
         }
         if (total > 1) {
-          if (video.currentTime > duration * 0.4) setLoaded((list) => (list.includes(next) ? list : [...list, next]));
-          const upcoming = videos.current[next];
-          const ready = upcoming ? upcoming.readyState >= 2 : false;
-          if (duration - video.currentTime < FADE_MS / 1000 && ready) go(next);
+          const ranges = video.buffered;
+          const have = ranges.length ? ranges.end(ranges.length - 1) : 0;
+          if (video.currentTime > duration * 0.4 && (have >= duration - 0.3 || repeats.current > 0)) want(next);
+          if (duration - video.currentTime < FADE_MS / 1000 && isReady(next)) go(next);
         }
       }
       frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [running, total, go]);
+  }, [running, total, go, advance, want]);
 
   const pick = (index: number) => {
     if (choice === false) setChoice(true);
@@ -249,7 +272,7 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
             preload={loaded.includes(index) ? "auto" : "none"}
             loop={total === 1}
             onPlaying={() => index === 0 && setStarted(true)}
-            onEnded={() => index === activeRef.current && total > 1 && go((index + 1) % total)}
+            onEnded={() => advance(index)}
             onError={() => index === activeRef.current && total > 1 && go((index + 1) % total)}
             tabIndex={-1}
           />
@@ -297,6 +320,7 @@ export const Clip = ({
   label,
   loop = true,
   eager = false,
+  small,
   onEnded,
 }: {
   src: string;
@@ -304,10 +328,13 @@ export const Clip = ({
   label: string;
   loop?: boolean;
   eager?: boolean;
+  /** Kleinere Fassung desselben Clips für schmale Bildschirme (Querformat-Clips am Telefon). */
+  small?: string;
   onEnded?: () => void;
 }) => {
   const reduce = useReducedMotion();
   const [lite] = useState(prefersLiteMedia);
+  const roomy = useMinWidth(900);
   const box = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const [near, setNear] = useState(false);
@@ -344,7 +371,7 @@ export const Clip = ({
         <video
           ref={video}
           className={ready ? "is-ready" : undefined}
-          src={src}
+          src={small && !roomy ? small : src}
           muted
           loop={loop}
           playsInline

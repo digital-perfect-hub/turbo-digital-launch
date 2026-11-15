@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 export const Reveal = ({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) => {
@@ -89,19 +89,84 @@ export const Decrypt = ({ text, className, as: Tag = "span" }: { text: string; c
   );
 };
 
-// Fährt aus der Tiefe nach vorn: klein, leicht gekippt und unscharf, dann an seinen Platz. Für Bühnen, Karten und Fenster.
+const matches = (query: string) => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(query).matches;
+// Telefone und Tablets: Eine Unschärfe über einer großen Fläche (oft mit laufendem Video darin) kostet dort mehr, als sie bringt.
+const isSmallOrTouch = () => matches("(max-width: 899px), (pointer: coarse)");
+const hasFinePointer = () => matches("(hover: hover) and (pointer: fine)");
+
+// Fährt aus der Tiefe nach vorn: klein, leicht gekippt und (am Rechner) unscharf, dann an seinen Platz. Für Bühnen, Karten und Fenster.
 export const Depth = ({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) => {
   const reduce = useReducedMotion();
+  const [light] = useState(isSmallOrTouch);
+  // Die Ebene wird dem Browser nur angekündigt, solange die Einfahrt läuft; danach kostet sie keinen Speicher mehr.
+  const [settled, setSettled] = useState(false);
   return (
     <motion.div
       className={className}
-      style={{ transformPerspective: 1400, willChange: "transform, opacity" }}
-      initial={reduce ? false : { opacity: 0, scale: 0.86, y: 64, rotateX: 14, filter: "blur(10px)" }}
-      whileInView={{ opacity: 1, scale: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
+      style={{ transformPerspective: 1400, willChange: settled || reduce ? "auto" : "transform, opacity" }}
+      initial={reduce ? false : light ? { opacity: 0, scale: 0.9, y: 48, rotateX: 12 } : { opacity: 0, scale: 0.86, y: 64, rotateX: 14, filter: "blur(10px)" }}
+      whileInView={light ? { opacity: 1, scale: 1, y: 0, rotateX: 0 } : { opacity: 1, scale: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
       viewport={{ once: true, margin: "0px 0px -10% 0px" }}
-      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay }}
+      transition={{ duration: light ? 0.9 : 1.1, ease: [0.16, 1, 0.3, 1], delay }}
+      onAnimationComplete={() => setSettled(true)}
     >
       {children}
     </motion.div>
+  );
+};
+
+/**
+ * Neigt seinen Inhalt im Raum zum Mauszeiger hin und legt einen Lichtschein darüber. Nur mit Maus und ohne reduzierte
+ * Bewegung; sonst bleibt der Inhalt, wie er ist. Die Werte gehen als CSS-Variablen direkt ans Element, ohne neu zu rendern.
+ */
+export const Tilt = ({ children, className, max = 8 }: { children: ReactNode; className?: string; max?: number }) => {
+  const reduce = useReducedMotion();
+  const [fine] = useState(hasFinePointer);
+  const ref = useRef<HTMLDivElement>(null);
+  const box = useRef<DOMRect | null>(null);
+  const frame = useRef(0);
+  const active = fine && !reduce;
+
+  useEffect(() => () => window.cancelAnimationFrame(frame.current), []);
+
+  const enter = () => {
+    box.current = ref.current?.getBoundingClientRect() ?? null;
+  };
+  const move = (event: PointerEvent<HTMLDivElement>) => {
+    const node = ref.current;
+    const rect = box.current;
+    if (!node || !rect || event.pointerType !== "mouse") return;
+    const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+    window.cancelAnimationFrame(frame.current);
+    frame.current = window.requestAnimationFrame(() => {
+      node.style.setProperty("--pv-ry", `${((x - 0.5) * 2 * max).toFixed(2)}deg`);
+      node.style.setProperty("--pv-rx", `${((0.5 - y) * 2 * max).toFixed(2)}deg`);
+      node.style.setProperty("--pv-gx", `${(x * 100).toFixed(1)}%`);
+      node.style.setProperty("--pv-gy", `${(y * 100).toFixed(1)}%`);
+      node.classList.add("is-tilting");
+    });
+  };
+  const leave = () => {
+    const node = ref.current;
+    window.cancelAnimationFrame(frame.current);
+    box.current = null;
+    if (!node) return;
+    node.classList.remove("is-tilting");
+    node.style.removeProperty("--pv-ry");
+    node.style.removeProperty("--pv-rx");
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={`pv-tilt${className ? ` ${className}` : ""}`}
+      onPointerEnter={active ? enter : undefined}
+      onPointerMove={active ? move : undefined}
+      onPointerLeave={active ? leave : undefined}
+    >
+      {children}
+      <span className="pv-tilt__sheen" aria-hidden="true" />
+    </div>
   );
 };

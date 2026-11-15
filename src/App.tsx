@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useMemo, type ComponentType, type ReactNode } from "react";
+import { Suspense, useLayoutEffect, useMemo, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,8 @@ import { AuthProvider } from "./hooks/useAuth";
 import { SiteProvider, useSiteContext } from "./context/SiteContext";
 import { useGlobalTheme } from "./hooks/useGlobalTheme";
 import { useSiteSettings } from "./hooks/useSiteSettings";
+import { lazyPage } from "./lib/lazyPage";
+import { isHomeFastPath, isHomeHostname } from "./lib/site";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -22,35 +24,6 @@ import { LoadingScreen } from "./components/ui/LoadingScreen";
 // gerendert werden. Alle übrigen Routen (inkl. des gesamten Admin-Panels) werden
 // per Code-Splitting nachgeladen, damit Erstbesucher der Startseite nicht das
 // komplette Admin-Bundle (Rich-Text-Editor, Charts, Drag&Drop, Stripe) mitladen.
-// Eine Unterseite wird als eigene Datei nachgeladen. Nach einem neuen Deployment heißt diese Datei anders: Ein Tab mit dem alten
-// Stand findet sie nicht mehr, und die Seite bliebe leer. Dann wird einmal neu geladen (der neue Stand kennt die neuen Namen);
-// schlägt es danach wieder fehl, wird der Fehler nicht verschluckt.
-const RELOAD_FLAG = "dp:chunk-reload";
-const flag = (set?: boolean): boolean => {
-  try {
-    if (set === true) window.sessionStorage.setItem(RELOAD_FLAG, "1");
-    else if (set === false) window.sessionStorage.removeItem(RELOAD_FLAG);
-    return window.sessionStorage.getItem(RELOAD_FLAG) === "1";
-  } catch {
-    return true;
-  }
-};
-export const lazyPage = <T extends ComponentType<never>>(load: () => Promise<{ default: T }>) =>
-  lazy(() =>
-    load().then(
-      (module) => {
-        flag(false);
-        return module;
-      },
-      (error: unknown) => {
-        if (flag()) throw error;
-        flag(true);
-        window.location.reload();
-        return new Promise<{ default: T }>(() => undefined);
-      },
-    ),
-  );
-
 const Login = lazyPage(() => import("./pages/Login"));
 const SetPassword = lazyPage(() => import("./pages/SetPassword"));
 const Impressum = lazyPage(() => import("./pages/Impressum"));
@@ -149,6 +122,10 @@ const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
   const shouldShowBootLoader = isAdminRoute
     ? isSiteLoading || isThemeLoading || isSettingsLoading
     : isPublicBootstrapLoading || (Boolean(activeSiteId) && (isThemeLoading || isSettingsLoading));
+  // Eigene Site, Seite mit Inhalt aus dem Code: Die Seite wird schon aufgebaut (und ihr Film geladen), während Design und
+  // Einstellungen noch unterwegs sind. Sichtbar wird sie erst danach: Bis dahin liegt das Ladebild aus index.html darüber, und
+  // steht in den Einstellungen der Wartungsmodus, erscheint der Wartungsbildschirm, ohne dass die Seite je zu sehen war.
+  const canRenderUnderBoot = shouldShowBootLoader && !isAdminRoute && !isPublicBootstrapLoading && isHomeHostname(hostname) && isHomeFastPath(location.pathname, location.search) && typeof document !== "undefined" && document.getElementById(APP_BOOT_ID) !== null;
   const shouldShowDomainNotFound = !isAdminRoute && !isSiteLoading && !activeSiteId && !isLocalDevelopmentHost && !resolvedSite;
 
   useLayoutEffect(() => {
@@ -170,7 +147,7 @@ const ThemeBootstrap = ({ children }: { children: ReactNode }) => {
     return <NotFound />;
   }
 
-  if (shouldShowBootLoader) {
+  if (shouldShowBootLoader && !canRenderUnderBoot) {
     return (
       <LoadingScreen
         heading={activeSiteId ? theme?.loader_heading || loadingScreenConfig?.heading : "Bitte kurz warten"}

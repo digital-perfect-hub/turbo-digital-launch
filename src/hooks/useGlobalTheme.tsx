@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { takeBootData } from "@/lib/bootData";
 import { supabase } from "@/integrations/supabase/client";
 import { buildRenderImageUrl } from "@/lib/image";
 import { useSiteContext } from "@/context/SiteContext";
@@ -114,6 +115,8 @@ export const useGlobalTheme = () => {
     queryKey: ["global_settings", siteId],
     enabled: Boolean(siteId),
     queryFn: async () => {
+      const early = siteId ? await takeBootData<Array<Partial<GlobalThemeSettings>>>("theme", siteId) : undefined;
+      if (Array.isArray(early)) return early[0] ?? null;
       const { data, error } = await supabase.from("global_settings").select("*").eq("site_id", siteId).limit(1).maybeSingle();
       if (error) throw error;
       return (data as unknown as Partial<GlobalThemeSettings> | null) ?? null;

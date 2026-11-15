@@ -427,3 +427,45 @@ body:has(.pm) .cookie-reopen { display: none; }
 @media (min-width: 640px) { .pv-pricing .pm-cost__figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .pv-plans { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .pv-pricing .pm-cost__figures { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ---------- Raum: Neigung zur Maus, Kartenstapel mit Tiefe, Bilderring ---------- */
+.pv-tilt { position: relative; transform-style: preserve-3d; transform: perspective(1100px) rotateX(var(--pv-rx, 0deg)) rotateY(var(--pv-ry, 0deg)); transition: transform 0.6s var(--pm-ease); }
+.pv-tilt.is-tilting { transition: transform 0.09s linear; }
+.pv-tilt__sheen { position: absolute; inset: 0; z-index: 6; border-radius: var(--pv-tilt-radius, 0); pointer-events: none; opacity: 0; background: radial-gradient(520px circle at var(--pv-gx, 50%) var(--pv-gy, 0%), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%); mix-blend-mode: screen; transition: opacity 0.35s var(--pm-ease); transform: translateZ(1px); }
+.pv-tilt.is-tilting .pv-tilt__sheen { opacity: 1; }
+.pv-tilt--card { --pv-tilt-radius: 8px; height: 100%; }
+.pv-tilt--card .pm-project:hover { transform: translateZ(18px); }
+.pv-tilt--stage { --pv-tilt-radius: clamp(20px, 3vw, 36px); }
+
+.pv-gal__deck { position: absolute; inset: 0; --pv-tilt-radius: 28px; }
+.pv-gal__ghost--1 { transform: translate3d(12%, 0, -70px) rotateY(-9deg) rotate(3deg); }
+.pv-gal__ghost--2 { transform: translate3d(24%, 0, -150px) rotateY(-15deg) rotate(6deg); opacity: 0.6; }
+.pv-gal__deck .pv-tilt__sheen { transform: translateZ(2px); }
+/* Ohne Maus (Telefon, Tablet) pendelt der Stapel von selbst leicht, damit die Tiefe sichtbar ist; nur solange er im Bild ist. */
+@media (hover: none), (pointer: coarse) {
+  .pv-gal__deck { animation: pv-deck-float 9s ease-in-out infinite alternate; animation-play-state: paused; }
+  .pv-gal__stage.is-onscreen .pv-gal__deck { animation-play-state: running; }
+}
+@keyframes pv-deck-float {
+  from { transform: perspective(1100px) rotateX(1.5deg) rotateY(-7deg); }
+  to { transform: perspective(1100px) rotateX(-1.5deg) rotateY(7deg); }
+}
+
+.pv-ring { position: relative; margin-top: clamp(20px, 6vw, 96px); }
+.pv-ring__scene { display: grid; place-items: center; height: clamp(250px, 44vw, 500px); perspective: 1100px; perspective-origin: 50% 40%; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%); }
+.pv-ring__track { --pv-ring-w: clamp(104px, 14vw, 208px); --pv-ring-r: calc((var(--pv-ring-w) + 14px) * var(--pv-ring-k, 2.5)); position: relative; width: var(--pv-ring-w); aspect-ratio: 9 / 16; transform-style: preserve-3d; transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(0deg); animation: pv-ring-spin 70s linear infinite; animation-play-state: paused; }
+.pv-ring.is-live .pv-ring__track { animation-play-state: running; }
+.pv-ring__card { position: absolute; inset: 0; overflow: hidden; border: 1px solid var(--pm-line-strong); border-radius: 16px; background: #0b1222; box-shadow: 0 30px 60px -30px #000; transform: rotateY(var(--pv-ring-a, 0deg)) translateZ(var(--pv-ring-r)); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.pv-ring__card img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pv-ring__note { margin: clamp(18px, 3vw, 30px) auto 0; padding-inline: var(--pm-gutter); max-width: 60ch; text-align: center; }
+@keyframes pv-ring-spin {
+  from { transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(0deg); }
+  to { transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(-360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-ring__track, .pv-gal__deck { animation: none; }
+  .pv-tilt, .pv-tilt.is-tilting { transition: none; }
+}
+
+/* Platz für die Abschnitte unter dem Hero, bis sie aufgebaut sind (ein Augenblick nach dem ersten Bild). */
+.pv-rest-hold { min-height: 300vh; }

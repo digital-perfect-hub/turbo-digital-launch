@@ -14,6 +14,7 @@ import {
   DEFAULT_SITE_ID,
   getBrowserHostname,
   getStoredAdminSiteId,
+  isHomeHostname,
   normalizeHostname,
   setStoredAdminSiteId,
   type SiteRecord,
@@ -108,6 +109,8 @@ export const SiteProvider = ({ children }: { children: ReactNode }) => {
 
   const resolveSiteQuery = useQuery({
     queryKey: ["site-resolve", hostname],
+    // Auf den eigenen Adressen gilt die Standard-Site als Ausgangswert und wird sofort gegen die Datenbank geprüft.
+    ...(isHomeHostname(hostname) ? { initialData: createDefaultSiteRecord(hostname), initialDataUpdatedAt: 0 } : {}),
     queryFn: async (): Promise<SiteRecord | null> => {
       const { data, error } = await supabase.rpc("resolve_site_by_hostname", {
         p_hostname: hostname,

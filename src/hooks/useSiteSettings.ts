@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { takeBootData } from "@/lib/bootData";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
@@ -558,6 +559,8 @@ export const useSiteSettings = () => {
     queryKey: ["site_settings", siteId],
     enabled: Boolean(siteId),
     queryFn: async () => {
+      const early = await takeBootData<Array<{ key: string; value: unknown }>>("settings", siteId);
+      if (Array.isArray(early)) return early;
       const { data, error } = await supabase.from("site_settings").select("key, value").eq("site_id", siteId);
       if (error) throw error;
       return data;

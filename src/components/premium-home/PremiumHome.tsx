@@ -1,9 +1,9 @@
-import { useRef } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
 import { FilmStage, useMinWidth } from "./media";
-import { Depth, Reveal } from "./motion";
+import { Depth, Reveal, Tilt } from "./motion";
 import { OpsServices } from "./OpsSection";
 import { PricingSection, usePricing } from "./Pricing";
 import { StudioSteps } from "./StudioSteps";
@@ -147,6 +147,7 @@ export const ProjectsSection = ({ more = true }: { more?: boolean }) => (
         {PROJECTS.map((project, index) => (
           <li key={project.name}>
             <Depth delay={index * 0.07}>
+              <Tilt className="pv-tilt--card" max={7}>
               <a className="pm-project" href={project.href} target="_blank" rel="noopener noreferrer">
                 <span className="pm-project__chrome" aria-hidden="true"><i /><i /><i /><b>{project.host}</b></span>
                 <span className="pm-project__shot">
@@ -158,6 +159,7 @@ export const ProjectsSection = ({ more = true }: { more?: boolean }) => (
                   <em>{project.host} <ArrowUpRight size={14} aria-hidden="true" /></em>
                 </span>
               </a>
+              </Tilt>
             </Depth>
           </li>
         ))}
@@ -182,19 +184,73 @@ export const FounderSection = () => (
   </section>
 );
 
-const PremiumHome = () => (
-  <PremiumShell>
-    <Hero />
-    <Ticker />
-    <StudioSteps />
-    <CreatorGallery />
-    <FreeWorlds />
-    <CostSection />
-    <OpsServices />
-    <ProjectsSection />
-    <FounderSection />
-    <PremiumContact />
-  </PremiumShell>
-);
+// Erst der Hero, dann der Rest. Die ganze Seite auf einmal aufzubauen hält ein Telefon über eine Sekunde lang fest, und so lange
+// startet auch der Film nicht. Der Rest folgt gleich nach dem ersten Bild als unterbrechbare Arbeit; bis dahin hält ein Platzhalter
+// die Höhe, damit die Fußzeile nicht unter dem Hero aufblitzt.
+const PremiumHome = () => {
+  const [rest, setRest] = useState(false);
+  useEffect(() => {
+    let timer = 0;
+    const frame = window.requestAnimationFrame(() => {
+      timer = window.setTimeout(() => startTransition(() => setRest(true)), 0);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, []);
+  // Ein Link auf einen Abschnitt (zum Beispiel /#kontakt) findet sein Ziel erst, wenn der Rest steht. Bilder und Abschnitte darüber
+  // bekommen ihre Höhe erst nach und nach: Das Ziel wird nachgeführt, bis die Seite ruhig ist oder die Person selbst scrollt.
+  useEffect(() => {
+    if (!rest || !window.location.hash) return;
+    let id = "";
+    try {
+      id = decodeURIComponent(window.location.hash.slice(1));
+    } catch {
+      return;
+    }
+    const target = id ? document.getElementById(id) : null;
+    if (!target) return;
+    let following = true;
+    const stop = () => {
+      following = false;
+    };
+    const align = () => {
+      if (following) target.scrollIntoView({ block: "start", behavior: "instant" });
+    };
+    align();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(align);
+    observer?.observe(document.body);
+    const events = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+    events.forEach((name) => window.addEventListener(name, stop, { once: true, passive: true }));
+    const timer = window.setTimeout(stop, 4000);
+    return () => {
+      stop();
+      observer?.disconnect();
+      window.clearTimeout(timer);
+      events.forEach((name) => window.removeEventListener(name, stop));
+    };
+  }, [rest]);
+  return (
+    <PremiumShell>
+      <Hero />
+      <Ticker />
+      {rest ? (
+        <>
+          <StudioSteps />
+          <CreatorGallery />
+          <FreeWorlds />
+          <CostSection />
+          <OpsServices />
+          <ProjectsSection />
+          <FounderSection />
+          <PremiumContact />
+        </>
+      ) : (
+        <div className="pv-rest-hold" aria-hidden="true" />
+      )}
+    </PremiumShell>
+  );
+};
 
 export default PremiumHome;
