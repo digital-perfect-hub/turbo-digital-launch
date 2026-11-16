@@ -35,9 +35,7 @@
 .pv-hero__film { position: absolute; inset: 0; z-index: 0; overflow: hidden; transform-origin: 50% 70%; will-change: transform; }
 .pv-stage, .pv-stage__media { position: absolute; inset: 0; }
 .pv-stage__poster, .pv-stage__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.pv-stage__video { opacity: 0; }
-.pv-stage__video.is-previous { opacity: 1; z-index: 1; }
-.pv-stage__video.is-active { opacity: 1; z-index: 2; transition: opacity 0.9s linear; }
+.pv-stage__video { z-index: 1; }
 .pv-stage.is-blocked .pv-stage__video { opacity: 0; }
 .pv-stage.is-blocked .pv-stage__poster { animation: pm-kenburns 14s ease-in-out infinite alternate; }
 .pv-stage__media::after { content: ""; position: absolute; inset: 0; z-index: 3; background: linear-gradient(180deg, rgba(7, 11, 21, 0.72) 0, rgba(7, 11, 21, 0) 24%, rgba(7, 11, 21, 0.1) 42%, rgba(7, 11, 21, 0.9) 76%, #070b15 100%); }
@@ -308,7 +306,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pv-stage.is-blocked .pv-stage__poster, .pv-d-playhead, .pv-world__prompt i, .pv-step__timer { animation: none; }
-  .pv-stage__video.is-active { transition: none; }
 }
 
 /* ───── Feinschliff (12.11.2026) ───── */
@@ -456,8 +453,23 @@ body:has(.pm) .cookie-reopen { display: none; }
 .pv-ring__track { --pv-ring-w: clamp(104px, 14vw, 208px); --pv-ring-r: calc((var(--pv-ring-w) + 14px) * var(--pv-ring-k, 2.5)); position: relative; width: var(--pv-ring-w); aspect-ratio: 9 / 16; transform-style: preserve-3d; transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(0deg); animation: pv-ring-spin 70s linear infinite; animation-play-state: paused; }
 .pv-ring.is-live .pv-ring__track { animation-play-state: running; }
 .pv-ring__card { position: absolute; inset: 0; overflow: hidden; border: 1px solid var(--pm-line-strong); border-radius: 16px; background: #0b1222; box-shadow: 0 30px 60px -30px #000; transform: rotateY(var(--pv-ring-a, 0deg)) translateZ(var(--pv-ring-r)); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.pv-ring__card img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.pv-ring__note { margin: clamp(18px, 3vw, 30px) auto 0; padding-inline: var(--pm-gutter); max-width: 60ch; text-align: center; }
+.pv-ring__card img, .pv-ring__card video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Das Video einer Karte liegt über ihrem Standbild und wird erst sichtbar, wenn es wirklich läuft. */
+.pv-ring__media { position: absolute; inset: 0; }
+.pv-ring__card video { opacity: 0; transition: opacity 0.5s var(--pm-ease); }
+.pv-ring__card video.is-ready { opacity: 1; }
+.pv-ring__name { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 8px 9px; background: linear-gradient(transparent, rgba(7, 11, 21, 0.88)); font: 600 clamp(9.5px, 1.05vw, 13px)/1.15 var(--pm-body); letter-spacing: 0.01em; color: #fff; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pv-ring__line { margin: clamp(18px, 3vw, 30px) auto 0; padding-inline: var(--pm-gutter); font: 800 clamp(1.35rem, 3.2vw, 2.3rem)/1.05 var(--pm-display); letter-spacing: 0.02em; text-transform: uppercase; text-align: center; color: var(--pm-text); text-wrap: balance; }
+.pv-ring__note { margin: 10px auto 0; padding-inline: var(--pm-gutter); max-width: 60ch; text-align: center; }
+
+/* Die Karte der Galerie lässt sich seitlich wischen: Senkrechtes Scrollen bleibt beim Browser, die Karte selbst wird nicht
+   markiert oder als Bild gezogen. */
+.pv-gal__card { touch-action: pan-y; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pv-gal__card:active { cursor: grabbing; }
+.pv-gal__card img, .pv-gal__card video { -webkit-user-drag: none; pointer-events: none; }
+
+/* Lehnt ein iPhone den Start ab, legt Safari einen eigenen Abspielknopf über das Video. Die Seite hat ihren eigenen. */
+.pm video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
 @keyframes pv-ring-spin {
   from { transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(0deg); }
   to { transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(-360deg); }

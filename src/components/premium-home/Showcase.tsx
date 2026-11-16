@@ -1,39 +1,90 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "framer-motion";
 import { ArrowLeft, ArrowRight, Film as FilmIcon, Image as ImageIcon, ImagePlay, Type } from "lucide-react";
 import { Depth, Reveal, Tilt } from "./motion";
-import { Clip, MediaToggle, useMediaChoice, useOnScreen } from "./media";
+import { Clip, MediaToggle, prefersLiteMedia, useAutoPlay, useMediaChoice, useOnScreen, usePooledVideo } from "./media";
 import { requestInterest } from "./AppShell";
-import { AI_NOTE, CREATORS, WORLDS } from "./content";
+import { AI_NOTE, CREATORS, WORLDS, type Scene } from "./content";
 
 // Alle Szenen aller Creator, reihum gemischt, damit im Ring nie zwei Bilder derselben Figur nebeneinanderstehen.
-const RING = (() => {
-  const lists = CREATORS.map((creator) => creator.scenes.map((scene) => ({ id: `${creator.id}-${scene.id}`, thumb: scene.thumb })));
+type RingItem = { id: string; thumb: string; name: string; clip?: string };
+const RING: RingItem[] = (() => {
+  const lists = CREATORS.map((creator) => creator.scenes.map((scene: Scene): RingItem => ({ id: `${creator.id}-${scene.id}`, thumb: scene.thumb, name: creator.name, clip: scene.ring })));
   const longest = Math.max(...lists.map((list) => list.length));
   return Array.from({ length: longest }, (_, row) => lists.flatMap((list) => (list[row] ? [list[row]] : []))).flat();
 })();
 
+// Eine Umdrehung des Rings, gleich der Dauer von pv-ring-spin in premium-v5.css.
+const RING_TURN_MS = 70000;
+
+// Eine Karte im Ring: Standbild, Name der Figur und, bei Videoszenen, eine sehr kleine Fassung des Videos (240 × 426). Das
+// Video wird erst eingehängt, wenn die Karte zum ersten Mal vorn steht, und läuft nur, solange sie vorn ist.
+const RingCard = ({ item, angle, live }: { item: RingItem; angle: number; live: boolean }) => {
+  const host = useRef<HTMLSpanElement>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    if (live) setSeen(true);
+  }, [live]);
+  const [video, attached] = usePooledVideo(host, seen ? item.clip : null);
+  useEffect(() => {
+    const node = video.current;
+    if (!node) return;
+    node.loop = true;
+    node.preload = "auto";
+  }, [video, attached]);
+  useAutoPlay(video, attached && live, attached, true);
+  return (
+    <span className="pv-ring__card" style={{ "--pv-ring-a": `${angle.toFixed(3)}deg` } as CSSProperties}>
+      <img src={item.thumb} alt="" width={240} height={427} loading="lazy" decoding="async" />
+      <span className="pv-ring__media" ref={host} />
+      <span className="pv-ring__name">{item.name}</span>
+    </span>
+  );
+};
+
 /**
- * Bilderring: alle Szenen der Galerie auf einem Zylinder, der sich langsam dreht. Reines CSS (eine Drehung der ganzen
- * Spur), gedreht wird nur, solange der Ring im Bild ist; bei reduzierter Bewegung steht er. Er zeigt nichts Neues, sondern
- * dieselben Szenen noch einmal als Ganzes, deshalb ist er für Vorleseprogramme ausgeblendet und nur der Satz darunter zählt.
+ * Bilderring: alle Szenen der Galerie auf einem Zylinder, der sich langsam dreht. Die Drehung ist reines CSS (eine Drehung
+ * der ganzen Spur) und läuft nur, solange der Ring im Bild ist; bei reduzierter Bewegung steht er. Die Karten, die gerade
+ * vorn stehen, spielen ihr Video, höchstens drei zugleich und in einer sehr kleinen Fassung. Er zeigt nichts Neues, sondern
+ * dieselben Szenen noch einmal als Ganzes, deshalb ist er für Vorleseprogramme ausgeblendet und nur der Text darunter zählt.
  */
 export const SceneRing = () => {
+  const reduce = useReducedMotion();
+  const [lite] = useState(prefersLiteMedia);
+  const choice = useMediaChoice();
   const [ref, onScreen] = useOnScreen<HTMLDivElement>(0.05, "160px 0px");
+  const track = useRef<HTMLDivElement>(null);
+  const [front, setFront] = useState(0);
   const count = RING.length;
   const spacing = 1 / (2 * Math.tan(Math.PI / count));
+  const playable = onScreen && (choice ?? (!reduce && !lite));
+
+  // Welche Karte vorn steht, folgt aus dem Stand der Drehung.
+  useEffect(() => {
+    if (!playable) return;
+    const read = () => {
+      const animation = track.current?.getAnimations?.()[0];
+      const time = Number(animation?.currentTime ?? 0);
+      const turn = Number.isFinite(time) ? (time % RING_TURN_MS) / RING_TURN_MS : 0;
+      setFront(Math.round(turn * count) % count);
+    };
+    read();
+    const timer = window.setInterval(read, 500);
+    return () => window.clearInterval(timer);
+  }, [playable, count]);
+
   return (
     <div className={`pv-ring${onScreen ? " is-live" : ""}`} ref={ref}>
       <div className="pv-ring__scene" aria-hidden="true">
-        <div className="pv-ring__track" style={{ "--pv-ring-k": spacing.toFixed(4) } as CSSProperties}>
-          {RING.map((item, position) => (
-            <span key={item.id} className="pv-ring__card" style={{ "--pv-ring-a": `${((360 / count) * position).toFixed(3)}deg` } as CSSProperties}>
-              <img src={item.thumb} alt="" width={240} height={427} loading="lazy" decoding="async" />
-            </span>
-          ))}
+        <div className="pv-ring__track" ref={track} style={{ "--pv-ring-k": spacing.toFixed(4) } as CSSProperties}>
+          {RING.map((item, position) => {
+            const away = Math.abs(position - front);
+            return <RingCard key={item.id} item={item} angle={(360 / count) * position} live={playable && Math.min(away, count - away) <= 1} />;
+          })}
         </div>
       </div>
-      <p className="pm-caption pv-ring__note">{`${CREATORS.length} Creator, ${count} Szenen. Jedes Bild in diesem Ring ist in Creator Studio entstanden.`}</p>
+      <p className="pv-ring__line">{`${CREATORS.length} Creator, ${count} Szenen, ein Studio.`}</p>
+      <p className="pm-caption pv-ring__note">Alles in diesem Ring ist in Creator Studio entstanden.</p>
     </div>
   );
 };
@@ -41,20 +92,31 @@ export const SceneRing = () => {
 /**
  * Creator-Galerie: vier Figuren aus unserem eigenen Studio. Oben wählt man die Figur, die Bühne zeigt ihre Szenen
  * als Kartenstapel (die nächste Szene liegt schon dahinter), rechts stehen alle Szenen zum Anklicken. Videos laufen
- * stumm und schalten am Ende zur nächsten Szene weiter, Bilder nach ein paar Sekunden.
+ * stumm und schalten am Ende zur nächsten Szene weiter, Bilder nach ein paar Sekunden. Die Karte lässt sich mit dem Finger
+ * (oder der Maus) nach links und rechts wischen; die Pfeile tun dasselbe.
  */
+// Die Karte kommt aus der Richtung, in die geblättert wird, und geht zur anderen Seite hinaus.
+const CARD_MOVES = {
+  enter: (direction: number) => ({ opacity: 0, scale: 0.9, x: 56 * direction, rotateY: -16 * direction }),
+  shown: { opacity: 1, scale: 1, x: 0, rotateY: 0 },
+  leave: (direction: number) => ({ opacity: 0, scale: 1.05, x: -48 * direction, rotateY: 10 * direction }),
+};
 export const CreatorGallery = () => {
   const reduce = useReducedMotion();
   const [who, setWho] = useState(0);
   const [index, setIndex] = useState(0);
   const [auto, setAuto] = useState(true);
+  const [direction, setDirection] = useState(1);
   const [stageRef, onScreen] = useOnScreen<HTMLDivElement>(0.4);
 
   const creator = CREATORS[who];
   const scenes = creator.scenes;
   const total = scenes.length;
   const current = scenes[index % total];
-  const next = () => setIndex((value) => (value + 1) % total);
+  const next = () => {
+    setDirection(1);
+    setIndex((value) => (value + 1) % total);
+  };
   const paused = useMediaChoice() === false;
   // Ein Clip, der gerade ausgeblendet wird, kann sein Ende noch melden: Weitergeschaltet wird nur, wenn die Szene, die
   // zu Ende ging, noch die gezeigte ist. Sonst würde nach einem Wechsel eine Szene übersprungen.
@@ -74,7 +136,7 @@ export const CreatorGallery = () => {
     tabs.current[target]?.focus();
   };
 
-  // Bilder bleiben fünf Sekunden stehen, Videos melden ihr Ende selbst.
+  // Bilder bleiben fünf Sekunden stehen, Videos melden ihr Ende selbst (auch wenn der Browser sie nicht anlaufen lässt, siehe Clip).
   useEffect(() => {
     if (!auto || !onScreen || reduce || paused || current.kind !== "bild") return;
     const timer = window.setTimeout(next, 5000);
@@ -83,15 +145,22 @@ export const CreatorGallery = () => {
   }, [auto, onScreen, reduce, paused, current.id]);
 
   const pickCreator = (value: number) => {
+    setDirection(value < who ? -1 : 1);
     setWho(value);
     setIndex(0);
     setAuto(true);
   };
-  const pickScene = (value: number) => {
+  const pickScene = (value: number, towards = value < index % total ? -1 : 1) => {
+    setDirection(towards);
     setAuto(false);
     setIndex(value);
   };
-  const step = (delta: number) => pickScene((index + delta + total) % total);
+  const step = (delta: number) => pickScene((index + delta + total) % total, delta);
+  // Wischen: weit genug oder schnell genug gezogen, blättert die Karte; sonst federt sie zurück.
+  const onSwipe = (_event: unknown, info: PanInfo) => {
+    if (info.offset.x < -56 || info.velocity.x < -420) step(1);
+    else if (info.offset.x > 56 || info.velocity.x > 420) step(-1);
+  };
 
   return (
     <section id="creator" className="pm-section pv-gal" aria-labelledby="pv-gal-title">
@@ -145,20 +214,28 @@ export const CreatorGallery = () => {
               <span className="pv-gal__ghost pv-gal__ghost--1" aria-hidden="true">
                 <img src={scenes[(index + 1) % total].poster} alt="" loading="lazy" decoding="async" />
               </span>
-              <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence mode="popLayout" initial={false} custom={direction}>
                 <motion.figure
                   key={`${creator.id}-${current.id}`}
                   className="pv-gal__card"
                   style={{ transformPerspective: 1200 }}
-                  initial={reduce ? false : { opacity: 0, scale: 0.9, x: 56, rotateY: -16 }}
-                  animate={{ opacity: 1, scale: 1, x: 0, rotateY: 0 }}
-                  exit={reduce ? undefined : { opacity: 0, scale: 1.05, x: -48, rotateY: 10 }}
+                  custom={direction}
+                  variants={CARD_MOVES}
+                  initial={reduce ? false : "enter"}
+                  animate="shown"
+                  exit={reduce ? undefined : "leave"}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  drag={total > 1 ? "x" : false}
+                  dragDirectionLock
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.55}
+                  dragSnapToOrigin
+                  onDragEnd={onSwipe}
                 >
                   {current.kind === "video" ? (
                     <Clip src={current.src} poster={current.poster} label={`${creator.name}: ${current.title}`} loop={!auto} onEnded={auto ? endedOn(`${creator.id}:${current.id}`) : undefined} />
                   ) : (
-                    <div className="pv-clip"><img src={current.src} alt={`${creator.name}: ${current.title}`} loading="lazy" decoding="async" /></div>
+                    <div className="pv-clip"><img src={current.src} alt={`${creator.name}: ${current.title}`} loading="lazy" decoding="async" draggable={false} /></div>
                   )}
                   <figcaption>
                     <span>{current.kind === "video" ? <FilmIcon size={12} aria-hidden="true" /> : <ImageIcon size={12} aria-hidden="true" />}{current.kind === "video" ? "Video" : "Bild"}</span>

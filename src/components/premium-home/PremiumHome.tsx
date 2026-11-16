@@ -1,8 +1,8 @@
-import { startTransition, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, startTransition, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
-import { FilmStage, useMinWidth } from "./media";
+import { FilmStage, VIDEO_TEST, useMinWidth } from "./media";
 import { Depth, Reveal, Tilt } from "./motion";
 import { OpsServices } from "./OpsSection";
 import { PricingSection, usePricing } from "./Pricing";
@@ -11,6 +11,9 @@ import { CreatorGallery, FreeWorlds } from "./Showcase";
 import { requestInterest } from "./AppShell";
 import { PremiumContact, PremiumShell } from "./Shell";
 import { AI_NOTE, COST_BAND, COST_POINTS, FOUNDER, HERO_TALL, HERO_WIDE, MODEL_FAMILIES, PROJECTS } from "./content";
+
+// Prüfansicht für ein echtes Gerät, nur mit ?videotest in der Adresse geladen.
+const VideoProbe = lazy(() => import("./VideoProbe"));
 
 const QUICK = ["Creator erstellen", "Bilder und Videos machen", "Schneiden, planen, posten"] as const;
 
@@ -29,7 +32,7 @@ const Hero = () => {
   return (
     <section ref={ref} className="pv-hero" aria-labelledby="pm-h1">
       <motion.div className="pv-hero__film" style={reduce ? undefined : { scale, borderRadius: radius }}>
-        <FilmStage key={wide ? "wide" : "tall"} films={wide ? HERO_WIDE : HERO_TALL} note={AI_NOTE} />
+        <FilmStage key={wide ? "wide" : "tall"} reel={wide ? HERO_WIDE : HERO_TALL} note={AI_NOTE} />
       </motion.div>
       <motion.div className="pm-wrap pv-hero__copy" style={reduce ? undefined : { y: copyY, opacity: copyFade }}>
         <p className="pm-eyebrow">Creator Studio von Digital-Perfect</p>
@@ -233,6 +236,7 @@ const PremiumHome = () => {
   }, [rest]);
   return (
     <PremiumShell>
+      {VIDEO_TEST ? <Suspense fallback={null}><VideoProbe /></Suspense> : null}
       <Hero />
       <Ticker />
       {rest ? (

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
-import type { Film } from "./content";
+import type { Reel } from "./content";
 
 // Bewegte Medien sparen: bei aktivierter Datenspar-Funktion oder sehr langsamer Verbindung bleiben die Standbilder stehen.
 export const prefersLiteMedia = () => {
@@ -10,7 +10,47 @@ export const prefersLiteMedia = () => {
   return Boolean(connection?.saveData) || connection?.effectiveType === "slow-2g" || connection?.effectiveType === "2g";
 };
 
-// Autoplay auf Telefonen: iOS und Android starten ein Video nur von selbst, wenn es stumm ist und inline läuft.
+/* ───── Abspielen: eine Stelle für alle Videos der Seite ─────
+ *
+ * Ein Telefon startet ein Video nur von selbst, wenn es stumm ist und inline läuft, und manche gar nicht: im
+ * Stromsparmodus, im Datensparmodus oder wenn Autoplay am Gerät abgeschaltet ist, lehnt der Browser jeden Start ab, der
+ * nicht während einer Berührung kommt. Deshalb läuft jeder Start über `start`: Wird er abgelehnt, merkt sich die Seite
+ * das Video und startet es bei der nächsten Berührung, noch während diese läuft (nur dann lässt der Browser es zu).
+ * Dieselbe Berührung stößt auch die Videos an, die schon da sind, aber noch nicht laufen sollen: Ein Video, das einmal
+ * während einer Berührung gestartet wurde, darf danach von selbst anlaufen. Clips und Ringkarten nehmen ihr Video-Element
+ * deshalb aus einem Vorrat und geben es zurück: Nach der ersten Berührung liegen dort freie Elemente, und jeder spätere
+ * Clip läuft ohne weitere Berührung an, auch wenn die Galerie von selbst weiterschaltet. Das Attribut `autoplay` wird bewusst nicht
+ * gesetzt: Safari hält solche Videos nach eigenen Regeln an und setzt sie fort, und das verträgt sich nicht mit einer
+ * Steuerung von außen.
+ */
+const wanting = new Set<HTMLVideoElement>(); // sollen gerade laufen
+const refused = new Set<HTMLVideoElement>(); // Start vom Browser abgelehnt, warten auf eine Berührung
+const known = new Set<HTMLVideoElement>(); // alle Videos, die es gerade gibt
+const freed = new WeakSet<HTMLVideoElement>(); // schon einmal während einer Berührung gestartet
+const quiet = new WeakSet<HTMLVideoElement>(); // Beiwerk (Ringkarten): eine Ablehnung ändert die Anzeige der Seite nicht
+const idle: HTMLVideoElement[] = []; // Vorrat: freie Elemente ohne Quelle
+const IDLE_TARGET = 4;
+const watchers = new Set<() => void>();
+let everRefused = false;
+let unlockedAt = -1e9;
+let listening = false;
+
+const emit = () => watchers.forEach((watcher) => watcher());
+const subscribe = (watcher: () => void) => {
+  watchers.add(watcher);
+  return () => void watchers.delete(watcher);
+};
+
+// Protokoll für die Prüfansicht am Gerät (Adresse mit ?videotest); ohne sie wird nichts aufgezeichnet.
+export const VIDEO_TEST = typeof window !== "undefined" && /[?&]videotest\b/.test(window.location.search);
+export const playbackLog: string[] = [];
+const log = (video: HTMLVideoElement | null, what: string) => {
+  if (!VIDEO_TEST) return;
+  const file = video ? (video.currentSrc || video.src || "ohne Quelle").split("/").pop() : "Seite";
+  playbackLog.push(`${(performance.now() / 1000).toFixed(1)}s ${file}: ${what}`);
+  if (playbackLog.length > 60) playbackLog.shift();
+};
+
 // React setzt "muted" nur als Eigenschaft; hier zusätzlich als Attribut, sonst blockiert Safari den Start gelegentlich.
 const armVideo = (video: HTMLVideoElement) => {
   video.muted = true;
@@ -20,27 +60,182 @@ const armVideo = (video: HTMLVideoElement) => {
   video.setAttribute("webkit-playsinline", "");
 };
 
-export const safePlay = (video: HTMLVideoElement, onBlocked: () => void = () => undefined) => {
+const make = () => {
+  const video = document.createElement("video");
+  video.tabIndex = -1;
+  video.setAttribute("aria-hidden", "true");
   armVideo(video);
-  const attempt = video.play();
-  if (attempt) {
-    attempt.catch((error: DOMException) => {
-      if (error?.name === "NotAllowedError") onBlocked();
-    });
+  return video;
+};
+
+// Während einer Berührung kurz anstoßen: Danach lässt der Browser das Element auch ohne Berührung starten.
+const free = (video: HTMLVideoElement) => {
+  freed.add(video);
+  armVideo(video);
+  try {
+    const attempt = video.play();
+    video.pause();
+    attempt?.catch(() => undefined);
+  } catch {
+    /* ohne Quelle: nichts zu tun */
   }
 };
 
-// Blockiert der Browser den Start (z. B. Stromsparmodus am iPhone), startet die erste Berührung, Taste oder
-// Scrollbewegung die Videos.
-const useUnblockOnGesture = (blocked: boolean, retry: () => void) => {
-  useEffect(() => {
-    if (!blocked) return;
-    const events = ["pointerdown", "touchstart", "keydown", "scroll"] as const;
-    const handler = () => retry();
-    events.forEach((name) => window.addEventListener(name, handler, { once: true, passive: true }));
-    return () => events.forEach((name) => window.removeEventListener(name, handler));
-  }, [blocked, retry]);
+/** Ein Video-Element aus dem Vorrat (nach der ersten Berührung ein freies), sonst ein neues. */
+const borrowVideo = () => idle.pop() ?? make();
+
+const returnVideo = (video: HTMLVideoElement) => {
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  video.className = "";
+  video.loop = false;
+  if (freed.has(video) && idle.length < IDLE_TARGET + 2) idle.push(video);
 };
+
+const start = (video: HTMLVideoElement) => {
+  armVideo(video);
+  let attempt: Promise<void> | undefined;
+  try {
+    attempt = video.play();
+  } catch {
+    return;
+  }
+  log(video, "Start verlangt");
+  attempt?.then(
+    () => {
+      log(video, "läuft");
+      if (refused.delete(video)) emit();
+    },
+    (error: DOMException) => {
+      log(video, `Start abgelehnt (${error?.name ?? "unbekannt"})`);
+      // AbortError heißt nur: Inzwischen kam eine Pause oder eine neue Quelle. Nur die Ablehnung des Browsers zählt.
+      if (error?.name !== "NotAllowedError" || !wanting.has(video)) return;
+      everRefused = true;
+      if (!refused.has(video)) {
+        refused.add(video);
+        emit();
+      }
+    },
+  );
+};
+
+// Läuft noch während der Berührung, nicht erst danach: Nur so gilt der Start als von der Person ausgelöst.
+const onGesture = () => {
+  let revived = false;
+  wanting.forEach((video) => {
+    if (!video.paused) return;
+    if (refused.has(video)) revived = true;
+    freed.add(video);
+    start(video);
+  });
+  if (revived) {
+    unlockedAt = performance.now();
+    log(null, "Berührung: abgelehnte Videos gestartet");
+  }
+  if (!everRefused) return;
+  known.forEach((video) => {
+    if (!wanting.has(video) && !freed.has(video)) free(video);
+  });
+  while (idle.length < IDLE_TARGET) {
+    const video = make();
+    free(video);
+    idle.push(video);
+  }
+};
+
+const onReturn = () => {
+  if (document.hidden) return;
+  wanting.forEach((video) => {
+    if (video.paused) start(video);
+  });
+};
+
+const listen = () => {
+  if (listening || typeof window === "undefined") return;
+  listening = true;
+  (["touchstart", "touchend", "pointerdown", "pointerup", "click", "keydown"] as const).forEach((name) => window.addEventListener(name, onGesture, { capture: true, passive: true }));
+  document.addEventListener("visibilitychange", onReturn);
+  window.addEventListener("pageshow", onReturn);
+};
+
+/** true für einen Augenblick nach der Berührung, die abgelehnte Videos gestartet hat: Ihr Klick soll nicht gleich wieder anhalten. */
+const justUnlocked = () => performance.now() - unlockedAt < 800;
+
+/**
+ * Lässt das Video laufen, solange `on` gilt, und hält es sonst an. `present` sagt, ob es das Element gerade gibt (für
+ * Videos, die erst später eingehängt werden). Bleibt ein Video stehen, obwohl es laufen soll, wird der Start wiederholt.
+ */
+export const useAutoPlay = (ref: RefObject<HTMLVideoElement | null>, on: boolean, present: unknown = true, beiwerk = false) => {
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    listen();
+    known.add(video);
+    if (beiwerk) quiet.add(video);
+    let timer = 0;
+    if (on) {
+      wanting.add(video);
+      start(video);
+      timer = window.setInterval(() => {
+        if (video.paused && !refused.has(video) && !document.hidden) start(video);
+      }, 2500);
+    } else {
+      video.pause();
+    }
+    return () => {
+      window.clearInterval(timer);
+      known.delete(video);
+      wanting.delete(video);
+      if (refused.delete(video)) emit();
+    };
+  }, [ref, on, present, beiwerk]);
+};
+
+/**
+ * Hängt ein Video-Element aus dem Vorrat in `host` ein, solange `src` gesetzt ist, und gibt es danach zurück. Das Element
+ * bekommt die Klasse is-ready, sobald es wirklich läuft. Liefert den Verweis auf das Element und ob es gerade eingehängt ist.
+ */
+export const usePooledVideo = (host: RefObject<HTMLElement | null>, src: string | null | undefined, onEnded?: () => void) => {
+  const video = useRef<HTMLVideoElement | null>(null);
+  const [attached, setAttached] = useState(false);
+  const ended = useRef(onEnded);
+  ended.current = onEnded;
+  useEffect(() => {
+    const parent = host.current;
+    if (!src || !parent) return;
+    const node = borrowVideo();
+    const onPlaying = () => node.classList.add("is-ready");
+    const onEnd = () => ended.current?.();
+    node.addEventListener("playing", onPlaying);
+    node.addEventListener("ended", onEnd);
+    node.preload = "none";
+    node.src = src;
+    parent.appendChild(node);
+    video.current = node;
+    setAttached(true);
+    return () => {
+      node.removeEventListener("playing", onPlaying);
+      node.removeEventListener("ended", onEnd);
+      video.current = null;
+      setAttached(false);
+      node.remove();
+      returnVideo(node);
+    };
+  }, [host, src]);
+  return [video, attached] as const;
+};
+
+/** true, solange der Browser den Start dieses Videos ablehnt (bis zur nächsten Berührung). */
+export const useIsRefused = (ref: RefObject<HTMLVideoElement | null>) =>
+  useSyncExternalStore(subscribe, () => (ref.current ? refused.has(ref.current) : false), () => false);
+
+/** true, solange der Browser irgendein Video der Seite nicht von selbst starten lässt. */
+const anyRefused = () => {
+  for (const video of refused) if (!quiet.has(video)) return true;
+  return false;
+};
+export const useAutoplayRefused = () => useSyncExternalStore(subscribe, anyRefused, () => false);
 
 export const useMinWidth = (px: number) => {
   const query = `(min-width: ${px}px)`;
@@ -70,24 +265,34 @@ const subscribeMedia = (listener: () => void) => {
 };
 export const useMediaChoice = (): boolean | null => useSyncExternalStore(subscribeMedia, () => mediaChoice, () => null);
 
-/** Anhalten und Abspielen für einen Bereich mit laufenden Clips; schaltet dieselbe Wahl wie die Bühne im Hero. */
-export const MediaToggle = ({ className }: { className?: string }) => {
+// Der Knopf zeigt „anhalten“ nur, wenn wirklich etwas läuft. Lehnt der Browser den Start ab, zeigt er „abspielen“, und der
+// Klick darauf ist die Berührung, die alles startet.
+const useMediaSwitch = () => {
   const reduce = useReducedMotion();
   const [lite] = useState(prefersLiteMedia);
   const choice = useMediaChoice();
+  const stuck = useAutoplayRefused();
   const wanted = choice ?? (!reduce && !lite);
-  const label = wanted ? "Videos anhalten" : "Videos abspielen";
+  const playing = wanted && !stuck;
+  const toggle = () => setMediaChoice(stuck || justUnlocked() ? true : !wanted);
+  return { wanted, playing, toggle };
+};
+
+/** Anhalten und Abspielen für einen Bereich mit laufenden Clips; schaltet dieselbe Wahl wie die Bühne im Hero. */
+export const MediaToggle = ({ className }: { className?: string }) => {
+  const { playing, toggle } = useMediaSwitch();
+  const label = playing ? "Videos anhalten" : "Videos abspielen";
   return (
-    <button type="button" className={`pv-stage__toggle pv-media-toggle${className ? ` ${className}` : ""}`} onClick={() => setMediaChoice(!wanted)} aria-label={label} aria-pressed={wanted}>
-      {wanted ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+    <button type="button" className={`pv-stage__toggle pv-media-toggle${className ? ` ${className}` : ""}`} onClick={toggle} aria-label={label} aria-pressed={playing}>
+      {playing ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
     </button>
   );
 };
 
-// true, solange das Element zu einem Teil im Bild ist.
-export const useOnScreen = <T extends Element>(threshold = 0.2, rootMargin = "0px") => {
+// true, solange das Element zu einem Teil im Bild ist. `initial` gilt, bis die erste Messung da ist.
+export const useOnScreen = <T extends Element>(threshold = 0.2, rootMargin = "0px", initial = false) => {
   const ref = useRef<T>(null);
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(initial);
   useEffect(() => {
     const node = ref.current;
     if (!node || typeof IntersectionObserver === "undefined") {
@@ -101,182 +306,113 @@ export const useOnScreen = <T extends Element>(threshold = 0.2, rootMargin = "0p
   return [ref, on] as const;
 };
 
-const FADE_MS = 900;
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 /**
- * Filmbühne im Hero: mehrere Filme laufen nacheinander und blenden ineinander über. Der nächste Film startet kurz
- * vor dem Ende des laufenden und legt sich weich darüber, es gibt also kein stehendes Bild und keinen Schnitt auf
- * Schwarz. Geladen wird immer nur der laufende Film und der nächste, und der nächste erst, wenn der laufende ganz da
- * ist: Auf einer langsamen Verbindung teilen sich sonst zwei Abrufe die Leitung. Ist der nächste am Ende des laufenden
- * noch nicht abspielbereit, läuft der laufende einfach noch einmal, statt auf ein stehendes Bild zu wechseln. Bei reduzierter Bewegung oder
- * Datenspar-Modus bleibt das erste Bild stehen; blockiert der Browser den Start, fährt das Standbild langsam und die
- * erste Berührung startet die Filme. Abspielen, Pause und die Szenenwahl sind immer bedienbar.
+ * Filmbühne im Hero: ein durchgehender Film, in dem die einzelnen Filme schon ineinander überblenden (siehe Reel in
+ * content.ts). Es gibt nur ein Video-Element und keinen Wechsel zwischen Dateien; welcher Film gerade zu sehen ist, liest
+ * die Anzeige aus der Abspielzeit. Die Auswahl springt im Film an die Stelle. Bei reduzierter Bewegung oder Datenspar-Modus
+ * bleibt das erste Bild stehen; lehnt der Browser den Start ab, fährt das Standbild langsam, und die erste Berührung
+ * startet den Film. Abspielen, Pause und die Szenenwahl sind immer bedienbar.
  */
-export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
-  const reduce = useReducedMotion();
+export const FilmStage = ({ reel, note }: { reel: Reel; note: string }) => {
+  const films = reel.films;
   const total = films.length;
-  const [lite] = useState(prefersLiteMedia);
+  const { wanted, playing, toggle } = useMediaSwitch();
   const choice = useMediaChoice();
-  const setChoice = setMediaChoice;
-  const [rootRef, visible] = useOnScreen<HTMLDivElement>(0.1);
+  // Der Hero steht beim Laden oben im Bild: Der Film startet sofort und wartet nicht auf die erste Messung.
+  const [rootRef, visible] = useOnScreen<HTMLDivElement>(0.1, "0px", true);
   const [active, setActive] = useState(0);
-  const [previous, setPrevious] = useState<number | null>(null);
-  const [loaded, setLoaded] = useState<number[]>([0]);
   const [started, setStarted] = useState(false);
-  const [blocked, setBlocked] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const videos = useRef<Array<HTMLVideoElement | null>>([]);
+  const video = useRef<HTMLVideoElement>(null);
   const bars = useRef<Array<HTMLElement | null>>([]);
-  const activeRef = useRef(0);
-  const fadeTimer = useRef(0);
-  // Wie oft der laufende Film schon von vorn begonnen hat, weil der nächste noch nicht bereit war.
-  const repeats = useRef(0);
+  const jump = useRef<number | null>(null);
 
-  const wanted = choice ?? (!reduce && !lite);
-  const running = wanted && visible;
-  // Einmal gestartete Filme bleiben geladen, auch wenn pausiert wird.
+  // Einmal gewollt, bleibt der Film geladen, auch wenn pausiert wird.
   const [armed, setArmed] = useState(wanted);
   useEffect(() => {
     if (wanted) setArmed(true);
   }, [wanted]);
 
-  const go = useCallback(
-    (index: number) => {
-      const from = activeRef.current;
-      if (index === from) return;
-      activeRef.current = index;
-      repeats.current = 0;
-      const target = videos.current[index];
-      if (target && target.readyState > 0) target.currentTime = 0;
-      setLoaded((list) => (list.includes(index) ? list : [...list, index]));
-      setPrevious(from);
-      setActive(index);
-      window.clearTimeout(fadeTimer.current);
-      fadeTimer.current = window.setTimeout(() => {
-        setPrevious(null);
-        const old = videos.current[from];
-        if (old) old.pause();
-      }, FADE_MS + 60);
-    },
-    [],
-  );
+  const running = wanted && visible;
+  useAutoPlay(video, running && armed, armed);
+  const blocked = useIsRefused(video);
 
-  useEffect(() => () => window.clearTimeout(fadeTimer.current), []);
-
-  const want = useCallback((index: number) => setLoaded((list) => (list.includes(index) ? list : [...list, index])), []);
-  const isReady = (index: number) => (videos.current[index]?.readyState ?? 0) >= 3;
-  // Der laufende Film ist zu Ende (oder hängt): weiter zum nächsten, wenn der abspielbereit ist, sonst noch einmal von vorn.
-  const advance = useCallback(
-    (index: number) => {
-      if (index !== activeRef.current || total < 2) return;
-      const next = (index + 1) % total;
-      if (isReady(next)) return go(next);
-      repeats.current += 1;
-      want(next);
-      const video = videos.current[index];
-      if (!video) return;
-      if (video.ended || video.currentTime > 0.5) video.currentTime = 0;
-      safePlay(video, () => setBlocked(true));
-    },
-    [go, total, want],
-  );
-
-  // Der aktive Film spielt, der vorige läuft während der Überblendung aus, alle anderen stehen.
-  useEffect(() => {
-    videos.current.forEach((video, index) => {
-      if (!video) return;
-      if (index === active && running) {
-        safePlay(video, () => setBlocked(true));
-      } else if (index !== previous || !running) {
-        video.pause();
-      }
-    });
-  }, [active, previous, running, attempt, loaded]);
-
-  const retry = useCallback(() => {
-    setBlocked(false);
-    setAttempt((value) => value + 1);
-  }, []);
-  useUnblockOnGesture(blocked && wanted, retry);
-
-  // Zurück im Tab: weiterlaufen lassen.
-  useEffect(() => {
-    const onVisible = () => {
-      if (!document.hidden) setAttempt((value) => value + 1);
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, []);
-
-  // Fortschritt, Vorladen des nächsten Films und der Wechsel kurz vor dem Ende, direkt aus der Abspielzeit.
+  // Anzeige und Fortschritt direkt aus der Abspielzeit.
   useEffect(() => {
     if (!running) return;
     let frame = 0;
-    let lastTime = -1;
-    let lastMove = performance.now();
+    let shown = -1;
     const tick = () => {
-      const index = activeRef.current;
-      const video = videos.current[index];
-      const bar = bars.current[index];
-      const next = (index + 1) % total;
-      if (video) {
-        const duration = video.duration && Number.isFinite(video.duration) ? video.duration : 8;
-        if (bar) bar.style.transform = `scaleX(${Math.min(1, video.currentTime / duration)})`;
-        if (video.currentTime !== lastTime) {
-          lastTime = video.currentTime;
-          lastMove = performance.now();
-        } else if (!video.paused && performance.now() - lastMove > 6000 && total > 1) {
-          // Hängt ein Film (Netz, Dekoder) länger als sechs Sekunden, geht es mit dem nächsten weiter, sofern der bereit ist.
-          lastMove = performance.now();
-          advance(index);
+      const node = video.current;
+      if (node) {
+        const time = node.currentTime;
+        let index = 0;
+        if (time < reel.wrap) {
+          for (let position = 1; position < total; position += 1) if (time >= films[position].cue) index = position;
         }
-        if (total > 1) {
-          const ranges = video.buffered;
-          const have = ranges.length ? ranges.end(ranges.length - 1) : 0;
-          if (video.currentTime > duration * 0.4 && (have >= duration - 0.3 || repeats.current > 0)) want(next);
-          if (duration - video.currentTime < FADE_MS / 1000 && isReady(next)) go(next);
+        if (index !== shown) {
+          shown = index;
+          setActive(index);
+          bars.current.forEach((bar, position) => {
+            if (bar && position !== index) bar.style.transform = position < index ? "scaleX(1)" : "scaleX(0)";
+          });
         }
+        const bar = bars.current[index];
+        const from = films[index].cue;
+        const to = index + 1 < total ? films[index + 1].cue : reel.wrap;
+        if (bar) bar.style.transform = `scaleX(${time >= reel.wrap ? 0 : clamp01((time - from) / (to - from))})`;
       }
       frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [running, total, go, advance, want]);
+  }, [running, reel, films, total]);
+
+  const seek = (node: HTMLVideoElement, time: number) => {
+    try {
+      node.currentTime = time;
+    } catch {
+      /* noch keine Metadaten: wird nach dem Laden nachgeholt */
+    }
+  };
 
   const pick = (index: number) => {
-    if (choice === false) setChoice(true);
-    if (blocked) retry();
-    bars.current.forEach((bar) => {
-      if (bar) bar.style.transform = "";
+    if (choice === false || !wanted) setMediaChoice(true);
+    const node = video.current;
+    const time = films[index].start;
+    if (node && node.readyState > 0) seek(node, time);
+    else jump.current = time;
+    setActive(index);
+    bars.current.forEach((bar, position) => {
+      if (bar) bar.style.transform = position < index ? "scaleX(1)" : "scaleX(0)";
     });
-    go(index);
   };
 
   const current = films[active];
-  const label = wanted ? "Filme anhalten" : "Filme abspielen";
+  const label = playing ? "Filme anhalten" : "Filme abspielen";
 
   return (
     <div className={`pv-stage${blocked ? " is-blocked" : ""}${started ? " is-live" : ""}`} ref={rootRef} role="group" aria-roledescription="Filmfolge" aria-label="Beispiele aus Creator Studio">
       <div className="pv-stage__media" aria-hidden="true">
-        <img className="pv-stage__poster" src={films[0].poster} alt="" decoding="async" {...({ fetchpriority: "high" } as Record<string, string>)} />
-        {films.map((item, index) => (
-          <video
-            key={item.id}
-            ref={(node) => { videos.current[index] = node; }}
-            className={`pv-stage__video${index === active ? " is-active" : ""}${index === previous ? " is-previous" : ""}`}
-            src={loaded.includes(index) && (armed || wanted) ? item.src : undefined}
-            poster={index === 0 || loaded.includes(index) ? item.poster : undefined}
-            muted
-            playsInline
-            autoPlay={index === 0 && wanted}
-            preload={loaded.includes(index) ? "auto" : "none"}
-            loop={total === 1}
-            onPlaying={() => index === 0 && setStarted(true)}
-            onEnded={() => advance(index)}
-            onError={() => index === activeRef.current && total > 1 && go((index + 1) % total)}
-            tabIndex={-1}
-          />
-        ))}
+        <img className="pv-stage__poster" src={reel.poster} alt="" decoding="async" {...({ fetchpriority: "high" } as Record<string, string>)} />
+        <video
+          ref={video}
+          className="pv-stage__video"
+          src={armed ? reel.src : undefined}
+          poster={reel.poster}
+          muted
+          loop
+          playsInline
+          preload={armed ? "auto" : "none"}
+          onPlaying={() => setStarted(true)}
+          onLoadedMetadata={(event) => {
+            if (jump.current === null) return;
+            seek(event.currentTarget, jump.current);
+            jump.current = null;
+          }}
+          tabIndex={-1}
+        />
       </div>
       <div className="pv-stage__hud">
         <div className="pv-stage__now" aria-live="off">
@@ -300,8 +436,8 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
             </li>
           ))}
         </ol>
-        <button type="button" className="pv-stage__toggle" onClick={() => setChoice(!wanted)} aria-label={label} aria-pressed={wanted}>
-          {wanted ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+        <button type="button" className="pv-stage__toggle" onClick={toggle} aria-label={label} aria-pressed={playing}>
+          {playing ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
         </button>
       </div>
       <p className="pv-stage__note">{note}</p>
@@ -312,7 +448,7 @@ export const FilmStage = ({ films, note }: { films: Film[]; note: string }) => {
 
 /**
  * Standbild mit Video darüber. Das Video wird erst geladen, wenn das Element in die Nähe des Bildschirms kommt, und
- * spielt stumm in Schleife, solange es gut sichtbar ist (oder `active` es verlangt).
+ * spielt stumm in Schleife, solange es gut sichtbar ist.
  */
 export const Clip = ({
   src,
@@ -336,10 +472,8 @@ export const Clip = ({
   const [lite] = useState(prefersLiteMedia);
   const roomy = useMinWidth(900);
   const box = useRef<HTMLDivElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
   const [near, setNear] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [ready, setReady] = useState(false);
   const choice = useMediaChoice();
   // Wer ausdrücklich abspielt, bekommt die Clips auch bei reduzierter Bewegung; wer anhält, hält alle an.
   const allowed = choice ?? (!reduce && !lite);
@@ -357,33 +491,31 @@ export const Clip = ({
     };
   }, [allowed]);
 
+  const [video, attached] = usePooledVideo(box, near && allowed ? (small && !roomy ? small : src) : null, onEnded);
+  // Geladen wird erst, wenn der Clip wirklich läuft: ein Clip knapp unter dem sichtbaren Bereich fing sonst an zu laden,
+  // und der Browser brach diesen Abruf gleich wieder ab (als fehlgeschlagener Abruf sichtbar, am Telefon verschenktes Datenvolumen).
   useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-    if (playing && choice !== false) safePlay(element);
-    else element.pause();
-  }, [playing, near, choice]);
+    const node = video.current;
+    if (!node) return;
+    node.loop = loop;
+    if (playing) node.preload = "auto";
+  }, [video, attached, loop, playing]);
+  useAutoPlay(video, attached && playing, attached);
+  // Lässt der Browser den Clip nicht anlaufen, zählt er für die Bühne nach fünf Sekunden als gezeigt: Eine Galerie, die am
+  // Ende eines Clips weiterschaltet, bleibt so nicht auf dem ersten Standbild stehen.
+  const stuck = useIsRefused(video);
+  const advances = Boolean(onEnded);
+  const done = useRef(onEnded);
+  done.current = onEnded;
+  useEffect(() => {
+    if (!stuck || !playing || !advances) return;
+    const timer = window.setTimeout(() => done.current?.(), 5000);
+    return () => window.clearTimeout(timer);
+  }, [stuck, playing, advances]);
 
   return (
     <div className="pv-clip" ref={box}>
-      <img src={poster} alt={label} loading={eager ? "eager" : "lazy"} decoding="async" />
-      {near && allowed ? (
-        <video
-          ref={video}
-          className={ready ? "is-ready" : undefined}
-          src={small && !roomy ? small : src}
-          muted
-          loop={loop}
-          playsInline
-          // Geladen wird erst, wenn der Clip wirklich läuft: ein Clip knapp unter dem sichtbaren Bereich fing sonst an zu laden,
-          // und der Browser brach diesen Abruf gleich wieder ab (als fehlgeschlagener Abruf sichtbar, am Telefon verschenktes Datenvolumen).
-          preload={playing ? "auto" : "none"}
-          onPlaying={() => setReady(true)}
-          onEnded={onEnded}
-          tabIndex={-1}
-          aria-hidden="true"
-        />
-      ) : null}
+      <img src={poster} alt={label} loading={eager ? "eager" : "lazy"} decoding="async" draggable={false} />
     </div>
   );
 };

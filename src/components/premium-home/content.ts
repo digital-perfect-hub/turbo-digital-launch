@@ -37,36 +37,57 @@ export type Film = {
   /** Name der Figur oder „Ohne Creator“ */
   who: string;
   title: string;
-  src: string;
-  poster: string;
+  /** Ab dieser Sekunde des durchgehenden Films gehört die Anzeige diesem Film (Mitte der Überblendung). */
+  cue: number;
+  /** Sprungziel bei der Auswahl: erste Sekunde, in der nur noch dieser Film zu sehen ist (dort liegt ein Schlüsselbild). */
+  start: number;
 };
 
-const film = (file: string, tag: string, who: string, title: string): Film => ({
-  id: file,
-  tag,
-  who,
-  title,
-  src: `${M}/${file}.mp4`,
-  poster: `${M}/${file}.webp`,
-});
+/**
+ * Die Hero-Filme liegen je Format als EIN durchgehender Film vor, die Überblendungen sind eingerechnet. Ein Video-Element,
+ * ein Abruf, kein Wechsel zwischen Dateien: Telefone laden ein Video erst, wenn es läuft, ein zweiter Film ließ sich dort
+ * nicht verlässlich vorbereiten. Der Film endet mit der Überblendung zurück auf seinen Anfang, die Schleife hat keinen Sprung.
+ * Erzeugt mit dem Skript reel.sh (ffmpeg, xfade); die Zeiten unten folgen aus den Bildzahlen dort.
+ */
+export type Reel = {
+  src: string;
+  /** Erstes Bild des Films, deckungsgleich mit dem Start. */
+  poster: string;
+  duration: number;
+  /** Ab hier blendet der Film auf den Anfang zurück: Die Anzeige springt auf den ersten Film. */
+  wrap: number;
+  films: Film[];
+};
 
-// Hero am Rechner: fünf Filme im Querformat (1600 × 900, je ca. 8 s). Sie blenden ineinander über und laufen endlos.
-export const HERO_WIDE: Film[] = [
-  film("hero-maria-see", "Creator", "Maria Noelle", "Abend am Bergsee"),
-  film("world-vulkan", "Freies Video", "Ohne Creator", "Vulkan in der Dämmerung"),
-  film("hero-laura-neon", "Creator", "Laura Bellame", "Neonnacht in der Stadt"),
-  film("world-alpen", "Freies Video", "Ohne Creator", "Alpen im Morgenlicht"),
-  film("hero-maria-loft", "Creator", "Maria Noelle", "Nacht im Loft"),
-];
+// Hero am Rechner: fünf Filme im Querformat (1600 × 900, zusammen 34,6 s).
+export const HERO_WIDE: Reel = {
+  src: `${M}/hero-reel-wide.mp4`,
+  poster: `${M}/hero-reel-wide.webp`,
+  duration: 34.583,
+  wrap: 34.208,
+  films: [
+    { id: "hero-maria-see", tag: "Creator", who: "Maria Noelle", title: "Abend am Bergsee", cue: 0, start: 0 },
+    { id: "world-vulkan", tag: "Freies Video", who: "Ohne Creator", title: "Vulkan in der Dämmerung", cue: 6.542, start: 6.959 },
+    { id: "hero-laura-neon", tag: "Creator", who: "Laura Bellame", title: "Neonnacht in der Stadt", cue: 13.458, start: 13.834 },
+    { id: "world-alpen", tag: "Freies Video", who: "Ohne Creator", title: "Alpen im Morgenlicht", cue: 20.375, start: 20.75 },
+    { id: "hero-maria-loft", tag: "Creator", who: "Maria Noelle", title: "Nacht im Loft", cue: 27.292, start: 27.709 },
+  ],
+};
 
-// Hero am Telefon: dieselbe Idee im Hochformat (720 × 1280).
-export const HERO_TALL: Film[] = [
-  film("maria-cafe", "Creator", "Maria Noelle", "Cappuccino am Fenster"),
-  film("world-vulkan-tall", "Freies Video", "Ohne Creator", "Vulkan in der Dämmerung"),
-  film("laura-strand", "Creator", "Laura Bellame", "Abend am Strand"),
-  film("world-alpen-tall", "Freies Video", "Ohne Creator", "Alpen im Morgenlicht"),
-  film("maria-gipfel", "Creator", "Maria Noelle", "Morgen über den Wolken"),
-];
+// Hero am Telefon: dieselbe Idee im Hochformat (720 × 1280, zusammen 30,3 s).
+export const HERO_TALL: Reel = {
+  src: `${M}/hero-reel-tall.mp4`,
+  poster: `${M}/hero-reel-tall.webp`,
+  duration: 30.333,
+  wrap: 29.958,
+  films: [
+    { id: "maria-cafe", tag: "Creator", who: "Maria Noelle", title: "Cappuccino am Fenster", cue: 0, start: 0 },
+    { id: "world-vulkan-tall", tag: "Freies Video", who: "Ohne Creator", title: "Vulkan in der Dämmerung", cue: 5.125, start: 5.5 },
+    { id: "laura-strand", tag: "Creator", who: "Laura Bellame", title: "Abend am Strand", cue: 12.042, start: 12.459 },
+    { id: "world-alpen-tall", tag: "Freies Video", who: "Ohne Creator", title: "Alpen im Morgenlicht", cue: 17.542, start: 17.959 },
+    { id: "maria-gipfel", tag: "Creator", who: "Maria Noelle", title: "Morgen über den Wolken", cue: 24.458, start: 24.834 },
+  ],
+};
 
 export type Scene = {
   id: string;
@@ -76,6 +97,8 @@ export type Scene = {
   src: string;
   poster: string;
   thumb: string;
+  /** Sehr kleine Fassung des Videos (240 × 426) für den Bilderring; Bilder haben keine. */
+  ring?: string;
 };
 
 const clip = (file: string, title: string): Scene => ({
@@ -85,6 +108,7 @@ const clip = (file: string, title: string): Scene => ({
   src: `${M}/${file}.mp4`,
   poster: `${M}/${file}.webp`,
   thumb: `${M}/${file}-thumb.webp`,
+  ring: `${M}/${file}-ring.mp4`,
 });
 
 const still = (file: string, title: string): Scene => ({

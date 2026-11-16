@@ -72,7 +72,7 @@
     <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
     <script>
       // Eigene Adressen von Digital-Perfect (gleiche Liste wie HOME_HOSTNAMES in src/lib/site.ts): Das erste Bild des Hero-Films
-      // (gleiche Dateien wie HERO_WIDE[0] und HERO_TALL[0] in content.ts) wird geholt, bevor das Skript der Seite da ist, und
+      // (gleiche Dateien wie die Standbilder von HERO_WIDE und HERO_TALL in content.ts) wird geholt, bevor das Skript der Seite da ist, und
       // steht im Ladebild. Mandanten-Adressen bleiben unberührt.
       (function () {
         var host = location.hostname.replace(/^www\./, "");
@@ -99,7 +99,7 @@
           };
         }
         if (location.pathname !== "/" || /[?&]design=classic/.test(location.search)) return;
-        var poster = "/media/studio/" + (window.matchMedia("(min-width: 900px)").matches ? "hero-maria-see" : "maria-cafe") + ".webp";
+        var poster = "/media/studio/" + (window.matchMedia("(min-width: 900px)").matches ? "hero-reel-wide" : "hero-reel-tall") + ".webp";
         var link = document.createElement("link");
         link.rel = "preload";
         link.as = "image";
