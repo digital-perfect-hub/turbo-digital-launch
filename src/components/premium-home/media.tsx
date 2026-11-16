@@ -4,10 +4,16 @@ import { useReducedMotion } from "framer-motion";
 import type { Reel } from "./content";
 
 // Bewegte Medien sparen: bei aktivierter Datenspar-Funktion oder sehr langsamer Verbindung bleiben die Standbilder stehen.
+// Entschieden wird einmal je Seitenaufruf, beim ersten Bereich, der fragt: Die Schätzung des Browsers schwankt, während die
+// Seite lädt, und ohne das sähe ein Bereich Videos vor und der nächste nicht.
+let liteMedia: boolean | null = null;
 export const prefersLiteMedia = () => {
   if (typeof navigator === "undefined") return false;
-  const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-  return Boolean(connection?.saveData) || connection?.effectiveType === "slow-2g" || connection?.effectiveType === "2g";
+  if (liteMedia === null) {
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    liteMedia = Boolean(connection?.saveData) || connection?.effectiveType === "slow-2g" || connection?.effectiveType === "2g";
+  }
+  return liteMedia;
 };
 
 /* ───── Abspielen: eine Stelle für alle Videos der Seite ─────
