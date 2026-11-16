@@ -194,7 +194,7 @@ export const CreatorGallery = () => {
               className={`pv-who${position === who ? " is-active" : ""}`}
               onClick={() => pickCreator(position)}
             >
-              <img src={item.scenes[0].thumb} alt="" width={96} height={96} loading="lazy" decoding="async" />
+              <img src={item.avatar} alt="" width={96} height={96} loading="lazy" decoding="async" />
               <span>
                 <strong>{item.name}</strong>
                 <em>{item.line}</em>

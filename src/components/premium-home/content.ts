@@ -4,11 +4,12 @@
 
 export const STUDIO_URL = "https://studio.digital-perfect.com";
 
+// hint: die Zeile unter dem Eintrag im mobilen Menü.
 export const NAV_LINKS = [
-  { label: "Creator Studio", href: "/creator-studio" },
-  { label: "Leistungen", href: "/leistungen" },
-  { label: "Projekte", href: "/projekte" },
-  { label: "Kontakt", href: "/kontakt" },
+  { label: "Creator Studio", href: "/creator-studio", hint: "Dein eigener KI-Creator: Bilder, Videos, Posts" },
+  { label: "Leistungen", href: "/leistungen", hint: "Webdesign, SEO und KI-Sichtbarkeit" },
+  { label: "Projekte", href: "/projekte", hint: "Portale, ein Magazin, ein SEO-Projekt" },
+  { label: "Kontakt", href: "/kontakt", hint: "Du sprichst direkt mit Markus" },
 ] as const;
 
 // Modellfamilien, die Creator Studio über die Higgsfield-API anspricht (README, Auswahl).
@@ -121,10 +122,12 @@ const still = (file: string, title: string): Scene => ({
 });
 
 // Die Beispiel-Creator aus unserem eigenen Studio. Jede Szene stammt aus denselben Referenzbildern der Figur.
+// avatar: kleines Bild mit dem Gesicht nach vorn, für die runden Bildchen (Auswahl in der Galerie, mobiles Menü).
 export const CREATORS = [
   {
     id: "maria",
     name: "Maria Noelle",
+    avatar: `${M}/maria-cafe-thumb.webp`,
     line: "Reisen, Mode, Alltag",
     about: "Maria ist unsere erste Figur. Braune Wellen, blaue Augen, Sommersprossen. In jeder Szene wiederzuerkennen, egal ob Café, Berggipfel oder Fotostudio.",
     scenes: [
@@ -139,6 +142,7 @@ export const CREATORS = [
   {
     id: "laura",
     name: "Laura Bellame",
+    avatar: `${M}/laura-strand-thumb.webp`,
     line: "Fitness, Business, Lifestyle",
     about: "Laura hat langes schwarzes Haar und helle blaue Augen. Sie zeigt, wie dieselbe Figur vom Fitnessstudio ins Büro und an den Strand wechselt.",
     scenes: [
@@ -151,10 +155,11 @@ export const CREATORS = [
   {
     id: "maya",
     name: "Maya MaBelle",
+    avatar: `${M}/maya-lesen-thumb.webp`,
     line: "Kochen, Garten, Zuhause",
     about: "Maya ist älter als Maria und Laura und steht für ruhigere Themen: Küche, Garten, ein gutes Buch. Auch das geht mit einem Creator.",
     scenes: [
-      clip("maya-kueche", "Frisch aus der Küche"),
+      clip("maya-teig", "Brotteig am Morgen"),
       still("maya-garten", "Im Garten"),
       still("maya-lesen", "Lesestunde am Fenster"),
     ],
@@ -162,6 +167,7 @@ export const CREATORS = [
   {
     id: "leon",
     name: "Leon Marlow",
+    avatar: `${M}/leon-cafe-thumb.webp`,
     line: "Sport, Reisen, Alltag",
     about: "Leon ist unser jüngster Creator: kurzes dunkles Haar, graugrüne Augen, Dreitagebart. Angelegt, Referenzbilder erzeugt und noch am selben Abend in drei Szenen fotografiert.",
     scenes: [

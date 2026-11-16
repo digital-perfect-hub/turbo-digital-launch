@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent, type ReactNode, useRef } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent, type ReactNode, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUp, ArrowUpRight, CheckCircle2, Menu, Search, X } from "lucide-react";
+import { ArrowRight, ArrowUp, ArrowUpRight, CheckCircle2, FolderKanban, Layers, Menu, Search, X } from "lucide-react";
 import SupportWidget from "@/components/support/SupportWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useGlobalTheme } from "@/hooks/useGlobalTheme";
@@ -11,7 +11,7 @@ import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { Reveal } from "./motion";
 import { CommandPalette, INTEREST_EVENT, MobileDock, requestInterest, scrollToId, takePendingInterest, usePaletteHotkey } from "./AppShell";
-import { INTEREST_OPTIONS, NAV_LINKS, STUDIO_URL } from "./content";
+import { CREATORS, FOUNDER, HERO_TALL, INTEREST_OPTIONS, NAV_LINKS, STUDIO_URL } from "./content";
 import "@/styles/premium-home.css";
 import "@/styles/premium-v5.css";
 
@@ -62,6 +62,9 @@ const NavLink = ({ href, label, onClick }: { href: string; label: string; onClic
     </Link>
   );
 };
+
+// Zeichen der Einträge im mobilen Menü; der Kontakt zeigt stattdessen das Bild des Gründers.
+const MENU_ICONS: Record<string, typeof Layers> = { "/leistungen": Layers, "/projekte": FolderKanban };
 
 const PremiumNav = ({ brand, onPalette }: { brand: string; onPalette: () => void }) => {
   const [scrolled, setScrolled] = useState(false);
@@ -122,14 +125,49 @@ const PremiumNav = ({ brand, onPalette }: { brand: string; onPalette: () => void
           </button>
         </div>
       </div>
+      {/* Mobiles Menü: oben das Produkt als Karte mit den Gesichtern der Creator, darunter die Seiten als Zeilen mit einem
+          Satz dazu, unten die beiden Wege weiter (Anfrage, App). Die Einträge fahren beim Öffnen nacheinander ein. */}
       <div id="pm-menu" className="pm-menu" hidden={!open}>
-        <nav aria-label="Mobile Navigation">
-          {NAV_LINKS.map((link) => (
-            <NavLink key={link.href} href={link.href} label={link.label} onClick={() => setOpen(false)} />
-          ))}
-          <a href={STUDIO_URL} rel="noopener noreferrer">Zur App</a>
+        <nav aria-label="Mobile Navigation" className="pm-menu__nav">
+          {NAV_LINKS.map((link, index) => {
+            const current = pathname === link.href;
+            const order = { "--pm-i": index } as CSSProperties;
+            if (index === 0) {
+              return (
+                <Link key={link.href} to={link.href} className={`pm-menu__feature${current ? " is-active" : ""}`} aria-current={current ? "page" : undefined} onClick={() => setOpen(false)} style={order}>
+                  <img className="pm-menu__bg" src={HERO_TALL.poster} alt="" loading="lazy" decoding="async" />
+                  <span className="pm-menu__kicker">Unser Produkt</span>
+                  <strong>{link.label}</strong>
+                  <span className="pm-menu__hint">{link.hint}</span>
+                  <span className="pm-menu__faces">
+                    {CREATORS.map((creator) => (
+                      <img key={creator.id} src={creator.avatar} alt="" width={30} height={30} loading="lazy" decoding="async" />
+                    ))}
+                    <em>Vier KI-Figuren aus dem Studio</em>
+                  </span>
+                  <span className="pm-menu__go" aria-hidden="true"><ArrowRight size={18} /></span>
+                </Link>
+              );
+            }
+            const Icon = MENU_ICONS[link.href];
+            return (
+              <Link key={link.href} to={link.href} className={`pm-menu__row${current ? " is-active" : ""}`} aria-current={current ? "page" : undefined} onClick={() => setOpen(false)} style={order}>
+                <span className="pm-menu__icon" aria-hidden="true">
+                  {Icon ? <Icon size={20} strokeWidth={1.7} /> : <img src={FOUNDER.image} alt="" width={46} height={46} loading="lazy" decoding="async" />}
+                </span>
+                <span className="pm-menu__text">
+                  <strong>{link.label}</strong>
+                  <em>{link.hint}</em>
+                </span>
+                <ArrowRight className="pm-menu__chev" size={18} aria-hidden="true" />
+              </Link>
+            );
+          })}
         </nav>
-        <a className="pm-btn" href="#kontakt" onClick={() => setOpen(false)}>Anfrage senden</a>
+        <div className="pm-menu__foot" style={{ "--pm-i": NAV_LINKS.length } as CSSProperties}>
+          <a className="pm-btn" href="#kontakt" onClick={() => setOpen(false)}>Anfrage senden <ArrowRight size={18} aria-hidden="true" /></a>
+          <a className="pm-btn pm-btn--ghost" href={STUDIO_URL} rel="noopener noreferrer">Zur App <ArrowUpRight size={16} aria-hidden="true" /></a>
+        </div>
       </div>
     </header>
   );

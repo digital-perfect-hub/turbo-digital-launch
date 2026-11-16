@@ -10,7 +10,7 @@
 # Aufruf: scripts/hero-reel.sh <Ordner mit den Originalen aus Creator Studio> <Zielordner>   (ffmpeg über $FFMPEG, sonst "ffmpeg")
 # Originale (nicht im Repository): vm1 Maria am Bergsee, vm2 Maria im Loft, vm3 Maria im Café, vm4 Maria im Studio,
 # vm5 Maria am Gipfel, vm6 Maria in der Altstadt, vl1 Laura Neonnacht, vl2 Laura im Gym, vl3 Laura am Strand,
-# vl4 Laura im Büro, vy1 Maya in der Küche, f1 Vulkan, f2 Alpen (alle .mp4, 24 Bilder pro Sekunde).
+# vl4 Laura im Büro, vy2 Maya knetet Teig, f1 Vulkan, f2 Alpen (alle .mp4, 24 Bilder pro Sekunde).
 set -euo pipefail
 SRC="$1"
 OUT="$2"
@@ -56,7 +56,7 @@ WIDE="scale=1600:900:flags=lanczos,$NORM"
 "$FF" -v error -y -ss $SKIP -i "$SRC/vm1.mp4" -vf "$WIDE,select=eq(n\,18)" -frames:v 1 -c:v libwebp -quality 74 "$OUT/hero-reel-wide.webp"
 
 # Bilderring: dieselben Creator-Clips sehr klein, damit mehrere zugleich laufen können, ohne ein Telefon zu belasten.
-for pair in "vm3 maria-cafe" "vm4 maria-studio" "vm5 maria-gipfel" "vm6 maria-altstadt" "vl3 laura-strand" "vl2 laura-gym" "vl4 laura-buero" "vy1 maya-kueche"; do
+for pair in "vm3 maria-cafe" "vm4 maria-studio" "vm5 maria-gipfel" "vm6 maria-altstadt" "vl3 laura-strand" "vl2 laura-gym" "vl4 laura-buero" "vy2 maya-teig"; do
   set -- $pair
   "$FF" -v error -y -ss $SKIP -i "$SRC/$1.mp4" -vf "scale=240:426:flags=lanczos,$NORM" $X264 -level:v 3.0 -crf 31 -maxrate 260k -bufsize 520k "$OUT/$2-ring.mp4"
 done

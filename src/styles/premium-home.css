@@ -115,11 +115,51 @@ body:has(.pm), body:has(.pm) #root { overflow-x: clip; }
 .pm-nav__actions { display: flex; align-items: center; gap: 16px; }
 .pm-nav__app { display: none; align-items: center; gap: 4px; font: 500 14px/1 var(--pm-body); color: var(--pm-muted); text-decoration: none; }
 .pm-nav__app:hover { color: var(--pm-text); }
-.pm-nav__toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--pm-line-strong); border-radius: 4px; background: transparent; color: var(--pm-text); cursor: pointer; }
-.pm-menu { position: fixed; inset: 72px 0 0 0; display: flex; flex-direction: column; gap: 28px; padding: 24px var(--pm-gutter) 40px; overflow-y: auto; background: #070b15; }
+.pm-nav__toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--pm-line-strong); border-radius: 12px; background: rgba(214, 224, 255, 0.04); color: var(--pm-text); cursor: pointer; }
+/* Mobiles Menü: eine Fläche mit Tiefe (blauer Schein oben, warmer unten), das Produkt als Bildkarte, die Seiten als Zeilen. */
+.pm-menu { position: fixed; inset: 72px 0 0 0; display: flex; flex-direction: column; gap: 14px; padding: 14px var(--pm-gutter) calc(18px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; background: radial-gradient(120% 55% at 100% 0%, rgba(56, 104, 255, 0.22), transparent 62%), radial-gradient(110% 45% at 0% 100%, rgba(255, 107, 44, 0.15), transparent 60%), #070b15; }
 .pm-menu[hidden] { display: none; }
-.pm-menu nav { display: flex; flex-direction: column; }
-.pm-menu nav a { padding: 14px 0; border-bottom: 1px solid var(--pm-line); font: 800 2.3rem/1 var(--pm-display); text-transform: uppercase; text-decoration: none; }
+.pm-menu__nav { display: flex; flex: 1 1 auto; flex-direction: column; gap: 10px; }
+.pm-menu__nav > a, .pm-menu__foot { animation: pm-menu-in 0.5s var(--pm-ease) both; animation-delay: calc(var(--pm-i, 0) * 55ms + 40ms); }
+@keyframes pm-menu-in { from { opacity: 0; transform: translateY(16px); } }
+/* Die Bildkarte nimmt auf hohen Bildschirmen den freien Platz (bis 260 px), die Zeilen darunter bleiben, wie sie sind. */
+.pm-menu__feature { position: relative; isolation: isolate; display: grid; flex: 1 1 178px; align-content: end; justify-items: start; gap: 6px; min-height: 178px; max-height: 260px; padding: 18px 18px 16px; overflow: hidden; border: 1px solid var(--pm-line-strong); border-radius: 22px; background: linear-gradient(135deg, #142042, #0b1222 70%); color: #fff; text-decoration: none; box-shadow: 0 30px 60px -32px rgba(56, 104, 255, 0.7); }
+.pm-menu__feature.is-active, .pm-menu__row.is-active { border-color: rgba(255, 107, 44, 0.6); }
+.pm-menu__bg { position: absolute; top: 0; right: 0; z-index: -2; width: 56%; height: 100%; object-fit: cover; object-position: 50% 16%; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 52%); mask-image: linear-gradient(90deg, transparent 0, #000 52%); }
+.pm-menu__feature::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7, 11, 21, 0.72) 0, transparent 60%); }
+.pm-menu__kicker { font: 600 10px/1 var(--pm-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--pm-orange); }
+.pm-menu__feature strong { font: 800 2.15rem/0.95 var(--pm-display); letter-spacing: 0.02em; text-transform: uppercase; text-shadow: 0 2px 18px rgba(7, 11, 21, 0.7); }
+.pm-menu__hint { max-width: 21ch; font: 400 13px/1.4 var(--pm-body); color: rgba(255, 255, 255, 0.86); text-shadow: 0 1px 12px rgba(7, 11, 21, 0.8); }
+.pm-menu__faces { display: flex; align-items: center; margin-top: 8px; }
+.pm-menu__faces img { width: 30px; height: 30px; margin-right: -8px; border: 2px solid #0b1222; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
+.pm-menu__faces em { margin-left: 16px; font: 500 10.5px/1.2 var(--pm-mono); font-style: normal; color: rgba(255, 255, 255, 0.78); text-shadow: 0 1px 10px rgba(7, 11, 21, 0.9); }
+.pm-menu__go { position: absolute; right: 14px; top: 14px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--pm-orange); color: #070b15; box-shadow: 0 10px 26px -10px rgba(255, 107, 44, 0.9); }
+.pm-menu__row { display: grid; flex: none; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 11px 14px 11px 11px; border: 1px solid var(--pm-line); border-radius: 18px; background: rgba(214, 224, 255, 0.045); color: var(--pm-text); text-decoration: none; transition: background 0.2s, border-color 0.2s; }
+.pm-menu__row:active { background: rgba(214, 224, 255, 0.1); }
+.pm-menu__row.is-active { background: rgba(255, 107, 44, 0.08); }
+.pm-menu__icon { display: grid; place-items: center; width: 46px; height: 46px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg, rgba(56, 104, 255, 0.32), rgba(56, 104, 255, 0.08)); color: #d3deff; }
+/* Das Bild des Gründers zeigt ihn ganz; für das kleine Feld wird auf das Gesicht vergrößert. */
+.pm-menu__icon img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; transform: scale(4.2); transform-origin: 52% 21%; }
+.pm-menu__text { display: grid; gap: 4px; min-width: 0; }
+.pm-menu__text strong { font: 800 1.45rem/1 var(--pm-display); letter-spacing: 0.03em; text-transform: uppercase; }
+.pm-menu__text em { font: 400 12.5px/1.35 var(--pm-body); font-style: normal; color: var(--pm-muted); }
+.pm-menu__chev { color: var(--pm-muted); }
+.pm-menu__row.is-active .pm-menu__chev { color: var(--pm-orange); }
+.pm-menu__foot { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 10px; margin-top: auto; padding-top: 6px; }
+.pm-menu__foot .pm-btn { min-height: 54px; padding: 0 12px; border-radius: 16px; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .pm-menu__nav > a, .pm-menu__foot { animation: none; } }
+/* Niedrige Bildschirme (kleine Telefone, Querformat): alles etwas dichter, damit das Menü ohne Scrollen passt. */
+@media (max-height: 620px) {
+  .pm-menu { gap: 10px; padding-top: 10px; }
+  .pm-menu__nav { gap: 8px; }
+  .pm-menu__feature { flex-basis: 146px; min-height: 146px; padding: 14px 16px 12px; gap: 4px; }
+  .pm-menu__feature strong { font-size: 1.9rem; }
+  .pm-menu__faces { margin-top: 4px; }
+  .pm-menu__row { grid-template-columns: 40px minmax(0, 1fr) auto; padding: 8px 12px 8px 8px; }
+  .pm-menu__icon { width: 40px; height: 40px; border-radius: 12px; }
+  .pm-menu__text strong { font-size: 1.3rem; }
+  .pm-menu__foot .pm-btn { min-height: 50px; }
+}
 @media (min-width: 640px) { .pm-nav__app { display: inline-flex; } }
 @media (min-width: 1024px) {
   .pm-nav__links { display: flex; gap: 30px; }
