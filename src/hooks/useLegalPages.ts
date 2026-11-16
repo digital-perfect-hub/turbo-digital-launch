@@ -68,13 +68,19 @@ export const isLegalPagePublishable = (page?: Pick<LegalPageRecord, "id" | "body
   return !LEGAL_PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(page.body || ""));
 };
 
-export const useLegalPage = (slug: LegalPageSlug) => {
+// Links auf Rechtsseiten, wie sie in der Fußzeile stehen. Der Link auf die AGB entfällt, solange dort kein echter,
+// veröffentlichter Text liegt: Eine Fußzeile soll nicht auf Geschäftsbedingungen zeigen, die es nicht gibt. Impressum und
+// Datenschutz bleiben immer verlinkt.
+export const withoutUnpublishedTerms = <T extends { url: string }>(links: readonly T[], termsPublishable: boolean): T[] =>
+  links.filter((link) => termsPublishable || !/^\/agb\/?(?:[?#].*)?$/i.test((link.url || "").trim()));
+
+export const useLegalPage = (slug: LegalPageSlug, enabled = true) => {
   const { activeSiteId } = useSiteContext();
   const siteId = activeSiteId || DEFAULT_SITE_ID;
 
   return useQuery({
     queryKey: ["legal-page", siteId, slug],
-    enabled: Boolean(siteId),
+    enabled: Boolean(siteId) && enabled,
     queryFn: async (): Promise<LegalPageRecord> => {
       const fallback = legalPageDefaults[slug];
       const { data, error } = await supabase

@@ -8,6 +8,7 @@ import { defaultFooterContactItems, type FooterContactItem, useSiteSettings } fr
 import { openCookieSettings } from "@/lib/cookie-consent";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteContext } from "@/context/SiteContext";
+import { isLegalPagePublishable, useLegalPage, withoutUnpublishedTerms } from "@/hooks/useLegalPages";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 import { Reveal, Tilt } from "./motion";
 import { useOnScreen } from "./media";
@@ -379,12 +380,18 @@ const FootMark = ({ brand }: { brand: string }) => {
 const PremiumFooter = ({ brand }: { brand: string }) => {
   const { settings } = useGlobalTheme();
   const { getJsonSetting } = useSiteSettings();
-  const legal = Array.isArray(settings.footer_legal_links) && settings.footer_legal_links.length ? settings.footer_legal_links : FALLBACK_LEGAL;
+  // Die AGB werden erst abgefragt, wenn die Fußzeile in die Nähe des Bildes kommt, und nur mit echtem Text verlinkt.
+  const [footRef, footNear] = useOnScreen<HTMLElement>(0, "800px");
+  const terms = useLegalPage("agb", footNear);
+  const legal = withoutUnpublishedTerms<{ label: string; url: string }>(
+    Array.isArray(settings.footer_legal_links) && settings.footer_legal_links.length ? settings.footer_legal_links : FALLBACK_LEGAL,
+    isLegalPagePublishable(terms.data),
+  );
   const contact = getJsonSetting<FooterContactItem[]>("footer_contact_items", defaultFooterContactItems).filter((item) => item?.value?.trim());
   const mail = contact.find((item) => (item.icon || "mail") === "mail")?.value.trim();
 
   return (
-    <footer className="pv-foot">
+    <footer className="pv-foot" ref={footRef}>
       <div className="pm-wrap">
         <div className="pv-foot__top">
           <div className="pv-foot__brand">
@@ -416,7 +423,7 @@ const PremiumFooter = ({ brand }: { brand: string }) => {
             <div>
               <h2>Rechtliches</h2>
               <ul>
-                {legal.map((link: { label: string; url: string }) => (
+                {legal.map((link) => (
                   <li key={link.url}>
                     <Link to={link.url}>{link.label}</Link>
                   </li>

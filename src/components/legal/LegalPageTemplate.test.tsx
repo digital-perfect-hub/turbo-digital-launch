@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import LegalPageTemplate from "@/components/legal/LegalPageTemplate";
-import { type LegalPageRecord, isLegalPagePublishable, legalPageDefaults } from "@/hooks/useLegalPages";
+import { type LegalPageRecord, isLegalPagePublishable, legalPageDefaults, withoutUnpublishedTerms } from "@/hooks/useLegalPages";
 import { DEFAULT_SITE_ID } from "@/lib/site";
 
 const mocks = vi.hoisted(() => ({ useLegalPage: vi.fn(), activeSiteId: "andere-site" }));
@@ -115,5 +115,24 @@ describe("isLegalPagePublishable", () => {
     for (const page of Object.values(legalPageDefaults)) {
       expect(isLegalPagePublishable({ ...base, body: page.body })).toBe(false);
     }
+  });
+});
+
+// Fußzeile: Der Link auf die AGB steht nur dort, wenn die AGB-Seite einen echten, veröffentlichten Text hat.
+describe("withoutUnpublishedTerms", () => {
+  const links = [
+    { label: "Impressum", url: "/impressum" },
+    { label: "Datenschutz", url: "/datenschutz" },
+    { label: "AGB", url: "/agb" },
+  ];
+
+  it("nimmt den AGB-Link heraus, solange es keinen veröffentlichten Text gibt", () => {
+    expect(withoutUnpublishedTerms(links, false).map((link) => link.url)).toEqual(["/impressum", "/datenschutz"]);
+    expect(withoutUnpublishedTerms([{ label: "AGB", url: " /AGB/ " }], false)).toEqual([]);
+  });
+
+  it("zeigt den AGB-Link mit veröffentlichtem Text und lässt Impressum und Datenschutz immer stehen", () => {
+    expect(withoutUnpublishedTerms(links, true).map((link) => link.url)).toEqual(["/impressum", "/datenschutz", "/agb"]);
+    expect(withoutUnpublishedTerms([{ label: "Impressum", url: "/impressum" }], false)).toHaveLength(1);
   });
 });
