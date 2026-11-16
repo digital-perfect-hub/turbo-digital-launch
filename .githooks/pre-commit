@@ -1,0 +1,4 @@
+#!/bin/sh
+# Hält env-Dateien und Zugangsdaten aus dem Repository heraus (Regeln in scripts/security/check-secrets.mjs).
+# Einmal je Arbeitskopie einschalten:  git config core.hooksPath .githooks
+exec node scripts/security/check-secrets.mjs --staged

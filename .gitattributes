@@ -1,0 +1,2 @@
+# Der Pre-Commit-Hook ist ein Shell-Skript: immer mit LF auschecken, auch unter Windows (core.autocrlf).
+.githooks/* text eol=lf
