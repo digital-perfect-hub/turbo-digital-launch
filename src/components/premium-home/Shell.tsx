@@ -9,7 +9,8 @@ import { openCookieSettings } from "@/lib/cookie-consent";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteContext } from "@/context/SiteContext";
 import { DEFAULT_SITE_ID } from "@/lib/site";
-import { Reveal } from "./motion";
+import { Reveal, Tilt } from "./motion";
+import { useOnScreen } from "./media";
 import { CommandPalette, INTEREST_EVENT, MobileDock, requestInterest, scrollToId, takePendingInterest, usePaletteHotkey } from "./AppShell";
 import { CREATORS, FOUNDER, HERO_TALL, INTEREST_OPTIONS, NAV_LINKS, STUDIO_URL } from "./content";
 import "@/styles/premium-home.css";
@@ -348,6 +349,31 @@ const FALLBACK_LEGAL = [
   { label: "AGB", url: "/agb" },
 ];
 
+// Großer Schriftzug am Ende der Fußzeile, wie das Logo: helle Buchstaben, oranger Punkt. Die Buchstaben haben Tiefe und
+// richten sich nacheinander aus der Fläche auf, sobald der Schriftzug im Bild ist; danach läuft ein oranger Lichtstreif
+// darüber, am Rechner neigt sich das Ganze zur Maus. Jeder Buchstabe ist ein eigenes Element (außen die Bewegung und die
+// Tiefe, innen die Füllung), der Schriftzug ist für Vorleseprogramme ausgeblendet: Der Name steht oben schon als Logo.
+const FootMark = ({ brand }: { brand: string }) => {
+  const [ref, onScreen] = useOnScreen<HTMLDivElement>(0.35);
+  const letters = Array.from(`${brand}.`);
+  return (
+    <div className={`pv-foot__mark${onScreen ? " is-live" : ""}`} ref={ref} aria-hidden="true">
+      <Tilt className="pv-foot__tilt" max={6}>
+        <p className="pv-foot__word">
+          {letters.map((char, index) => {
+            const shown = char === " " ? "\u00a0" : char;
+            return (
+              <span key={index} data-char={shown} className={index === letters.length - 1 ? "is-dot" : undefined} style={{ "--pm-i": index } as CSSProperties}>
+                <i>{shown}</i>
+              </span>
+            );
+          })}
+        </p>
+      </Tilt>
+    </div>
+  );
+};
+
 // Fußzeile in der Sprache der Premium-Seiten. Rechtliche Links und Kontaktangaben kommen wie bisher aus den
 // Einstellungen der Website, damit sie an einer Stelle gepflegt werden.
 const PremiumFooter = ({ brand }: { brand: string }) => {
@@ -402,7 +428,7 @@ const PremiumFooter = ({ brand }: { brand: string }) => {
             </div>
           </nav>
         </div>
-        <p className="pv-foot__mark" aria-hidden="true">{brand}</p>
+        <FootMark brand={brand} />
         <div className="pv-foot__bottom">
           <p>{`© ${new Date().getFullYear()} ${brand}. Linz, Österreich.`}</p>
           {mail ? <a href={`mailto:${mail}`}>{mail}</a> : null}

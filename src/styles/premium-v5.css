@@ -345,7 +345,28 @@ body:has(.pm) .cookie-reopen { display: none; }
 .pv-foot__nav ul { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .pv-foot__nav a, .pv-foot__nav button { padding: 0; border: 0; background: none; font: 400 15px/1.4 var(--pm-body); color: #cdd5e6; text-align: left; text-decoration: none; cursor: pointer; transition: color 0.2s; }
 .pv-foot__nav a:hover, .pv-foot__nav button:hover { color: #fff; }
-.pv-foot__mark { margin: clamp(40px, 6vw, 80px) 0 0; font: 800 clamp(3.2rem, 16vw, 15rem)/0.8 var(--pm-display); text-transform: uppercase; white-space: nowrap; color: transparent; -webkit-text-stroke: 1px rgba(190, 208, 255, 0.16); user-select: none; }
+/* Großer Schriftzug: Die Schriftgröße folgt der Breite des Rahmens, damit er die Zeile genau füllt. Unter ihm liegt ein
+   blauer und ein oranger Schein wie Licht auf dem Boden. */
+.pv-foot__mark { position: relative; container-type: inline-size; margin: clamp(40px, 6vw, 80px) 0 0; -webkit-user-select: none; user-select: none; }
+.pv-foot__mark::after { content: ""; position: absolute; left: 3%; right: 3%; bottom: -34%; height: 62%; pointer-events: none; background: radial-gradient(46% 60% at 28% 50%, rgba(56, 104, 255, 0.36), transparent 72%), radial-gradient(38% 56% at 84% 52%, rgba(255, 107, 44, 0.34), transparent 72%); filter: blur(24px); opacity: 0; transition: opacity 1.4s var(--pm-ease) 0.35s; }
+.pv-foot__mark.is-live::after { opacity: 1; }
+.pv-foot__tilt .pv-tilt__sheen { display: none; }
+.pv-foot__word { position: relative; z-index: 1; margin: 0; font: 800 clamp(3rem, 15vw, 15rem)/0.86 var(--pm-display); font-size: min(16.2cqi, 15rem); text-transform: uppercase; white-space: nowrap; perspective: 900px; perspective-origin: 50% 120%; }
+/* Außen: Lage im Raum und die Tiefe (derselbe Buchstabe noch einmal dahinter, mit gestaffelten Schatten). */
+.pv-foot__word > span { position: relative; display: inline-block; isolation: isolate; transform: rotateX(-84deg) translateY(0.2em); transform-origin: 50% 100%; opacity: 0; transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease; transition-delay: calc(var(--pm-i, 0) * 42ms); }
+.pv-foot__mark.is-live .pv-foot__word > span { transform: none; opacity: 1; }
+.pv-foot__word > span::before { content: attr(data-char); position: absolute; left: 0; top: 0; z-index: -1; color: #1c3078; text-shadow: 0 0.014em 0 #22398a, 0 0.028em 0 #1e3380, 0 0.042em 0 #1a2d75, 0 0.056em 0 #17286a, 0 0.07em 0 #14235f, 0 0.084em 0 #111e54, 0 0.16em 0.2em rgba(56, 104, 255, 0.5), 0 0.3em 0.5em rgba(5, 9, 18, 0.9); }
+/* Innen: die Füllung von Weiß nach Blau, darüber der Lichtstreif (liegt in Ruhe außerhalb des Buchstabens). */
+.pv-foot__word i { display: inline-block; font-style: normal; color: transparent; -webkit-text-fill-color: transparent; background: linear-gradient(115deg, rgba(255, 150, 80, 0) 38%, rgba(255, 150, 80, 0.95) 50%, rgba(255, 150, 80, 0) 62%) 160% 0 / 320% 100% no-repeat, linear-gradient(180deg, #ffffff 0%, #e8edff 40%, #a3b8ff 78%, #6485f2 100%); -webkit-background-clip: text; background-clip: text; }
+.pv-foot__mark.is-live .pv-foot__word i { animation: pv-mark-glint 7s linear infinite; animation-delay: calc(var(--pm-i, 0) * 55ms + 1.5s); }
+.pv-foot__word .is-dot i { background: linear-gradient(180deg, #ffa25e, #ff6b2c); -webkit-background-clip: text; background-clip: text; animation: none; }
+.pv-foot__word .is-dot::before { color: #8f3410; text-shadow: 0 0.014em 0 #a53f14, 0 0.028em 0 #9a3a12, 0 0.042em 0 #8f3410, 0 0.056em 0 #84300e, 0 0.07em 0 #782b0c, 0 0.084em 0 #6c260a, 0 0.16em 0.22em rgba(255, 107, 44, 0.6), 0 0.3em 0.5em rgba(5, 9, 18, 0.9); }
+@keyframes pv-mark-glint { 0% { background-position: 160% 0, 0 0; } 13%, 100% { background-position: -60% 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .pv-foot__word > span { transform: none; opacity: 1; transition: none; }
+  .pv-foot__mark.is-live .pv-foot__word i { animation: none; }
+  .pv-foot__mark::after { opacity: 1; transition: none; }
+}
 .pv-foot__bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--pm-line); font: 400 12px/1.5 var(--pm-mono); color: var(--pm-muted); }
 .pv-foot__bottom p { margin: 0; }
 .pv-foot__bottom a { color: inherit; text-decoration: none; transition: color 0.2s; }
