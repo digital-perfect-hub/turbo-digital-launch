@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "framer-motion";
 import { ArrowLeft, ArrowRight, Film as FilmIcon, Image as ImageIcon, ImagePlay, Type } from "lucide-react";
 import { Depth, Reveal, Tilt } from "./motion";
-import { Clip, MediaToggle, prefersLiteMedia, useAutoPlay, useMediaChoice, useOnScreen, usePooledVideo } from "./media";
+import { Clip, MediaToggle, prefersLiteMedia, useAutoPlay, useMediaChoice, useMinWidth, useOnScreen, usePooledVideo } from "./media";
 import { requestInterest } from "./AppShell";
 import { AI_NOTE, CREATORS, WORLDS, type Scene } from "./content";
 
@@ -14,7 +14,7 @@ const RING: RingItem[] = (() => {
   return Array.from({ length: longest }, (_, row) => lists.flatMap((list) => (list[row] ? [list[row]] : []))).flat();
 })();
 
-// Eine Umdrehung des Rings, gleich der Dauer von pv-ring-spin in premium-v5.css.
+// Eine Umdrehung des Rings mit 16 Karten. Die Dauer geht als --pv-ring-turn an die Spur (pv-ring-spin in premium-v5.css).
 const RING_TURN_MS = 70000;
 
 // Eine Karte im Ring: Standbild, Name der Figur und, bei Videoszenen, eine sehr kleine Fassung des Videos (240 × 426). Das
@@ -47,6 +47,9 @@ const RingCard = ({ item, angle, live }: { item: RingItem; angle: number; live: 
  * der ganzen Spur) und läuft nur, solange der Ring im Bild ist; bei reduzierter Bewegung steht er. Die Karten, die gerade
  * vorn stehen, spielen ihr Video, höchstens drei zugleich und in einer sehr kleinen Fassung. Er zeigt nichts Neues, sondern
  * dieselben Szenen noch einmal als Ganzes, deshalb ist er für Vorleseprogramme ausgeblendet und nur der Text darunter zählt.
+ * Am Rechner steht jede Szene zweimal im Ring: doppelter Umfang und doppelter Radius bei gleicher Kartengröße. So wird aus
+ * dem engen Zylinder ein flacher, breiter Bogen über die ganze Seite. Die beiden Fassungen einer Szene stehen sich gegenüber,
+ * vorn ist nie dieselbe Szene zweimal zu sehen. Die Drehung dauert dort doppelt so lang, die Karten ziehen also gleich schnell.
  */
 export const SceneRing = () => {
   const reduce = useReducedMotion();
@@ -55,7 +58,10 @@ export const SceneRing = () => {
   const [ref, onScreen] = useOnScreen<HTMLDivElement>(0.05, "160px 0px");
   const track = useRef<HTMLDivElement>(null);
   const [front, setFront] = useState(0);
-  const count = RING.length;
+  const wide = useMinWidth(1024);
+  const cards = useMemo(() => (wide ? [...RING, ...RING] : RING), [wide]);
+  const count = cards.length;
+  const turnMs = RING_TURN_MS * (wide ? 2 : 1);
   const spacing = 1 / (2 * Math.tan(Math.PI / count));
   const playable = onScreen && (choice ?? (!reduce && !lite));
 
@@ -65,25 +71,25 @@ export const SceneRing = () => {
     const read = () => {
       const animation = track.current?.getAnimations?.()[0];
       const time = Number(animation?.currentTime ?? 0);
-      const turn = Number.isFinite(time) ? (time % RING_TURN_MS) / RING_TURN_MS : 0;
+      const turn = Number.isFinite(time) ? (time % turnMs) / turnMs : 0;
       setFront(Math.round(turn * count) % count);
     };
     read();
     const timer = window.setInterval(read, 500);
     return () => window.clearInterval(timer);
-  }, [playable, count]);
+  }, [playable, count, turnMs]);
 
   return (
-    <div className={`pv-ring${onScreen ? " is-live" : ""}`} ref={ref}>
+    <div className={`pv-ring${wide ? " pv-ring--wide" : ""}${onScreen ? " is-live" : ""}`} ref={ref}>
       <div className="pv-ring__scene" aria-hidden="true">
-        <div className="pv-ring__track" ref={track} style={{ "--pv-ring-k": spacing.toFixed(4) } as CSSProperties}>
-          {RING.map((item, position) => {
+        <div className="pv-ring__track" ref={track} style={{ "--pv-ring-k": spacing.toFixed(4), "--pv-ring-turn": `${turnMs / 1000}s` } as CSSProperties}>
+          {cards.map((item, position) => {
             const away = Math.abs(position - front);
-            return <RingCard key={item.id} item={item} angle={(360 / count) * position} live={playable && Math.min(away, count - away) <= 1} />;
+            return <RingCard key={`${item.id}-${position}`} item={item} angle={(360 / count) * position} live={playable && Math.min(away, count - away) <= 1} />;
           })}
         </div>
       </div>
-      <p className="pv-ring__line">{`${CREATORS.length} Creator, ${count} Szenen, ein Studio.`}</p>
+      <p className="pv-ring__line">{`${CREATORS.length} Creator, ${RING.length} Szenen, ein Studio.`}</p>
       <p className="pm-caption pv-ring__note">Alles in diesem Ring ist in Creator Studio entstanden.</p>
     </div>
   );

@@ -471,7 +471,13 @@ body:has(.pm) .cookie-reopen { display: none; }
 
 .pv-ring { position: relative; margin-top: clamp(20px, 6vw, 96px); }
 .pv-ring__scene { display: grid; place-items: center; height: clamp(250px, 44vw, 500px); perspective: 1100px; perspective-origin: 50% 40%; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%); }
-.pv-ring__track { --pv-ring-w: clamp(104px, 14vw, 208px); --pv-ring-r: calc((var(--pv-ring-w) + 14px) * var(--pv-ring-k, 2.5)); position: relative; width: var(--pv-ring-w); aspect-ratio: 9 / 16; transform-style: preserve-3d; transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(0deg); animation: pv-ring-spin 70s linear infinite; animation-play-state: paused; }
+.pv-ring__track { --pv-ring-w: clamp(104px, 14vw, 208px); --pv-ring-r: calc((var(--pv-ring-w) + 14px) * var(--pv-ring-k, 2.5)); position: relative; width: var(--pv-ring-w); aspect-ratio: 9 / 16; transform-style: preserve-3d; transform: translateY(var(--pv-ring-lift, 0px)) translateZ(calc(var(--pv-ring-r) * -1)) rotateX(var(--pv-ring-tilt, -6deg)) rotateY(0deg); animation: pv-ring-spin var(--pv-ring-turn, 70s) linear infinite; animation-play-state: paused; }
+/* Am Rechner (doppelter Ring, siehe SceneRing): Blick aus größerer Entfernung, damit der Bogen flach bleibt und bis an die
+   Seitenränder reicht; die Karten laufen dort erst kurz vor dem Rand aus. */
+.pv-ring--wide .pv-ring__scene { height: clamp(430px, 31vw, 760px); perspective: max(2000px, 150vw); -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); }
+/* Der große Ring ist weniger geneigt, und die Spur wird um das Maß angehoben, um das die Neigung die vorderen Karten senkt:
+   Sie stehen so wieder in der Mitte der Fläche, die Karten an den Seiten etwas höher. */
+.pv-ring--wide .pv-ring__track { --pv-ring-w: clamp(150px, 12.5vw, 300px); --pv-ring-tilt: -3.5deg; --pv-ring-lift: calc(var(--pv-ring-r) * -0.061); }
 .pv-ring.is-live .pv-ring__track { animation-play-state: running; }
 .pv-ring__card { position: absolute; inset: 0; overflow: hidden; border: 1px solid var(--pm-line-strong); border-radius: 16px; background: #0b1222; box-shadow: 0 30px 60px -30px #000; transform: rotateY(var(--pv-ring-a, 0deg)) translateZ(var(--pv-ring-r)); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .pv-ring__card img, .pv-ring__card video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -492,8 +498,8 @@ body:has(.pm) .cookie-reopen { display: none; }
 /* Lehnt ein iPhone den Start ab, legt Safari einen eigenen Abspielknopf über das Video. Die Seite hat ihren eigenen. */
 .pm video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
 @keyframes pv-ring-spin {
-  from { transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(0deg); }
-  to { transform: translateZ(calc(var(--pv-ring-r) * -1)) rotateX(-6deg) rotateY(-360deg); }
+  from { transform: translateY(var(--pv-ring-lift, 0px)) translateZ(calc(var(--pv-ring-r) * -1)) rotateX(var(--pv-ring-tilt, -6deg)) rotateY(0deg); }
+  to { transform: translateY(var(--pv-ring-lift, 0px)) translateZ(calc(var(--pv-ring-r) * -1)) rotateX(var(--pv-ring-tilt, -6deg)) rotateY(-360deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .pv-ring__track, .pv-gal__deck { animation: none; }
