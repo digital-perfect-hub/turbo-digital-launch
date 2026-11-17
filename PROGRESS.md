@@ -6,6 +6,15 @@ Neueste Einträge oben. Format: Datum, was gemacht/entschieden wurde, warum, was
 
 ---
 
+## 2026-11-17 — Anmeldeseite ohne Registrierung (Vorschauzweig, nicht live)
+
+- **Anlass:** Der Inhaber hat die öffentliche Registrierung im Supabase-Projekt ausgeschaltet (von außen gelesen: `disable_signup: true`). Kein Angebot der Website braucht ein selbst angelegtes Konto; Konten der Verwaltung entstehen auf Einladung (`invite-tenant-user`), das Passwort wird unter `/set-password` gesetzt.
+- **Änderung:** `src/pages/Login.tsx` zeigt nur noch die Anmeldung. Der Umschalter „Noch kein Account? Registrieren“ und der Registrierungszweig sind entfernt. Anmeldung, Einladung und `/set-password` sind unverändert; `signUp` im Hook `useAuth` bleibt stehen, wird aber nicht mehr aufgerufen.
+- **Geprüft:** neuer Test `src/pages/Login.test.tsx` (nur Anmeldung sichtbar, Registrierung wird nie aufgerufen), 37 Tests bestanden, Typprüfung unverändert 108 Altfehler, Lint ohne Befund, Seite im Browser gelesen (ein Knopf „Anmelden“).
+- **Stand:** nur auf dem Vorschauzweig committet. Die Vorschau selbst läuft weiter auf `25bd626`, `main` und live sind unverändert.
+
+---
+
 ## 2026-11-16 — Livegang Teil 1 von 2: env-Datei aus dem Repository, Fußzeile ohne AGB-Link, Stand für die Veröffentlichung (auf der Vorschau, live unverändert)
 
 - **Auftrag (Inhaber):** Sicherheit und Blocker vor dem Livegang beseitigen, keine neuen Funktionen. Noch kein Merge nach `main`, kein produktiver Deploy.
